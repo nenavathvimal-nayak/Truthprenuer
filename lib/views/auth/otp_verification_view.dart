@@ -76,7 +76,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
               Text(
                 "Enter the 6-digit code we sent to your email.",
                 style: AppTypography.body.copyWith(
-                  color: colors.text.withOpacity(0.7),
+                  color: colors.text.withValues(alpha: 0.7),
                 ),
               ),
               
@@ -95,7 +95,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
                   cursorColor: colors.primary,
                   decoration: InputDecoration(
                     hintText: "000000",
-                    hintStyle: AppTypography.metric.copyWith(color: colors.text.withOpacity(0.3)),
+                    hintStyle: AppTypography.metric.copyWith(color: colors.text.withValues(alpha: 0.3)),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.all(AppSpacing.md),
                   ),

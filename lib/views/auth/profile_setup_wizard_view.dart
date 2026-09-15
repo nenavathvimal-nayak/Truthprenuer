@@ -131,7 +131,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                           Container(
                             height: 8,
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1),
+                              color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -369,7 +369,7 @@ class _FounderTypeStepView extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: colors.textSecondary.withOpacity(0.3),
+                                color: colors.textSecondary.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -567,7 +567,7 @@ class _LocationStepView extends StatelessWidget {
                 ),
                 CupertinoSwitch(
                   value: notificationsEnabled,
-                  activeColor: colors.primary,
+                  activeTrackColor: colors.primary,
                   onChanged: onToggleNotifications,
                 ),
               ],

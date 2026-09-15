@@ -55,7 +55,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
     if (!mounted) return;
     
     ref.read(mockDataStoreProvider).login();
-    await ref.read(authProvider.notifier).login();
+    await ref.read(authProvider.notifier).login(email, password);
     
     if (!mounted) return;
     context.go('/');

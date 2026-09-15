@@ -50,7 +50,7 @@ class AvatarView extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         border: Border.all(
-          color: const Color(0xFFE4E2E3).withOpacity(0.15),
+          color: const Color(0xFFE4E2E3).withValues(alpha: 0.15),
           width: 1,
         ),
       ),

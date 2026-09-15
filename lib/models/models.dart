@@ -1,3 +1,15 @@
+enum UserRole {
+  founder('Founder', 'Build & validate your startup with evidence'),
+  investor('Investor', 'Discover truth-validated deal flow'),
+  professional('Professional', 'Lend expertise & earn validation karma'),
+  creator('Creator', 'Share startup wisdom & grow your audience'),
+  student('Student', 'Learn startup validation by doing');
+
+  final String label;
+  final String description;
+  const UserRole(this.label, this.description);
+}
+
 enum ProblemFrequency {
   daily("Daily"),
   weekly("Weekly"),
@@ -88,6 +100,7 @@ class User {
   String username;
   String bio;
   String role;
+  UserRole userRole;
   String? avatarURL;
 
   String website;
@@ -111,6 +124,7 @@ class User {
     required this.username,
     required this.bio,
     required this.role,
+    this.userRole = UserRole.founder,
     this.avatarURL,
     this.website = "",
     this.twitterHandle = "",
@@ -157,6 +171,7 @@ class ValidationRequest {
 
   String title;
   String problem;
+  String get description => problem;
   String solution;
   String targetAudience;
   List<String> tags;
@@ -439,3 +454,27 @@ extension DateExtensions on DateTime {
     return "${diff ~/ 86400}d ago";
   }
 }
+
+enum QuestionType {
+  multipleChoice,
+  text,
+  rating,
+  boolean,
+}
+
+class ValidationQuestion {
+  final String id;
+  final String validationId;
+  final String text;
+  final QuestionType type;
+  final List<String> options;
+
+  const ValidationQuestion({
+    required this.id,
+    this.validationId = "",
+    required this.text,
+    this.type = QuestionType.multipleChoice,
+    this.options = const [],
+  });
+}
+

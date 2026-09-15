@@ -51,7 +51,7 @@ class ActionSelectionView extends StatelessWidget {
                           color: isDark ? colors.cardBackground : Colors.white,
                           borderRadius: BorderRadius.circular(100), // Capsule
                           border: Border.all(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             width: isDark ? 0 : 1,
                           ),
                         ),
@@ -114,7 +114,7 @@ class ActionSelectionView extends StatelessWidget {
                           child: Text(
                             "Post your progress, wins,\nor challenges with the\nTAEED community.",
                             style: AppTypography.subheadline.copyWith(
-                              color: (isDark ? Colors.black : Colors.white).withOpacity(0.8),
+                              color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.8),
                               height: 1.2, // lineSpacing
                             ),
                           ),

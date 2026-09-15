@@ -186,7 +186,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                           color: colors.cardBackground,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: colors.border.withOpacity(0.5)),
+                            side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(AppSpacing.sm),
@@ -203,7 +203,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                             trailing: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: colors.primary.withOpacity(0.1),
+                                color: colors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -244,7 +244,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                           color: colors.cardBackground,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: colors.border.withOpacity(0.5)),
+                            side: BorderSide(color: colors.border.withValues(alpha: 0.5)),
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.symmetric(

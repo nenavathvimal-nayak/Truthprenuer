@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/avatar_view.dart';
 import '../../components/avatar_picker_modal.dart';
+import '../../components/role_switcher_modal.dart';
 import '../../components/tag_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../models/role_provider.dart';
 import '../../utils/haptic_manager.dart';
-import 'gamification_hub_view.dart';
-
 class ProfileStat extends StatelessWidget {
   final String value;
   final String label;
@@ -57,6 +57,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final currentRole = ref.watch(roleProvider);
     final dataStore = ref.watch(mockDataStoreProvider);
     final user = dataStore.currentUser ??
         dataStore.users.firstWhere(
@@ -80,6 +81,67 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
     final myPosts =
         dataStore.posts.where((p) => p.authorId == user.id).toList();
 
+    final stat1Value = switch (currentRole) {
+      UserRole.founder => "${myValidations.length}",
+      UserRole.investor => "8",
+      UserRole.professional => "28",
+      UserRole.creator => "${myPosts.isNotEmpty ? myPosts.length : 18}",
+      UserRole.student => "14",
+    };
+    final stat1Label = switch (currentRole) {
+      UserRole.founder => "Validations",
+      UserRole.investor => "Watchlist",
+      UserRole.professional => "Audits Done",
+      UserRole.creator => "Breakdowns",
+      UserRole.student => "Modules Done",
+    };
+
+    final stat2Value = switch (currentRole) {
+      UserRole.founder => "${user.validationsCompleted}",
+      UserRole.investor => "52",
+      UserRole.professional => "1,420",
+      UserRole.creator => "24.5K",
+      UserRole.student => "9",
+    };
+    final stat2Label = switch (currentRole) {
+      UserRole.founder => "Reviews Given",
+      UserRole.investor => "Signals",
+      UserRole.professional => "Karma XP",
+      UserRole.creator => "Readership",
+      UserRole.student => "Practice Cases",
+    };
+
+    final stat3Value = switch (currentRole) {
+      UserRole.founder => "${(user.helpfulnessScore * 100).toStringAsFixed(0)}%",
+      UserRole.investor => "84%",
+      UserRole.professional => "98.4%",
+      UserRole.creator => "94%",
+      UserRole.student => "890 XP",
+    };
+    final stat3Label = switch (currentRole) {
+      UserRole.founder => "Truth Score",
+      UserRole.investor => "Conviction",
+      UserRole.professional => "Trust Rating",
+      UserRole.creator => "Resonance",
+      UserRole.student => "Academy XP",
+    };
+
+    final tab1Title = switch (currentRole) {
+      UserRole.founder => "Validations (${myValidations.length})",
+      UserRole.investor => "Watchlist Deals (8)",
+      UserRole.professional => "Expertise Audits (28)",
+      UserRole.creator => "Published Posts (${myPosts.length})",
+      UserRole.student => "Practice Cases (9)",
+    };
+
+    final tab2Title = switch (currentRole) {
+      UserRole.founder => "Posts (${myPosts.length})",
+      UserRole.investor => "Due Diligence (3)",
+      UserRole.professional => "Advisory Invites (5)",
+      UserRole.creator => "Drafts & Teardowns (2)",
+      UserRole.student => "Certificates (3)",
+    };
+
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -92,16 +154,11 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.military_tech_outlined, color: colors.warning),
-            tooltip: "Gamification & Badges",
+            icon: Icon(Icons.swap_horiz_rounded, color: colors.primary),
+            tooltip: "Switch Role",
             onPressed: () {
               HapticManager.shared.impactLight();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const GamificationHubView(),
-                ),
-              );
+              RoleSwitcherModal.show(context);
             },
           ),
           IconButton(
@@ -189,6 +246,8 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                           color: colors.textSecondary,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      const RoleBadgePill(),
                       if (user.location.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Row(
@@ -307,8 +366,8 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                           children: [
                             Expanded(
                               child: ProfileStat(
-                                value: "${user.validationsCount}",
-                                label: "Validations",
+                                value: stat1Value,
+                                label: stat1Label,
                               ),
                             ),
                             Container(
@@ -318,8 +377,8 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                             ),
                             Expanded(
                               child: ProfileStat(
-                                value: "${user.validationsCompleted}",
-                                label: "Feedback Given",
+                                value: stat2Value,
+                                label: stat2Label,
                               ),
                             ),
                             Container(
@@ -329,9 +388,8 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                             ),
                             Expanded(
                               child: ProfileStat(
-                                value:
-                                    "${(user.helpfulnessScore * 100).toStringAsFixed(0)}%",
-                                label: "Helpfulness",
+                                value: stat3Value,
+                                label: stat3Label,
                               ),
                             ),
                           ],
@@ -349,7 +407,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                   child: Row(
                     children: [
                       _TabItem(
-                        title: "Validations (${myValidations.length})",
+                        title: tab1Title,
                         isSelected: _selectedTab == 0,
                         onTap: () {
                           setState(() => _selectedTab = 0);
@@ -357,7 +415,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                         },
                       ),
                       _TabItem(
-                        title: "Posts (${myPosts.length})",
+                        title: tab2Title,
                         isSelected: _selectedTab == 1,
                         onTap: () {
                           setState(() => _selectedTab = 1);
@@ -435,7 +493,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                               color: colors.cardBackground,
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: colors.border.withOpacity(0.5),
+                                color: colors.border.withValues(alpha: 0.5),
                                 width: 1,
                               ),
                             ),
@@ -450,7 +508,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                                         vertical: 3,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: colors.primary.withOpacity(0.12),
+                                        color: colors.primary.withValues(alpha: 0.12),
                                         borderRadius:
                                             BorderRadius.circular(100),
                                       ),
@@ -571,7 +629,7 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
                             color: colors.cardBackground,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: colors.border.withOpacity(0.5),
+                              color: colors.border.withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),

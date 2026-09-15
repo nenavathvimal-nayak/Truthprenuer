@@ -8,7 +8,6 @@ import '../views/validation/ai_validation_view.dart';
 import '../views/validation/structured_feedback_view.dart';
 import '../models/startup_health_models.dart';
 import '../views/onboarding/onboarding_view.dart';
-import '../views/onboarding/mood_selection_view.dart';
 import '../views/onboarding/action_selection_view.dart';
 import '../views/auth/login_view.dart';
 import '../views/auth/signup_view.dart';
@@ -16,7 +15,6 @@ import '../views/auth/otp_verification_view.dart';
 import '../views/auth/forgot_password_view.dart';
 import '../views/auth/profile_setup_wizard_view.dart';
 import '../views/main/search_overlay_view.dart';
-import '../views/main/create_post_modal_view.dart';
 import '../views/main/notifications_view.dart';
 import '../views/messaging/chats_list_view.dart';
 import '../views/messaging/chat_room_view.dart';
@@ -27,11 +25,18 @@ import '../views/network/top_validators_leaderboard_view.dart';
 import '../views/profile/change_password_view.dart';
 import '../views/profile/notification_preferences_view.dart';
 import '../views/profile/edit_profile_view.dart';
+import '../views/validation/startup_health_dashboard_view.dart';
+import '../views/validation/evidence_locker_view.dart';
+import '../views/main/founder_home_view.dart';
+import '../views/main/investor_home_view.dart';
+import '../views/main/professional_home_view.dart';
+import '../views/main/creator_home_view.dart';
+import '../views/main/student_home_view.dart';
 import '../models/models.dart';
 import '../models/mock_data_store.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/',
   routes: [
     GoRoute(
       path: '/splash',
@@ -40,10 +45,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingView(),
-    ),
-    GoRoute(
-      path: '/mood',
-      builder: (context, state) => const MoodSelectionView(),
     ),
     GoRoute(
       path: '/action',
@@ -98,10 +99,6 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const SearchOverlayView(),
     ),
     GoRoute(
-      path: '/create-post',
-      builder: (context, state) => const CreatePostModalView(),
-    ),
-    GoRoute(
       path: '/validation-wizard',
       builder: (context, state) => const ValidationWizardView(),
     ),
@@ -138,6 +135,60 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/top-validators',
       builder: (context, state) => const TopValidatorsLeaderboardView(),
+    ),
+    GoRoute(
+      path: '/leaderboard',
+      builder: (context, state) => const TopValidatorsLeaderboardView(),
+    ),
+    GoRoute(
+      path: '/startup-health',
+      builder: (context, state) => const StartupHealthDashboardView(),
+    ),
+    GoRoute(
+      path: '/evidence-locker',
+      builder: (context, state) => const EvidenceLockerView(),
+    ),
+    GoRoute(
+      path: '/founder-home',
+      builder: (context, state) => const FounderHomeView(),
+    ),
+    GoRoute(
+      path: '/investor-home',
+      builder: (context, state) => const InvestorHomeView(),
+    ),
+    GoRoute(
+      path: '/professional-home',
+      builder: (context, state) => const ProfessionalHomeView(),
+    ),
+    GoRoute(
+      path: '/creator-home',
+      builder: (context, state) => const CreatorHomeView(),
+    ),
+    GoRoute(
+      path: '/student-home',
+      builder: (context, state) => const StudentHomeView(),
+    ),
+    GoRoute(
+      path: '/validation-detail/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id'];
+        final dataStore = MockDataStore();
+        final validation = dataStore.validations.firstWhere(
+          (v) => v.id == id,
+          orElse: () => dataStore.validations.first,
+        );
+        final author = dataStore.users.firstWhere(
+          (u) => u.id == validation.authorId,
+          orElse: () => User(
+            id: validation.authorId,
+            name: validation.authorName ?? 'Founder',
+            username: 'founder',
+            bio: '',
+            role: validation.authorRole ?? 'Builder',
+          ),
+        );
+        return ValidationDetailView(validation: validation, author: author);
+      },
     ),
     GoRoute(
       path: '/notification-preferences',

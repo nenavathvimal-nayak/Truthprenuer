@@ -117,7 +117,7 @@ class _SmileyFacePainter extends CustomPainter {
     
     // Eyes
     // HStack spacing 4, circles width 3
-    final eyeRadius = 1.5;
+    const eyeRadius = 1.5;
     canvas.drawCircle(Offset(size.width / 2 - 3.5, size.height * 0.3), eyeRadius, paint);
     canvas.drawCircle(Offset(size.width / 2 + 3.5, size.height * 0.3), eyeRadius, paint);
     

@@ -26,7 +26,7 @@ class AppFloatingActionButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: colors.primary.withOpacity(0.4),
+              color: colors.primary.withValues(alpha: 0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),

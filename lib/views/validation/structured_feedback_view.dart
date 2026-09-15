@@ -31,7 +31,7 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
   int _overallRating = 0;
   final TextEditingController _textFeedbackCtrl = TextEditingController();
   final TextEditingController _evidenceLinksCtrl = TextEditingController();
-  List<EvidenceAttachment> _uploadedEvidence = [];
+  final List<EvidenceAttachment> _uploadedEvidence = [];
 
   @override
   void dispose() {
@@ -257,7 +257,7 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isSelected ? colors.primary.withOpacity(0.1) : colors.cardBackground,
+                  color: isSelected ? colors.primary.withValues(alpha: 0.1) : colors.cardBackground,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: isSelected ? colors.primary : colors.border, width: 1),
                 ),

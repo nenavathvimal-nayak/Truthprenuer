@@ -334,7 +334,7 @@ class _EditFieldState extends State<_EditField> {
             color: colors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _isFocused ? colors.primary.withOpacity(0.6) : colors.border,
+              color: _isFocused ? colors.primary.withValues(alpha: 0.6) : colors.border,
               width: 1,
             ),
           ),
@@ -425,7 +425,7 @@ class _BioEditFieldState extends State<_BioEditField> {
             color: colors.cardBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _isFocused ? colors.primary.withOpacity(0.6) : colors.border,
+              color: _isFocused ? colors.primary.withValues(alpha: 0.6) : colors.border,
               width: 1,
             ),
           ),

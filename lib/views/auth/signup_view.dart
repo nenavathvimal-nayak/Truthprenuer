@@ -60,7 +60,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
     
     if (!mounted) return;
     
-    await ref.read(authProvider.notifier).signup();
+    await ref.read(authProvider.notifier).signup(email, password, name);
     
     if (!mounted) return;
     context.go('/');

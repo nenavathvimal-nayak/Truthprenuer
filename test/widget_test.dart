@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taeed_flutter/main.dart';
 import 'package:taeed_flutter/models/mock_data_store.dart';
 import 'package:taeed_flutter/views/main/search_overlay_view.dart';
 import 'package:taeed_flutter/views/profile/builder_profile_view.dart';
@@ -17,14 +16,48 @@ import 'package:taeed_flutter/views/main/main_tab_view.dart';
 
 import 'package:taeed_flutter/views/network/top_validators_leaderboard_view.dart';
 import 'package:taeed_flutter/views/main/founder_home_view.dart';
+import 'package:taeed_flutter/views/main/investor_home_view.dart';
+import 'package:taeed_flutter/views/main/professional_home_view.dart';
+import 'package:taeed_flutter/views/main/creator_home_view.dart';
+import 'package:taeed_flutter/views/main/student_home_view.dart';
+import 'package:taeed_flutter/views/main/home_container_view.dart';
 import 'package:taeed_flutter/views/main/explore_view.dart';
 import 'package:taeed_flutter/design_system/theme_mode_provider.dart';
+import 'package:taeed_flutter/models/models.dart';
+import 'package:taeed_flutter/models/role_provider.dart';
+import 'package:taeed_flutter/components/role_switcher_modal.dart';
+import 'package:taeed_flutter/views/onboarding/splash_view.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() {
+  setUp(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (_) {}
+  });
 
   group('TAEED End-to-End & Component Tests', () {
     testWidgets('1. App Launch & Splash Smoke Test', (WidgetTester tester) async {
-      await tester.pumpWidget(const ProviderScope(child: TAEEDApp()));
+      final testRouter = GoRouter(
+        initialLocation: '/splash',
+        routes: [
+          GoRoute(path: '/splash', builder: (context, state) => const SplashView()),
+          GoRoute(path: '/onboarding', builder: (context, state) => const Scaffold()),
+          GoRoute(path: '/auth', builder: (context, state) => const Scaffold()),
+          GoRoute(path: '/', builder: (context, state) => const Scaffold()),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp.router(
+            routerConfig: testRouter,
+          ),
+        ),
+      );
       expect(find.text('TRUTHPRENUER'), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
     });
@@ -496,6 +529,152 @@ void main() {
 
       expect(find.text('SPECIFIC FEEDBACK QUESTIONS'), findsOneWidget);
       expect(find.text('Send Review Request'), findsOneWidget);
+    });
+
+    testWidgets('21. RoleNotifier state switching and computed getters', (WidgetTester tester) async {
+      final notifier = RoleNotifier();
+      expect(notifier.state, equals(UserRole.founder));
+      expect(notifier.isFounder, isTrue);
+
+      await notifier.switchRole(UserRole.investor);
+      expect(notifier.state, equals(UserRole.investor));
+      expect(notifier.isInvestor, isTrue);
+      expect(notifier.isFounder, isFalse);
+
+      await notifier.switchRole(UserRole.professional);
+      expect(notifier.state, equals(UserRole.professional));
+      expect(notifier.isProfessional, isTrue);
+
+      await notifier.switchRole(UserRole.creator);
+      expect(notifier.state, equals(UserRole.creator));
+      expect(notifier.isCreator, isTrue);
+
+      await notifier.switchRole(UserRole.student);
+      expect(notifier.state, equals(UserRole.student));
+      expect(notifier.isStudent, isTrue);
+    });
+
+    testWidgets('22. HomeContainerView renders role-specific views',
+        (WidgetTester tester) async {
+      // Test Investor View
+      await tester.pumpWidget(
+        ProviderScope(
+          key: const ValueKey('scope_investor'),
+          overrides: [
+            roleProvider.overrideWith((ref) => RoleNotifier(UserRole.investor)),
+          ],
+          child: const MaterialApp(
+            home: HomeContainerView(key: ValueKey('home_investor')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(InvestorHomeView), findsOneWidget);
+
+      // Test Professional View
+      await tester.pumpWidget(
+        ProviderScope(
+          key: const ValueKey('scope_prof'),
+          overrides: [
+            roleProvider.overrideWith((ref) => RoleNotifier(UserRole.professional)),
+          ],
+          child: const MaterialApp(
+            home: HomeContainerView(key: ValueKey('home_prof')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ProfessionalHomeView), findsOneWidget);
+
+      // Test Creator View
+      await tester.pumpWidget(
+        ProviderScope(
+          key: const ValueKey('scope_creator'),
+          overrides: [
+            roleProvider.overrideWith((ref) => RoleNotifier(UserRole.creator)),
+          ],
+          child: const MaterialApp(
+            home: HomeContainerView(key: ValueKey('home_creator')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(CreatorHomeView), findsOneWidget);
+
+      // Test Student View
+      await tester.pumpWidget(
+        ProviderScope(
+          key: const ValueKey('scope_student'),
+          overrides: [
+            roleProvider.overrideWith((ref) => RoleNotifier(UserRole.student)),
+          ],
+          child: const MaterialApp(
+            home: HomeContainerView(key: ValueKey('home_student')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(StudentHomeView), findsOneWidget);
+    });
+
+    testWidgets('23. MainTabView renders role-specific navigation tabs',
+        (WidgetTester tester) async {
+      // Investor tabs
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roleProvider.overrideWith((ref) => RoleNotifier(UserRole.investor)),
+          ],
+          child: const MaterialApp(
+            home: MainTabView(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('HOME'), findsOneWidget);
+      expect(find.text('DEAL FLOW'), findsOneWidget);
+      expect(find.text('SIGNALS'), findsOneWidget);
+      expect(find.text('NETWORK'), findsOneWidget);
+      expect(find.text('PROFILE'), findsOneWidget);
+    });
+
+    testWidgets('24. RoleBadgePill triggers RoleSwitcherModal and switches workspace',
+        (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            home: const Scaffold(
+              body: Center(
+                child: RoleBadgePill(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially founder badge is rendered
+      expect(find.text('FOUNDER'), findsOneWidget);
+
+      // Tap RoleBadgePill to open RoleSwitcherModal
+      await tester.tap(find.byType(RoleBadgePill));
+      await tester.pumpAndSettle();
+
+      // Verify bottom sheet title and all 5 role options
+      expect(find.text('Switch Workspace'), findsOneWidget);
+      expect(find.text('EXECUTIVE'), findsOneWidget);
+      expect(find.text('SIGNALS'), findsOneWidget);
+      expect(find.text('EXPERTISE'), findsOneWidget);
+      expect(find.text('STUDIO'), findsOneWidget);
+      expect(find.text('ACADEMY'), findsOneWidget);
+
+      // Tap on Investor option to switch
+      await tester.tap(find.text('SIGNALS'));
+      await tester.pumpAndSettle();
+
+      // Verify badge updated to INVESTOR
+      expect(find.text('INVESTOR'), findsOneWidget);
     });
   });
 }

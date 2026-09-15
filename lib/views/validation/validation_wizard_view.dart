@@ -8,6 +8,7 @@ import '../../design_system/app_typography.dart';
 import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
 import '../../utils/haptic_manager.dart';
+import '../../repositories/validation_repository.dart';
 
 class ValidationWizardView extends ConsumerStatefulWidget {
   const ValidationWizardView({super.key});
@@ -80,7 +81,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
   // Step 6: Privacy & Duration
   String _selectedVisibility = "Public";
   String _selectedDuration = "14 days";
-  String _selectedResponseLimit = "50 responses";
+  final String _selectedResponseLimit = "50 responses";
   bool _allowComments = true;
 
   // Step 7: Publishing State
@@ -247,8 +248,9 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
 
-    // Create Validation in MockDataStore
     final dataStore = ref.read(mockDataStoreProvider);
+    final repository = ref.read(validationRepositoryProvider);
+
     final newValidation = ValidationRequest(
       id: "val_${DateTime.now().millisecondsSinceEpoch}",
       title: _titleCtrl.text.trim(),
@@ -256,7 +258,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
       solution: _contextCtrl.text.trim().isNotEmpty ? _contextCtrl.text.trim() : "Proposed solution under validation",
       targetAudience: _selectedAudienceRoles.join(", "),
       authorId: dataStore.currentUser?.id ?? "me",
-      authorName: dataStore.currentUser?.name ?? "Alex Rivera",
+      authorName: dataStore.currentUser?.name ?? "Founder",
       authorRole: dataStore.currentUser?.role ?? "Founder",
       authorAvatarURL: dataStore.currentUser?.avatarURL,
       tags: [_selectedType, ..._selectedAudienceRoles],
@@ -264,8 +266,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
       status: "active",
     );
 
-    dataStore.validations.insert(0, newValidation);
-    dataStore.notify();
+    await repository.createValidation(newValidation, []);
 
     setState(() {
       _isPublishing = false;
@@ -312,7 +313,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: type,
+                initialValue: type,
                 dropdownColor: colors.surface,
                 style: TextStyle(color: colors.text),
                 decoration: InputDecoration(
@@ -623,7 +624,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
         Text("Geographic Focus", style: AppTypography.caption.copyWith(color: colors.textSecondary)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedGeography,
+          initialValue: _selectedGeography,
           dropdownColor: colors.surface,
           style: TextStyle(color: colors.text),
           decoration: InputDecoration(
@@ -771,7 +772,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
         Text("Visibility", style: AppTypography.caption.copyWith(color: colors.textSecondary)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedVisibility,
+          initialValue: _selectedVisibility,
           dropdownColor: colors.surface,
           style: TextStyle(color: colors.text),
           decoration: InputDecoration(
@@ -788,7 +789,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
         Text("Duration", style: AppTypography.caption.copyWith(color: colors.textSecondary)),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedDuration,
+          initialValue: _selectedDuration,
           dropdownColor: colors.surface,
           style: TextStyle(color: colors.text),
           decoration: InputDecoration(
@@ -806,7 +807,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
           contentPadding: EdgeInsets.zero,
           title: Text("Allow open discussion comments", style: TextStyle(color: colors.text)),
           value: _allowComments,
-          activeColor: colors.primary,
+          activeThumbColor: colors.primary,
           onChanged: (val) => setState(() => _allowComments = val),
         ),
       ],

@@ -1,33 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/models.dart';
+import '../../models/role_provider.dart';
 import 'founder_home_view.dart';
-import '../validation/validation_wizard_view.dart';
-import '../messaging/chats_list_view.dart';
+import 'investor_home_view.dart';
+import 'professional_home_view.dart';
+import 'creator_home_view.dart';
+import 'student_home_view.dart';
 
-class HomeContainerView extends StatefulWidget {
+class HomeContainerView extends ConsumerWidget {
   const HomeContainerView({super.key});
 
   @override
-  State<HomeContainerView> createState() => _HomeContainerViewState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentRole = ref.watch(roleProvider);
 
-class _HomeContainerViewState extends State<HomeContainerView> {
-  final PageController _pageController = PageController(initialPage: 1); // Starts on FounderHomeView (Index 1)
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PageView(
-      controller: _pageController,
-      children: const [
-        ValidationWizardView(),
-        FounderHomeView(),
-        ChatsListView(),
-      ],
-    );
+    return switch (currentRole) {
+      UserRole.founder => const FounderHomeView(),
+      UserRole.investor => const InvestorHomeView(),
+      UserRole.professional => const ProfessionalHomeView(),
+      UserRole.creator => const CreatorHomeView(),
+      UserRole.student => const StudentHomeView(),
+    };
   }
 }

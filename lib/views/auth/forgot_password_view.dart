@@ -78,7 +78,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               Text(
                 "Enter your email to receive a reset link.",
                 style: AppTypography.body.copyWith(
-                  color: colors.text.withOpacity(0.7),
+                  color: colors.text.withValues(alpha: 0.7),
                 ),
               ),
               

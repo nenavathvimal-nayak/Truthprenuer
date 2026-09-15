@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/avatar_view.dart';
 import '../../components/category_pill.dart';
+import '../../components/role_switcher_modal.dart';
 import '../../design_system/app_typography.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../models/role_provider.dart';
 import '../../utils/haptic_manager.dart';
 
 class ExploreView extends ConsumerStatefulWidget {
@@ -87,8 +89,25 @@ class _ExploreViewState extends ConsumerState<ExploreView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final currentRole = ref.watch(roleProvider);
     final dataStore = ref.watch(mockDataStoreProvider);
     final query = _searchCtrl.text.trim().toLowerCase();
+
+    final headerTitle = switch (currentRole) {
+      UserRole.founder => "Discovery Engine",
+      UserRole.investor => "Deal Flow Scanner",
+      UserRole.professional => "Opportunities & Bounties",
+      UserRole.creator => "Story & Case Study Feed",
+      UserRole.student => "Validation Practice Arena",
+    };
+
+    final headerSubtitle = switch (currentRole) {
+      UserRole.founder => "Explore verified assumptions and startup signals",
+      UserRole.investor => "Startups with verified customer willingness-to-pay",
+      UserRole.professional => "Ventures requesting your domain expertise",
+      UserRole.creator => "Trending startup debates, pivots and post-mortems",
+      UserRole.student => "Deconstruct live hypotheses and earn academy XP",
+    };
 
     List<ValidationRequest> filteredValidations = List<ValidationRequest>.from(dataStore.validations);
 
@@ -148,33 +167,43 @@ class _ExploreViewState extends ConsumerState<ExploreView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            headerTitle,
+                            style: AppTypography.h1.copyWith(color: colors.text),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            headerSubtitle,
+                            style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          "Discovery Engine",
-                          style: AppTypography.h1.copyWith(color: colors.text),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Explore verified assumptions and startup signals",
-                          style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                        const RoleBadgePill(),
+                        const SizedBox(width: AppSpacing.xs),
+                        GestureDetector(
+                          onTap: () {
+                            HapticManager.shared.lightImpact();
+                            context.push('/top-validators');
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: colors.cardBackground,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(Icons.leaderboard_outlined, color: colors.primary, size: 20),
+                          ),
                         ),
                       ],
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        HapticManager.shared.lightImpact();
-                        context.push('/top-validators');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colors.cardBackground,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(Icons.leaderboard_outlined, color: colors.primary, size: 20),
-                      ),
                     ),
                   ],
                 ),

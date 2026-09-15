@@ -48,7 +48,7 @@ class _TagContent extends StatelessWidget {
         vertical: AppSpacing.xxs,
       ),
       decoration: BoxDecoration(
-        color: isSelected ? colors.primary : colors.primary.withOpacity(0.1),
+        color: isSelected ? colors.primary : colors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(100), // Capsule
       ),
       child: Text(

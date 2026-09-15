@@ -234,7 +234,7 @@ class _AIChatBubbleViewState extends State<_AIChatBubbleView> with SingleTickerP
               Container(
                 width: 30, height: 30,
                 decoration: BoxDecoration(
-                  color: colors.primary.withOpacity(0.2),
+                  color: colors.primary.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.auto_awesome, color: colors.primary, size: 14),
@@ -252,7 +252,7 @@ class _AIChatBubbleViewState extends State<_AIChatBubbleView> with SingleTickerP
                     bottomRight: widget.message.isMine ? const Radius.circular(6) : const Radius.circular(18),
                   ),
                   boxShadow: widget.message.isMine ? [
-                    BoxShadow(color: colors.primary.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 2)),
+                    BoxShadow(color: colors.primary.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(0, 2)),
                   ] : null,
                 ),
                 child: Text(

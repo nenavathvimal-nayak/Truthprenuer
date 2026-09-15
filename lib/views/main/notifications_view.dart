@@ -259,7 +259,7 @@ class _NotificationRowView extends StatelessWidget {
         padding: const EdgeInsets.only(right: AppSpacing.xl),
         margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
         decoration: BoxDecoration(
-          color: colors.destructive.withOpacity(0.9),
+          color: colors.destructive.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.delete, color: Colors.white, size: 24),
@@ -276,7 +276,7 @@ class _NotificationRowView extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: notification.isRead ? colors.cardBackground : colors.primary.withOpacity(0.05),
+            color: notification.isRead ? colors.cardBackground : colors.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

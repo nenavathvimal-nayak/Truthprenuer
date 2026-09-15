@@ -227,8 +227,8 @@ class _StartupSettingsViewState extends State<StartupSettingsView> {
             title: Text(label, style: AppTypography.body.copyWith(color: colors.text)),
             value: value,
             onChanged: onChanged,
-            activeTrackColor: colors.primary.withOpacity(0.5),
-            activeColor: colors.primary,
+            activeTrackColor: colors.primary.withValues(alpha: 0.5),
+            activeThumbColor: colors.primary,
           ),
           Divider(height: 1, color: colors.divider, indent: AppSpacing.md),
         ],
@@ -428,7 +428,7 @@ class _TeamManagementViewState extends State<TeamManagementView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: roleColor.withOpacity(0.1),
+                            color: roleColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(

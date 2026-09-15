@@ -134,7 +134,7 @@ class _SkeletonCardState extends State<_SkeletonCard> with SingleTickerProviderS
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: colors.cardBackgroundLight.withOpacity(_animation.value),
+            color: colors.cardBackgroundLight.withValues(alpha: _animation.value),
             shape: widget.isCircle ? BoxShape.circle : BoxShape.rectangle,
             borderRadius: widget.isCircle ? null : BorderRadius.circular(16),
           ),
@@ -188,7 +188,7 @@ class _SkeletonTextState extends State<_SkeletonText> with SingleTickerProviderS
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: colors.cardBackgroundLight.withOpacity(_animation.value),
+            color: colors.cardBackgroundLight.withValues(alpha: _animation.value),
             borderRadius: BorderRadius.circular(8),
           ),
         );

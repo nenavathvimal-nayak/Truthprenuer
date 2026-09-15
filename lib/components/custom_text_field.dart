@@ -64,7 +64,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           if (widget.icon != null) ...[
             Icon(
               widget.icon,
-              color: _isFocused ? colors.primary : colors.text.withOpacity(0.5),
+              color: _isFocused ? colors.primary : colors.text.withValues(alpha: 0.5),
             ),
             const SizedBox(width: AppSpacing.sm),
           ],
@@ -78,7 +78,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               cursorColor: colors.primary,
               decoration: InputDecoration(
                 hintText: widget.placeholder,
-                hintStyle: AppTypography.body.copyWith(color: colors.text.withOpacity(0.5)),
+                hintStyle: AppTypography.body.copyWith(color: colors.text.withValues(alpha: 0.5)),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,

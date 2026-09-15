@@ -103,7 +103,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       Text(
                         page.description,
                         style: AppTypography.body.copyWith(
-                          color: colors.text.withOpacity(0.7),
+                          color: colors.text.withValues(alpha: 0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),

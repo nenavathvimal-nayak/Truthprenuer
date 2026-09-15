@@ -43,7 +43,7 @@ class SharedTopNavBar extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: colors.cardBackground,
                     shape: BoxShape.circle,
-                    border: Border.all(color: colors.border.withOpacity(0.5)),
+                    border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                   ),
                   child: Icon(
                     Icons.search,
@@ -70,7 +70,7 @@ class SharedTopNavBar extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: colors.cardBackground,
                         shape: BoxShape.circle,
-                        border: Border.all(color: colors.border.withOpacity(0.5)),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                       ),
                       child: Icon(
                         Icons.chat_bubble_outline,
@@ -119,7 +119,7 @@ class SharedTopNavBar extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: colors.cardBackground,
                         shape: BoxShape.circle,
-                        border: Border.all(color: colors.border.withOpacity(0.5)),
+                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
                       ),
                       child: Icon(
                         Icons.notifications_outlined,
