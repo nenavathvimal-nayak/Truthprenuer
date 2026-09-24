@@ -1,68 +1,77 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../repositories/supabase_client.dart';
 
 enum AuthStatus {
   unknown,
   unauthenticated,
   onboarding,
   authenticated,
+  offline,
 }
 
 class AuthState {
   final AuthStatus status;
   final bool isFirstLaunch;
+  final String? errorMessage;
 
   const AuthState({
     this.status = AuthStatus.unknown,
     this.isFirstLaunch = true,
+    this.errorMessage,
   });
 
-  AuthState copyWith({AuthStatus? status, bool? isFirstLaunch}) {
+  AuthState copyWith({AuthStatus? status, bool? isFirstLaunch, String? errorMessage}) {
     return AuthState(
       status: status ?? this.status,
       isFirstLaunch: isFirstLaunch ?? this.isFirstLaunch,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
+  StreamSubscription? _authSubscription;
+
   AuthNotifier() : super(const AuthState()) {
     _init();
   }
 
-  static const _keyIsLoggedIn = 'auth_is_logged_in';
   static const _keyHasOnboarded = 'auth_has_onboarded';
-
-  bool get _isSupabaseActive {
-    final url = dotenv.env['SUPABASE_URL'];
-    return url != null && url.isNotEmpty && url != 'your_project_url_here';
-  }
 
   Future<void> _init() async {
     final prefs = await SharedPreferences.getInstance();
     final hasOnboarded = prefs.getBool(_keyHasOnboarded) ?? false;
 
-    if (_isSupabaseActive) {
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-        final session = data.session;
-        if (session != null) {
-          state = AuthState(status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
-        } else {
-          state = AuthState(status: AuthStatus.unauthenticated, isFirstLaunch: !hasOnboarded);
-        }
-      });
-    } else {
-      final isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
-      if (isLoggedIn) {
-        state = AuthState(status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
-      } else if (hasOnboarded) {
-        state = const AuthState(status: AuthStatus.unauthenticated, isFirstLaunch: false);
-      } else {
-        state = const AuthState(status: AuthStatus.unauthenticated, isFirstLaunch: true);
-      }
+    final client = safeSupabaseClient;
+    if (client == null) {
+      // Offline / standalone preview mode: user is treated as unauthenticated
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        isFirstLaunch: !hasOnboarded,
+        errorMessage: 'Supabase client is not initialized',
+      );
+      return;
     }
+
+    // Supabase Auth as the single source of truth when initialized
+    _authSubscription = client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null) {
+        state = AuthState(
+            status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
+      } else {
+        state = AuthState(
+            status: AuthStatus.unauthenticated, isFirstLaunch: !hasOnboarded);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> completeOnboarding() async {
@@ -72,36 +81,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> login(String email, String password) async {
-    if (_isSupabaseActive) {
-      await Supabase.instance.client.auth.signInWithPassword(email: email, password: password);
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_keyIsLoggedIn, true);
-      await prefs.setBool(_keyHasOnboarded, true);
-      state = const AuthState(status: AuthStatus.authenticated, isFirstLaunch: false);
+    final client = safeSupabaseClient;
+    if (client == null) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: 'Service unavailable (offline)');
+      return;
     }
+    await client.auth.signInWithPassword(
+      email: email, 
+      password: password,
+    );
   }
 
   Future<void> signup(String email, String password, String fullName) async {
-    if (_isSupabaseActive) {
-      await Supabase.instance.client.auth.signUp(
-        email: email,
-        password: password,
-        data: {'full_name': fullName},
-      );
-    } else {
-      await login(email, password);
+    final client = safeSupabaseClient;
+    if (client == null) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: 'Service unavailable (offline)');
+      return;
     }
+    await client.auth.signUp(
+      email: email,
+      password: password,
+      data: {'full_name': fullName},
+    );
   }
 
   Future<void> logout() async {
-    if (_isSupabaseActive) {
-      await Supabase.instance.client.auth.signOut();
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_keyIsLoggedIn, false);
-      state = const AuthState(status: AuthStatus.unauthenticated, isFirstLaunch: false);
-    }
+    final client = safeSupabaseClient;
+    await client?.auth.signOut();
+    state = state.copyWith(status: AuthStatus.unauthenticated);
   }
 }
 

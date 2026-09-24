@@ -5,8 +5,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class TopValidatorsLeaderboardView extends ConsumerStatefulWidget {
@@ -36,10 +36,10 @@ class _TopValidatorsLeaderboardViewState extends ConsumerState<TopValidatorsLead
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final users = ref.watch(communityUsersProvider);
 
     // Sort users by validations completed and helpfulness
-    final sortedUsers = List<User>.from(dataStore.users)
+    final sortedUsers = List<User>.from(users)
       ..sort((a, b) {
         final scoreA = a.validationsCompleted * 10 + (a.helpfulnessScore * 10).toInt();
         final scoreB = b.validationsCompleted * 10 + (b.helpfulnessScore * 10).toInt();

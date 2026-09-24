@@ -76,13 +76,15 @@ TAEED utilizes third-party Large Language Models (LLMs) to power specific featur
 
 ---
 
-## 6. Your Privacy Rights
+## 6. Your Privacy Rights (DPDP Act)
 
-Depending on your jurisdiction (e.g., GDPR, CCPA), you may have the right to:
-- Access the personal data we hold about you.
-- Request correction of inaccurate data.
-- Request deletion of your personal data (Right to be Forgotten).
-- Opt-out of specific data processing (e.g., disabling AI features in Settings).
+Depending on your jurisdiction, specifically under the Digital Personal Data Protection (DPDP) Act of India, you have the right to:
+- Access the personal data we hold about you and request a summary of processing.
+- Request correction, completion, or updating of your personal data.
+- Request erasure (deletion) of your personal data (Right to be Forgotten).
+- Register a privacy grievance with our designated Data Protection Officer / Grievance Officer.
+- Nominate another individual to exercise your rights in the event of death or incapacity.
+- Opt-out of specific data processing (e.g., disabling AI features in Settings, revoking consent).
 
 > **[LEGAL REVIEW REQUIRED]:** Ensure rights listed align with the specific jurisdictions TAEED operates in.
 
@@ -133,8 +135,8 @@ We may update this Privacy Policy from time to time. If we make material changes
 
 | ID | Question | Owner |
 |---|---|---|
-| OQ-PRIV-001 | Does TAEED fall under CCPA thresholds or GDPR jurisdiction at launch? | Legal |
-| OQ-PRIV-002 | What is the contact email address for privacy/DSR requests? | Ops |
+| OQ-PRIV-001 | When will the exact grievance redressal timelines under the DPDP Act be notified by the Government? | Legal |
+| OQ-PRIV-002 | What is the contact email address for the Grievance Officer / Consent Manager? | Ops |
 
 ### Consistency Check Against Upstream Docs
 

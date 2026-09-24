@@ -46,3 +46,18 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Environment and secrets
+.env
+.env.*
+*.env
+!.env.example
+!.env.json.example
+
+# Signing keys
+*.keystore
+*.jks
+key.properties
+*.p8
+*.p12
+*.mobileprovision

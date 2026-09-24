@@ -55,7 +55,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   void _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasSeenOnboarding', true);
+    await prefs.setBool('auth_has_onboarded', true);
     if (!mounted) return;
     context.go('/auth'); // Route to auth after onboarding
   }

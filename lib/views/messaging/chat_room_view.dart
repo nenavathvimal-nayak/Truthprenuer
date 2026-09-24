@@ -7,8 +7,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class ChatRoomView extends ConsumerStatefulWidget {
@@ -41,7 +41,7 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToBottom();
-      ref.read(mockDataStoreProvider).markConversationAsRead(widget.conversation.id);
+      ref.read(conversationsProvider.notifier).markConversationAsRead(widget.conversation.id);
 
       // Natural typing simulation on room entry if unread messages existed
       if (widget.conversation.unreadCount > 0) {
@@ -89,18 +89,17 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
 
     HapticManager.shared.impactLight();
 
-    ref.read(mockDataStoreProvider).sendMessage(
-          widget.conversation.id,
-          text,
+    final myId = ref.read(currentUserProvider).value?.id ?? "founder_dev_1";
+
+    ref.read(chatMessagesProvider(widget.conversation.id).notifier).sendMessage(
+          text: text,
           attachmentType: attachmentType,
           attachmentUrl: attachmentUrl,
           attachmentTitle: attachmentTitle,
           attachmentSubtitle: attachmentSubtitle,
           replyToText: _replyingTo?.text,
           replyToAuthor: _replyingTo != null
-              ? (_replyingTo!.senderId == (ref.read(mockDataStoreProvider).currentUser?.id ?? "me")
-                  ? "You"
-                  : widget.otherUser.name)
+              ? (_replyingTo!.senderId == myId ? "You" : widget.otherUser.name)
               : null,
         );
 
@@ -143,18 +142,8 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
             ];
           }
 
-          final store = ref.read(mockDataStoreProvider);
           final replyText = (replies.toList()..shuffle()).first;
-          store.messages.add(ChatMessage(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            conversationId: widget.conversation.id,
-            senderId: widget.otherUser.id,
-            text: replyText,
-            sentAt: DateTime.now(),
-            isRead: false,
-          ));
-          store.conversations.firstWhere((c) => c.id == widget.conversation.id).lastMessage = replyText;
-          store.conversations.firstWhere((c) => c.id == widget.conversation.id).lastMessageTime = DateTime.now();
+          ref.read(chatMessagesProvider(widget.conversation.id).notifier).sendMessage(text: replyText);
           setState(() {});
           _scrollToBottom();
         }
@@ -315,9 +304,8 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final messages = dataStore.messages.where((m) => m.conversationId == widget.conversation.id).toList();
-    final myId = dataStore.currentUser?.id ?? "me";
+    final messages = ref.watch(chatMessagesProvider(widget.conversation.id));
+    final myId = ref.watch(currentUserProvider).value?.id ?? "founder_dev_1";
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -395,7 +383,7 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
               if (val == 'profile') {
                 context.push('/user-profile', extra: {'user': widget.otherUser});
               } else if (val == 'pin') {
-                ref.read(mockDataStoreProvider).togglePinConversation(widget.conversation.id);
+                ref.read(conversationsProvider.notifier).togglePinConversation(widget.conversation.id);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(widget.conversation.isPinned ? "Conversation unpinned" : "Conversation pinned"),
@@ -772,7 +760,7 @@ class _ChatBubbleViewState extends ConsumerState<_ChatBubbleView> with SingleTic
                       return GestureDetector(
                         onTap: () {
                           HapticManager.shared.impactLight();
-                          ref.read(mockDataStoreProvider).reactToMessage(widget.message.id, emoji);
+                          ref.read(chatMessagesProvider(widget.message.conversationId).notifier).reactToMessage(widget.message.id, emoji);
                           Navigator.pop(ctx);
                         },
                         child: Container(
@@ -817,7 +805,7 @@ class _ChatBubbleViewState extends ConsumerState<_ChatBubbleView> with SingleTic
                     title: Text("Delete Message", style: AppTypography.body.copyWith(color: Colors.redAccent)),
                     onTap: () {
                       HapticManager.shared.impactMedium();
-                      ref.read(mockDataStoreProvider).deleteMessage(widget.message.id);
+                      ref.read(chatMessagesProvider(widget.message.conversationId).notifier).deleteMessage(widget.message.id);
                       Navigator.pop(ctx);
                     },
                   ),

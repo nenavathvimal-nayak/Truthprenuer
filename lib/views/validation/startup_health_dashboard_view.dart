@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/startup_health_models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class StartupHealthDashboardView extends ConsumerStatefulWidget {
@@ -27,8 +27,8 @@ class _StartupHealthDashboardViewState extends ConsumerState<StartupHealthDashbo
   ];
 
   StartupHealth _getCurrentHealth(WidgetRef ref) {
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final validation = dataStore.myValidations().isNotEmpty ? dataStore.myValidations().first : null;
+    final validations = ref.watch(validationsProvider).value ?? [];
+    final validation = validations.isNotEmpty ? validations.first : null;
     if (validation != null && validation.startupHealth != null) {
       return validation.startupHealth!;
     }

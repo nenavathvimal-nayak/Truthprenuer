@@ -5,8 +5,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 enum ChatFilter { active, archived }
@@ -36,9 +36,8 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
   void _showNewMessageBottomSheet() {
     HapticManager.shared.impactLight();
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.read(mockDataStoreProvider);
-    final myId = dataStore.currentUser?.id ?? "me";
-    final allUsers = dataStore.users.where((u) => u.id != myId).toList();
+    final myId = ref.read(currentUserProvider).value?.id ?? "founder_dev_1";
+    final allUsers = ref.read(communityUsersProvider).where((u) => u.id != myId).toList();
 
     showModalBottomSheet(
       context: context,
@@ -162,7 +161,7 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
                                 onTap: () {
                                   Navigator.pop(ctx);
                                   HapticManager.shared.impactLight();
-                                  final conv = ref.read(mockDataStoreProvider).getOrCreateConversation(user.id);
+                                  final conv = ref.read(conversationsProvider.notifier).getOrCreateConversation(user.id);
                                   context.push(
                                     '/chat-room',
                                     extra: {
@@ -187,7 +186,7 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
   void _showConversationActions(Conversation conv, User otherUser) {
     HapticManager.shared.impactMedium();
     final colors = Theme.of(context).appColors;
-    final store = ref.read(mockDataStoreProvider);
+    final store = ref.read(conversationsProvider.notifier);
 
     showModalBottomSheet(
       context: context,
@@ -267,17 +266,23 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final conversations = ref.watch(conversationsProvider);
+    final users = ref.watch(communityUsersProvider);
+    final myId = ref.watch(currentUserProvider).value?.id ?? "founder_dev_1";
 
-    List<Conversation> filteredConversations = dataStore.conversations.where((conv) {
+    User getOtherUser(Conversation conv) {
+      final otherId = conv.participantIds.firstWhere((id) => id != myId, orElse: () => "");
+      return users.firstWhere((u) => u.id == otherId, orElse: () => users.first);
+    }
+
+    List<Conversation> filteredConversations = conversations.where((conv) {
       if (_selectedFilter == ChatFilter.archived) return conv.isArchived;
       return !conv.isArchived;
     }).toList();
 
     if (_searchText.isNotEmpty) {
       filteredConversations = filteredConversations.where((conv) {
-        final other = dataStore.otherUser(conv);
-        if (other == null) return false;
+        final other = getOtherUser(conv);
         final searchLower = _searchText.toLowerCase();
         return other.name.toLowerCase().contains(searchLower) ||
             conv.lastMessage.toLowerCase().contains(searchLower);
@@ -427,8 +432,7 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
                     itemCount: filteredConversations.length,
                     itemBuilder: (context, index) {
                       final conv = filteredConversations[index];
-                      final otherUser = dataStore.otherUser(conv);
-                      if (otherUser == null) return const SizedBox.shrink();
+                      final otherUser = getOtherUser(conv);
 
                       return Dismissible(
                         key: ValueKey(conv.id),
@@ -453,10 +457,10 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
                         confirmDismiss: (direction) async {
                           if (direction == DismissDirection.endToStart) {
                             HapticManager.shared.impactMedium();
-                            dataStore.toggleArchive(conv.id);
+                            ref.read(conversationsProvider.notifier).toggleArchive(conv.id);
                           } else if (direction == DismissDirection.startToEnd) {
                             HapticManager.shared.impactMedium();
-                            dataStore.togglePin(conv.id);
+                            ref.read(conversationsProvider.notifier).togglePin(conv.id);
                           }
                           setState(() {});
                           return false;

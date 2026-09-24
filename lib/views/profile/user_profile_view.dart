@@ -5,8 +5,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import 'builder_profile_view.dart'; // For ProfileStat
 
 class UserProfileView extends ConsumerWidget {
@@ -17,9 +17,9 @@ class UserProfileView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final validations = ref.watch(validationsProvider).value ?? [];
     
-    final theirValidations = dataStore.validations.where((v) => v.authorId == user.id).toList();
+    final theirValidations = validations.where((v) => v.authorId == user.id).toList();
 
     return Scaffold(
       backgroundColor: colors.background,

@@ -5,8 +5,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class ValidationMarketplaceView extends ConsumerStatefulWidget {
@@ -23,9 +23,10 @@ class _ValidationMarketplaceViewState extends ConsumerState<ValidationMarketplac
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final allValidations = ref.watch(validationsProvider).value ?? [];
+    final users = ref.watch(communityUsersProvider);
     
-    final validations = dataStore.validationsNeedingFeedback().where((v) {
+    final validations = allValidations.where((v) {
       return _selectedCategory == "All" || v.tags.contains(_selectedCategory);
     }).toList();
 
@@ -113,7 +114,7 @@ class _ValidationMarketplaceViewState extends ConsumerState<ValidationMarketplac
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final validation = validations[index];
-                      final author = dataStore.users.firstWhere((u) => u.id == validation.authorId);
+                      final author = users.firstWhere((u) => u.id == validation.authorId, orElse: () => users.first);
                       
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),

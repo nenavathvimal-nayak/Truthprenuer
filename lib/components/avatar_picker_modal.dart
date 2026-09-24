@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_spacing.dart';
 import '../design_system/app_typography.dart';
-import '../models/mock_data_store_provider.dart';
+import '../repositories/app_providers.dart';
 import '../utils/haptic_manager.dart';
 
 class AvatarPickerModal extends ConsumerStatefulWidget {
@@ -44,7 +44,12 @@ class _AvatarPickerModalState extends ConsumerState<AvatarPickerModal> {
 
   void _selectAvatar(String url) {
     HapticManager.shared.impactMedium();
-    ref.read(mockDataStoreProvider).updateUserAvatar(url);
+    final user = ref.read(currentUserProvider).valueOrNull;
+    if (user != null) {
+      user.avatarURL = url;
+      ref.read(profileRepositoryProvider).updateProfile(user);
+      ref.invalidate(currentUserProvider);
+    }
     HapticManager.shared.notificationSuccess();
     Navigator.of(context).pop();
   }
@@ -52,7 +57,8 @@ class _AvatarPickerModalState extends ConsumerState<AvatarPickerModal> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final currentAvatar = ref.watch(mockDataStoreProvider).currentUser?.avatarURL;
+    final userAsync = ref.watch(currentUserProvider);
+    final currentAvatar = userAsync.valueOrNull?.avatarURL;
 
     return Container(
       padding: EdgeInsets.only(

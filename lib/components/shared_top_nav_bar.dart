@@ -1,158 +1,188 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/mock_data_store_provider.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_spacing.dart';
 import '../design_system/app_typography.dart';
+import '../design_system/theme_mode_provider.dart';
+import '../repositories/app_providers.dart';
 import '../utils/haptic_manager.dart';
 
-class SharedTopNavBar extends ConsumerWidget {
-  const SharedTopNavBar({super.key});
+class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
+  final String? title;
+  final bool showBackButton;
+  final VoidCallback? onBack;
+
+  const SharedTopNavBar({
+    super.key,
+    this.title,
+    this.showBackButton = false,
+    this.onBack,
+  });
+
+  @override
+  Size get preferredSize => const Size.fromHeight(56.0);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final colors = Theme.of(context).appColors;
+    final themeMode = ref.watch(themeModeProvider);
+    final isDark = themeMode == ThemeMode.dark;
+
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: 56.0,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+        color: colors.background,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Left: Back button or brand mark
+            if (showBackButton)
+              _NavIconButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                onTap: () {
+                  HapticManager.shared.impactLight();
+                  if (onBack != null) {
+                    onBack!();
+                  } else {
+                    context.pop();
+                  }
+                },
+              )
+            else if (title != null && title!.isNotEmpty)
+              Text(
+                title!,
+                style: AppTypography.title2.copyWith(
+                  color: colors.text,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
+              )
+            else
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppPalette.orange,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 7),
+                  RichText(
+                    text: TextSpan(
+                      text: "TRUTH",
+                      style: AppTypography.title3.copyWith(
+                        color: colors.text,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: "PRENUER",
+                          style: TextStyle(
+                            color: colors.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+            // Right: Theme, Messages, Notifications
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _NavIconButton(
+                  icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  onTap: () {
+                    HapticManager.shared.selection();
+                    ref.read(themeModeProvider.notifier).toggleTheme();
+                  },
+                ),
+                _NavIconButton(
+                  icon: Icons.chat_bubble_outline_rounded,
+                  badgeCount: ref.watch(conversationsProvider).where((c) => c.unreadCount > 0).length,
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    context.push('/chats');
+                  },
+                ),
+                _NavIconButton(
+                  icon: Icons.notifications_none_rounded,
+                  badgeCount: ref.watch(notificationsProvider).where((n) => !n.isRead).length,
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    context.push('/notifications');
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Borderless icon button with ink splash — premium minimal style.
+class _NavIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final int badgeCount;
+
+  const _NavIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badgeCount = 0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            "TAEED",
-            style: AppTypography.title1.copyWith(
-              color: colors.primary,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.5,
+    return Semantics(
+      button: true,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: SizedBox(
+            width: 40,
+            height: 40,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 20,
+                  color: colors.textSecondary,
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    right: 9,
+                    top: 9,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppPalette.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Search Button
-              GestureDetector(
-                onTap: () {
-                  HapticManager.shared.impactLight();
-                  context.push('/search');
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.cardBackground,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                  ),
-                  child: Icon(
-                    Icons.search,
-                    size: 20,
-                    color: colors.text,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: AppSpacing.sm),
-
-              // Messages Button
-              GestureDetector(
-                onTap: () {
-                  HapticManager.shared.impactLight();
-                  context.push('/chats');
-                },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topRight,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                      ),
-                      child: Icon(
-                        Icons.chat_bubble_outline,
-                        size: 20,
-                        color: colors.text,
-                      ),
-                    ),
-                    if (dataStore.unreadMessageCount > 0)
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            "${dataStore.unreadMessageCount}",
-                            style: AppTypography.caption.copyWith(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(width: AppSpacing.sm),
-              
-              // Notifications Bell
-              GestureDetector(
-                onTap: () {
-                  HapticManager.shared.impactLight();
-                  context.push('/notifications');
-                },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topRight,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: colors.border.withValues(alpha: 0.5)),
-                      ),
-                      child: Icon(
-                        Icons.notifications_outlined,
-                        size: 20,
-                        color: colors.text,
-                      ),
-                    ),
-                    if (dataStore.unreadNotificationCount > 0)
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: colors.destructive,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            "${dataStore.unreadNotificationCount}",
-                            style: AppTypography.caption.copyWith(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -8,7 +8,6 @@ import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/auth_provider.dart';
-import '../../models/mock_data_store_provider.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -54,7 +53,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
     
     if (!mounted) return;
     
-    ref.read(mockDataStoreProvider).login();
     await ref.read(authProvider.notifier).login(email, password);
     
     if (!mounted) return;

@@ -5,7 +5,7 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class SearchOverlayView extends ConsumerStatefulWidget {
@@ -19,6 +19,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
   final TextEditingController _searchCtrl = TextEditingController();
   int _selectedFilterIndex = 0; // 0: All, 1: Validations, 2: People
   final List<String> _filters = ["All", "Validations", "People"];
+  final List<String> _searchHistory = ["Invoice OCR", "SOC2 Compliance", "B2B SaaS", "Pricing Strategy"];
 
   @override
   void dispose() {
@@ -29,18 +30,19 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final validations = ref.watch(validationsProvider).value ?? [];
+    final users = ref.watch(communityUsersProvider);
     final query = _searchCtrl.text.trim().toLowerCase();
 
     // Filtered data
-    final filteredValidations = dataStore.validations.where((v) {
+    final filteredValidations = validations.where((v) {
       if (query.isEmpty) return true;
       return v.title.toLowerCase().contains(query) ||
           v.problem.toLowerCase().contains(query) ||
           v.tags.any((t) => t.toLowerCase().contains(query));
     }).toList();
 
-    final filteredUsers = dataStore.users.where((u) {
+    final filteredUsers = users.where((u) {
       if (query.isEmpty) return true;
       return u.name.toLowerCase().contains(query) ||
           u.username.toLowerCase().contains(query) ||
@@ -148,7 +150,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: dataStore.searchHistory.map((term) {
+                      children: _searchHistory.map((term) {
                         return ActionChip(
                           avatar: Icon(Icons.trending_up, size: 14, color: colors.primary),
                           label: Text(term),
@@ -177,9 +179,9 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                         ),
                       ),
                       ...filteredValidations.map((v) {
-                        final author = dataStore.users.firstWhere(
+                        final author = users.firstWhere(
                           (u) => u.id == v.authorId,
-                          orElse: () => dataStore.users.first,
+                          orElse: () => users.first,
                         );
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 4),

@@ -41,6 +41,17 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
 
   final Color glowPrimary;
 
+  // Accessibility & Interactive State Tokens
+  final Color focusRing;
+  final Color errorSurface;
+  final Color errorBorder;
+  final Color interactiveHover;
+  final Color interactivePressed;
+  final Color skeletonBase;
+  final Color skeletonHighlight;
+
+  Color get error => destructive;
+
   const AppThemeColors({
     required this.primary,
     required this.primaryDark,
@@ -67,6 +78,13 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     required this.riskRed,
     required this.neutralGrey,
     required this.glowPrimary,
+    this.focusRing = AppPalette.orange,
+    this.errorSurface = const Color(0xFFFFF0EF),
+    this.errorBorder = const Color(0xFFFFB3AD),
+    this.interactiveHover = const Color(0x0A000000),
+    this.interactivePressed = const Color(0x18000000),
+    this.skeletonBase = const Color(0xFFEAE7DF),
+    this.skeletonHighlight = const Color(0xFFF7F5EE),
   });
 
   @override
@@ -96,6 +114,13 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
     Color? riskRed,
     Color? neutralGrey,
     Color? glowPrimary,
+    Color? focusRing,
+    Color? errorSurface,
+    Color? errorBorder,
+    Color? interactiveHover,
+    Color? interactivePressed,
+    Color? skeletonBase,
+    Color? skeletonHighlight,
   }) {
     return AppThemeColors(
       primary: primary ?? this.primary,
@@ -123,6 +148,13 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       riskRed: riskRed ?? this.riskRed,
       neutralGrey: neutralGrey ?? this.neutralGrey,
       glowPrimary: glowPrimary ?? this.glowPrimary,
+      focusRing: focusRing ?? this.focusRing,
+      errorSurface: errorSurface ?? this.errorSurface,
+      errorBorder: errorBorder ?? this.errorBorder,
+      interactiveHover: interactiveHover ?? this.interactiveHover,
+      interactivePressed: interactivePressed ?? this.interactivePressed,
+      skeletonBase: skeletonBase ?? this.skeletonBase,
+      skeletonHighlight: skeletonHighlight ?? this.skeletonHighlight,
     );
   }
 
@@ -160,63 +192,84 @@ class AppThemeColors extends ThemeExtension<AppThemeColors> {
       riskRed: Color.lerp(riskRed, other.riskRed, t)!,
       neutralGrey: Color.lerp(neutralGrey, other.neutralGrey, t)!,
       glowPrimary: Color.lerp(glowPrimary, other.glowPrimary, t)!,
+      focusRing: Color.lerp(focusRing, other.focusRing, t)!,
+      errorSurface: Color.lerp(errorSurface, other.errorSurface, t)!,
+      errorBorder: Color.lerp(errorBorder, other.errorBorder, t)!,
+      interactiveHover: Color.lerp(interactiveHover, other.interactiveHover, t)!,
+      interactivePressed: Color.lerp(interactivePressed, other.interactivePressed, t)!,
+      skeletonBase: Color.lerp(skeletonBase, other.skeletonBase, t)!,
+      skeletonHighlight: Color.lerp(skeletonHighlight, other.skeletonHighlight, t)!,
     );
   }
 
   static AppThemeColors get light => const AppThemeColors(
         primary: AppPalette.orange,
-        primaryDark: AppPalette.orange,
+        primaryDark: Color(0xFFD63B15),
         primaryMuted: Color(0x14F44A22),
         background: AppPalette.silver,                  // #FEF8E8 warm parchment
         surface: Color(0xFFF5F3EE),                     // subtle warm grey
-        surfaceElevated: Color(0xFFF5F3EE),             // subtle warm grey
-        cardBackground: Color(0xFFFFFFFF),              // white — cards pop against parchment
+        surfaceElevated: Color(0xFFFFFFFF),             // elevated cards pop
+        cardBackground: Color(0xFFFFFFFF),              // crisp white cards
         cardBackgroundLight: Color(0xFFFAF8F5),         // between parchment and white
         tabBar: Color(0xFFFFFFFF),                      // white tab bar
-        text: AppPalette.midnight,
-        textSecondary: AppPalette.stone,
-        textTertiary: AppPalette.grey,
+        text: AppPalette.midnight,                      // #161616 high contrast
+        textSecondary: Color(0xFF5A5D62),               // WCAG AA compliant (5.5:1 on parchment)
+        textTertiary: Color(0xFF767A82),                // Legible subtle captions (3.8:1)
         textInverted: Color(0xFFFFFFFF),
-        divider: Color(0xFFE8E6E1),                     // softer divider
-        border: Color(0xFFE8E6E1),                      // softer border
-        success: Color(0xFF34C759),                     // real semantic green
-        warning: Color(0xFFFF9500),                     // real semantic amber
-        destructive: Color(0xFFFF3B30),                 // real semantic red
-        info: AppPalette.stone,
-        gold: Color(0xFFFFB800),                        // real gold
-        evidenceGreen: Color(0xFF34C759),
-        confidenceBlue: Color(0xFF007AFF),
-        riskRed: Color(0xFFFF3B30),
-        neutralGrey: AppPalette.grey,
+        divider: Color(0xFFE8E5DD),                     // gentle warm divider
+        border: Color(0xFFE2DFD6),                      // gentle warm border
+        success: Color(0xFF248A3D),                     // WCAG compliant green
+        warning: Color(0xFFB25E00),                     // WCAG compliant amber
+        destructive: Color(0xFFD92D20),                 // WCAG compliant red
+        info: Color(0xFF0066CC),                        // Accessible blue
+        gold: Color(0xFFB8860B),                        // Dark goldenrod
+        evidenceGreen: Color(0xFF248A3D),
+        confidenceBlue: Color(0xFF0066CC),
+        riskRed: Color(0xFFD92D20),
+        neutralGrey: Color(0xFF767A82),
         glowPrimary: Color(0x33F44A22),
+        focusRing: AppPalette.orange,
+        errorSurface: Color(0xFFFFF0EF),
+        errorBorder: Color(0xFFFFB3AD),
+        interactiveHover: Color(0x0A000000),
+        interactivePressed: Color(0x14000000),
+        skeletonBase: Color(0xFFEAE7DF),
+        skeletonHighlight: Color(0xFFF7F5EE),
       );
 
   static AppThemeColors get dark => const AppThemeColors(
         primary: AppPalette.orange,
-        primaryDark: AppPalette.orange,
-        primaryMuted: Color(0x1FF44A22),
+        primaryDark: Color(0xFFFF6A42),
+        primaryMuted: Color(0x26F44A22),
         background: AppPalette.midnight,                // #161616 true dark
-        surface: Color(0xFF1A1B1E),                     // slightly elevated
-        surfaceElevated: Color(0xFF252629),              // more elevated
+        surface: Color(0xFF1E1F24),                     // elevated surface
+        surfaceElevated: Color(0xFF282A30),              // more elevated
         cardBackground: Color(0xFF1E1F24),              // cards distinct from background
-        cardBackgroundLight: Color(0xFF1A1B1E),         // subtle elevation
+        cardBackgroundLight: Color(0xFF24262C),         // subtle elevation
         tabBar: Color(0xFF1E1F24),                      // elevated tab bar
-        text: AppPalette.silver,
-        textSecondary: AppPalette.stone,
-        textTertiary: AppPalette.grey,
+        text: Color(0xFFF5F3ED),                        // soft high contrast text
+        textSecondary: Color(0xFFA6ABB2),               // WCAG AA compliant on dark
+        textTertiary: Color(0xFF7C828A),                // subtle captions on dark
         textInverted: AppPalette.midnight,
         divider: Color(0xFF2C2D32),                     // subtle dark divider
-        border: Color(0xFF2C2D32),                      // subtle dark border
+        border: Color(0xFF33353C),                      // subtle dark border
         success: Color(0xFF30D158),                     // iOS dark green
         warning: Color(0xFFFFD60A),                     // iOS dark amber
         destructive: Color(0xFFFF453A),                 // iOS dark red
-        info: AppPalette.stone,
+        info: Color(0xFF5AC8FA),                        // Accessible cyan-blue
         gold: Color(0xFFFFD60A),                        // iOS dark gold
         evidenceGreen: Color(0xFF30D158),
         confidenceBlue: Color(0xFF0A84FF),
         riskRed: Color(0xFFFF453A),
-        neutralGrey: AppPalette.grey,
+        neutralGrey: Color(0xFF7C828A),
         glowPrimary: Color(0x33F44A22),
+        focusRing: Color(0xFFFF6A42),
+        errorSurface: Color(0xFF2E1917),
+        errorBorder: Color(0xFF6B221E),
+        interactiveHover: Color(0x0AFFFFFF),
+        interactivePressed: Color(0x18FFFFFF),
+        skeletonBase: Color(0xFF22242A),
+        skeletonHighlight: Color(0xFF2C2E35),
       );
 }
 

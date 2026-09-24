@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../../components/avatar_view.dart';
-import '../../components/category_pill.dart';
-import '../../components/custom_text_field.dart';
+import '../../components/shared_top_nav_bar.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
 import '../../utils/haptic_manager.dart';
 
@@ -20,9 +16,47 @@ class NetworkView extends ConsumerStatefulWidget {
 
 class _NetworkViewState extends ConsumerState<NetworkView> {
   final TextEditingController _searchCtrl = TextEditingController();
-  String _searchText = "";
   String _selectedRole = "All";
-  final List<String> _roles = ["All", "Founder", "Validator", "Mentor", "Investor", "Builder"];
+  final List<String> _roles = ["All", "Founder", "Investor", "Professional", "Creator"];
+
+  final List<User> _allUsers = [
+    User(
+      id: "u_1",
+      name: "Siddharth Verma",
+      username: "siddharth",
+      bio: "Serial founder. Building dev-tools for cloud cost validation.",
+      role: "Founder",
+      skills: ["Cloud Architecture", "DevOps", "B2B SaaS"],
+      isVerified: true,
+    ),
+    User(
+      id: "u_2",
+      name: "Ananya Deshmukh",
+      username: "ananya",
+      bio: "Principal at Matrix Ventures. Focus on early FinTech & Developer APIs.",
+      role: "Investor",
+      skills: ["FinTech", "Due Diligence", "Growth"],
+      isVerified: true,
+    ),
+    User(
+      id: "u_3",
+      name: "Rohan Kulkarni",
+      username: "rohank",
+      bio: "Staff Product Manager. Provided feedback to 24 early-stage startups.",
+      role: "Professional",
+      skills: ["Product Strategy", "Pricing", "User Research"],
+      isVerified: true,
+    ),
+    User(
+      id: "u_4",
+      name: "Elena Rostova",
+      username: "elena",
+      bio: "Writing about AI agent architectures and validation frameworks.",
+      role: "Creator",
+      skills: ["AI Engineering", "Technical Writing", "Community"],
+      isVerified: false,
+    ),
+  ];
 
   @override
   void dispose() {
@@ -33,337 +67,252 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final currentUser = dataStore.currentUser;
-    
-    var filteredUsers = dataStore.users.where((u) => u.id != currentUser?.id).toList();
+    final query = _searchCtrl.text.trim().toLowerCase();
 
-    // Apply role filter
+    var filtered = _allUsers;
     if (_selectedRole != "All") {
-      filteredUsers = filteredUsers.where((u) {
-        return u.role.toLowerCase().contains(_selectedRole.toLowerCase());
-      }).toList();
+      filtered = filtered.where((u) => u.role.toLowerCase() == _selectedRole.toLowerCase()).toList();
     }
-
-    // Apply search filter
-    if (_searchText.isNotEmpty) {
-      final query = _searchText.toLowerCase();
-      filteredUsers = filteredUsers.where((u) {
-        return u.name.toLowerCase().contains(query) ||
-            u.role.toLowerCase().contains(query) ||
-            u.skills.any((s) => s.toLowerCase().contains(query));
-      }).toList();
+    if (query.isNotEmpty) {
+      filtered = filtered.where((u) =>
+        u.name.toLowerCase().contains(query) ||
+        u.skills.any((s) => s.toLowerCase().contains(query)) ||
+        u.bio.toLowerCase().contains(query)
+      ).toList();
     }
 
     return Scaffold(
+      appBar: const SharedTopNavBar(title: "Network"),
       backgroundColor: colors.background,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Founder Network",
-                      style: AppTypography.h1.copyWith(color: colors.text),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Connect with builders, validators, and mentors",
-                      style: AppTypography.footnote.copyWith(color: colors.textSecondary),
-                    ),
-                  ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search Bar — borderless
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.sm, AppSpacing.screenPadding, 0),
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: TextField(
+                controller: _searchCtrl,
+                onChanged: (_) => setState(() {}),
+                style: AppTypography.body.copyWith(color: colors.text, fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: "Search people by name, role, or expertise...",
+                  hintStyle: AppTypography.subheadline.copyWith(color: colors.textTertiary),
+                  prefixIcon: Icon(Icons.search, size: 20, color: colors.textTertiary),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 ),
               ),
             ),
+          ),
 
-            // Search bar
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                child: CustomTextField(
-                  controller: _searchCtrl,
-                  placeholder: "Search by name, role, or skill...",
-                  icon: Icons.search,
-                  onChanged: (val) {
-                    setState(() => _searchText = val);
-                  },
-                ),
-              ),
-            ),
-
-            // Role filter chips
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
-                child: Row(
-                  children: _roles.map((role) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CategoryPill(
-                      label: role,
-                      isSelected: _selectedRole == role,
-                      onTap: () {
-                        setState(() => _selectedRole = role);
-                        HapticManager.shared.selection();
-                      },
-                    ),
-                  )).toList(),
-                ),
-              ),
-            ),
-
-            // Results count
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xs),
-                child: Text(
-                  "${filteredUsers.length} founders",
-                  style: AppTypography.caption.copyWith(color: colors.textSecondary),
-                ),
-              ),
-            ),
-
-            // User list or empty state
-            if (filteredUsers.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 80),
-                  child: Column(
-                    children: [
-                      Icon(Icons.group_off, size: 40, color: colors.textTertiary),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text("No founders found", style: AppTypography.title3.copyWith(color: colors.text)),
-                      const SizedBox(height: 4),
-                      Text("Try a different search or filter.", style: AppTypography.body.copyWith(color: colors.textSecondary)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final user = filteredUsers[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _UserCard(
-                          user: user,
-                          onTap: () {
-                            context.push('/user-profile', extra: {'user': user});
-                          },
-                          onMessage: () {
-                            HapticManager.shared.impactLight();
-                            final conv = ref.read(mockDataStoreProvider).getOrCreateConversation(user.id);
-                            context.push('/chat-room', extra: {
-                              'conversation': conv,
-                              'otherUser': user,
-                            });
-                          },
-                          onConnect: () {
-                            HapticManager.shared.impactLight();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Connection request sent to ${user.name}"),
-                                behavior: SnackBarBehavior.floating,
-                                backgroundColor: colors.cardBackground,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                            );
-                          },
-                        ),
-                      );
+          // Role Filter Pills — borderless
+          Container(
+            height: 34,
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+              scrollDirection: Axis.horizontal,
+              itemCount: _roles.length,
+              itemBuilder: (context, index) {
+                final role = _roles[index];
+                final isSelected = _selectedRole == role;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticManager.shared.selection();
+                      setState(() => _selectedRole = role);
                     },
-                    childCount: filteredUsers.length,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppPalette.orange.withValues(alpha: 0.12) : colors.surface,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        role,
+                        style: AppTypography.caption.copyWith(
+                          color: isSelected ? AppPalette.orange : colors.textSecondary,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-          ],
-        ),
+                );
+              },
+            ),
+          ),
+
+          // Person List
+          Expanded(
+            child: filtered.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.people_outline_rounded, size: 40, color: colors.textTertiary),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No people found",
+                            style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "Try adjusting your search query or role filter.",
+                            style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final person = filtered[index];
+                      return _PersonCard(person: person);
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _UserCard extends StatelessWidget {
-  final User user;
-  final VoidCallback onTap;
-  final VoidCallback onMessage;
-  final VoidCallback onConnect;
+class _PersonCard extends StatefulWidget {
+  final User person;
 
-  const _UserCard({
-    required this.user,
-    required this.onTap,
-    required this.onMessage,
-    required this.onConnect,
-  });
+  const _PersonCard({required this.person});
+
+  @override
+  State<_PersonCard> createState() => _PersonCardState();
+}
+
+class _PersonCardState extends State<_PersonCard> {
+  bool _isConnected = false;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: colors.cardBackground,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                AvatarView(name: user.name, imageURL: user.avatarURL, size: 48),
-                const SizedBox(width: 12),
-                
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              user.name,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: colors.text,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+    final person = widget.person;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
+                child: Text(
+                  person.name[0],
+                  style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            person.name,
+                            style: AppTypography.subheadline.copyWith(
+                              color: colors.text,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if (user.isVerified) ...[
-                            const SizedBox(width: 4),
-                            Icon(Icons.verified, size: 14, color: colors.primary),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        user.role,
-                        style: AppTypography.caption.copyWith(color: colors.textSecondary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (user.skills.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          user.skills.take(3).join(" · "),
-                          style: AppTypography.caption.copyWith(
-                            color: colors.primary,
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
+                        if (person.isVerified) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified, size: 14, color: AppPalette.orange),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                // Stats
-                _StatChip(
-                  label: "${user.validationsCompleted} validated",
-                  color: colors.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                _StatChip(
-                  label: "${(user.helpfulnessScore * 100).toStringAsFixed(0)}% helpful",
-                  color: colors.primary,
-                ),
-                const Spacer(),
-                // Action buttons
-                _ActionButton(
-                  icon: Icons.chat_bubble_outline,
-                  onTap: onMessage,
-                  color: colors.textSecondary,
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onConnect,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      borderRadius: BorderRadius.circular(8),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      person.role,
+                      style: AppTypography.caption.copyWith(color: colors.textTertiary, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              // Connect button — filled or outlined based on state
+              Material(
+                color: _isConnected ? Colors.transparent : AppPalette.orange,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    setState(() => _isConnected = !_isConnected);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    decoration: _isConnected
+                        ? BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: colors.textTertiary.withValues(alpha: 0.4)),
+                          )
+                        : null,
                     child: Text(
-                      "Connect",
+                      _isConnected ? "Requested" : "Connect",
                       style: AppTypography.caption.copyWith(
-                        color: colors.textInverted,
-                        fontWeight: FontWeight.bold,
+                        color: _isConnected ? colors.textTertiary : Colors.white,
+                        fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            person.bio,
+            style: AppTypography.footnote.copyWith(color: colors.textSecondary, height: 1.35),
+          ),
+          if (person.skills.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: person.skills.take(3).map((skill) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    skill,
+                    style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 10),
+                  ),
+                );
+              }).toList(),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _StatChip({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: colors.divider.withAlpha(80),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.caption.copyWith(
-          color: color,
-          fontSize: 11,
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color color;
-
-  const _ActionButton({required this.icon, required this.onTap, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: colors.divider.withAlpha(80),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, size: 16, color: color),
+        ],
       ),
     );
   }

@@ -4,8 +4,8 @@ import '../../components/avatar_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,8 +42,9 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final filteredNotifications = _getFilteredNotifications(dataStore.notifications);
+    final notifications = ref.watch(notificationsProvider);
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+    final filteredNotifications = _getFilteredNotifications(notifications);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -74,11 +75,11 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
         ),
         centerTitle: true,
         actions: [
-          if (dataStore.unreadNotificationCount > 0)
+          if (unreadCount > 0)
             TextButton(
               onPressed: () {
                 HapticManager.shared.notificationSuccess();
-                ref.read(mockDataStoreProvider).markAllNotificationsRead();
+                ref.read(notificationsProvider.notifier).markAllNotificationsRead();
               },
               child: Text(
                 "Mark All Read",
@@ -120,7 +121,7 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
                                   color: isSelected ? colors.text : colors.textSecondary,
                                 ),
                               ),
-                              if (filter == NotifFilter.unread && dataStore.unreadNotificationCount > 0) ...[
+                              if (filter == NotifFilter.unread && unreadCount > 0) ...[
                                 const SizedBox(width: 4),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
@@ -129,7 +130,7 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
                                     borderRadius: BorderRadius.circular(100),
                                   ),
                                   child: Text(
-                                    "${dataStore.unreadNotificationCount}",
+                                    "$unreadCount",
                                     style: AppTypography.label.copyWith(color: Colors.white),
                                   ),
                                 ),
@@ -191,7 +192,7 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
                         notification: notif,
                         onTap: () {
                           if (!notif.isRead) {
-                            ref.read(mockDataStoreProvider).markNotificationRead(notif.id);
+                            ref.read(notificationsProvider.notifier).markNotificationRead(notif.id);
                           }
                           HapticManager.shared.impactLight();
                         },

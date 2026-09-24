@@ -59,6 +59,31 @@ class HealthScore {
     this.evidenceReferences = const [],
     required this.recommendation,
   }) : id = id ?? DateTime.now().millisecondsSinceEpoch.toString();
+
+  factory HealthScore.fromJson(Map<String, dynamic> json) {
+    return HealthScore(
+      id: json['id'] as String?,
+      dimension: StartupHealthDimension.values.firstWhere(
+        (e) => e.name == json['dimension'],
+        orElse: () => StartupHealthDimension.problemStrength,
+      ),
+      score: json['score'] as int? ?? 0,
+      explanation: json['explanation'] as String? ?? '',
+      evidenceReferences: (json['evidenceReferences'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      recommendation: json['recommendation'] as String? ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'dimension': dimension.name,
+      'score': score,
+      'explanation': explanation,
+      'evidenceReferences': evidenceReferences,
+      'recommendation': recommendation,
+    };
+  }
 }
 
 class StartupHealth {
@@ -78,16 +103,50 @@ class StartupHealth {
         overallScore = scores.isEmpty
             ? 0
             : (scores.fold(0, (sum, item) => sum + item.score) / scores.length).round();
+
+  factory StartupHealth.fromJson(Map<String, dynamic> json) {
+    return StartupHealth(
+      id: json['id'] as String?,
+      startupId: json['startupId'] as String,
+      scores: (json['scores'] as List<dynamic>?)
+              ?.map((e) => HealthScore.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      lastUpdated: json['lastUpdated'] != null ? DateTime.parse(json['lastUpdated'] as String) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'startupId': startupId,
+      'overallScore': overallScore,
+      'scores': scores.map((e) => e.toJson()).toList(),
+      'lastUpdated': lastUpdated.toIso8601String(),
+    };
+  }
 }
 
+/// 8-Part Structured Evidence Synthesis Output
 class AIValidationReport {
   String id;
   final String validationId;
+
+  // Canonical Blueprint Fields
+  final List<String> observations;
+  final List<String> observedPatterns;
+  final List<String> contradictions;
+  final String evidenceStrength;
+  final List<String> uncertainties;
+  final List<String> missingInformation;
+  final List<String> suggestedQuestions;
+  final String nextExperiment;
+
+  // Compatibility / Supporting Fields
   final String problemAnalysis;
   final String competitorOverview;
   final List<String> marketAssumptions;
   final List<String> risks;
-  final List<String> missingInformation;
   final String suggestedAudience;
   final List<String> interviewQuestions;
   final List<String> biasWarnings;
@@ -96,48 +155,165 @@ class AIValidationReport {
   AIValidationReport({
     String? id,
     required this.validationId,
-    required this.problemAnalysis,
-    required this.competitorOverview,
-    required this.marketAssumptions,
-    required this.risks,
-    required this.missingInformation,
-    required this.suggestedAudience,
-    required this.interviewQuestions,
-    required this.biasWarnings,
+    this.observations = const [],
+    this.observedPatterns = const [],
+    this.contradictions = const [],
+    this.evidenceStrength = "Moderate",
+    this.uncertainties = const [],
+    this.missingInformation = const [],
+    this.suggestedQuestions = const [],
+    this.nextExperiment = "",
+    String? problemAnalysis,
+    this.competitorOverview = "",
+    this.marketAssumptions = const [],
+    this.risks = const [],
+    this.suggestedAudience = "",
+    List<String>? interviewQuestions,
+    this.biasWarnings = const [],
     DateTime? generatedAt,
   })  : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        problemAnalysis = problemAnalysis ?? (observations.isNotEmpty ? observations.first : "Empirical analysis in progress."),
+        interviewQuestions = interviewQuestions ?? suggestedQuestions,
         generatedAt = generatedAt ?? DateTime.now();
+
+  double get overallScore => 0.78;
+  String get summary => problemAnalysis;
+  List<String> get strengths => marketAssumptions.isNotEmpty ? marketAssumptions : observedPatterns;
+  List<String> get recommendedActions => missingInformation.isNotEmpty ? missingInformation : (uncertainties.isNotEmpty ? uncertainties : risks);
+
+  factory AIValidationReport.fromJson(Map<String, dynamic> json) {
+    return AIValidationReport(
+      id: json['id'] as String?,
+      validationId: json['validationId'] as String,
+      observations: (json['observations'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      observedPatterns: (json['observedPatterns'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      contradictions: (json['contradictions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      evidenceStrength: json['evidenceStrength'] as String? ?? "Moderate",
+      uncertainties: (json['uncertainties'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      missingInformation: (json['missingInformation'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      suggestedQuestions: (json['suggestedQuestions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      nextExperiment: json['nextExperiment'] as String? ?? "",
+      problemAnalysis: json['problemAnalysis'] as String?,
+      competitorOverview: json['competitorOverview'] as String? ?? "",
+      marketAssumptions: (json['marketAssumptions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      risks: (json['risks'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      suggestedAudience: json['suggestedAudience'] as String? ?? "",
+      interviewQuestions: (json['interviewQuestions'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      biasWarnings: (json['biasWarnings'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      generatedAt: json['generatedAt'] != null ? DateTime.parse(json['generatedAt'] as String) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'validationId': validationId,
+      'observations': observations,
+      'observedPatterns': observedPatterns,
+      'contradictions': contradictions,
+      'evidenceStrength': evidenceStrength,
+      'uncertainties': uncertainties,
+      'missingInformation': missingInformation,
+      'suggestedQuestions': suggestedQuestions,
+      'nextExperiment': nextExperiment,
+      'problemAnalysis': problemAnalysis,
+      'competitorOverview': competitorOverview,
+      'marketAssumptions': marketAssumptions,
+      'risks': risks,
+      'suggestedAudience': suggestedAudience,
+      'interviewQuestions': interviewQuestions,
+      'biasWarnings': biasWarnings,
+      'generatedAt': generatedAt.toIso8601String(),
+    };
+  }
 }
 
 enum EvidenceItemType {
-  userInterview("User Interview"),
-  prototypeTest("Prototype Test"),
-  aiCritique("AI Critique"),
-  expertReview("Expert Review"),
-  marketData("Market Data");
+  interview("Interview"),
+  survey("Survey"),
+  data("Data"),
+  other("Other");
 
   final String value;
   const EvidenceItemType(this.value);
 }
 
+enum EvidenceClassification {
+  supports("Supports"),
+  contradicts("Contradicts"),
+  mixed("Mixed"),
+  inconclusive("Inconclusive");
+
+  final String label;
+  const EvidenceClassification(this.label);
+}
+
 class EvidenceItem {
   final String id;
-  final String startupId;
+  final String validationId;
   final EvidenceItemType type;
   final String title;
-  final String content;
-  final String? sourceId;
-  final int confidenceLevel; // 0-100
+  final String summary;
+  final int confidenceScore; // 0-100
+  final String keyInsight;
+  final EvidenceClassification classification;
+  final String provenance;
+  final List<String> tags;
+  final bool isPrivate;
   final DateTime createdAt;
 
   EvidenceItem({
     required this.id,
-    required this.startupId,
+    required this.validationId,
     required this.type,
     required this.title,
-    required this.content,
-    this.sourceId,
-    required this.confidenceLevel,
+    required this.summary,
+    required this.confidenceScore,
+    required this.keyInsight,
+    this.classification = EvidenceClassification.supports,
+    this.provenance = "",
+    this.tags = const [],
+    this.isPrivate = true,
     required this.createdAt,
   });
+
+  factory EvidenceItem.fromJson(Map<String, dynamic> json) {
+    return EvidenceItem(
+      id: json['id'] as String,
+      validationId: json['validationId'] as String,
+      type: EvidenceItemType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => EvidenceItemType.other,
+      ),
+      title: json['title'] as String,
+      summary: json['summary'] as String,
+      confidenceScore: json['confidenceScore'] as int? ?? 0,
+      keyInsight: json['keyInsight'] as String,
+      classification: EvidenceClassification.values.firstWhere(
+        (e) => e.name == json['classification'],
+        orElse: () => EvidenceClassification.inconclusive,
+      ),
+      provenance: json['provenance'] as String? ?? "",
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? const [],
+      isPrivate: json['isPrivate'] as bool? ?? true,
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'validationId': validationId,
+      'type': type.name,
+      'title': title,
+      'summary': summary,
+      'confidenceScore': confidenceScore,
+      'keyInsight': keyInsight,
+      'classification': classification.name,
+      'provenance': provenance,
+      'tags': tags,
+      'isPrivate': isPrivate,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 }

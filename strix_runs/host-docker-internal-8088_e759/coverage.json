@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-23 13:01:56 UTC",
+  "run_id": "host-docker-internal-8088_e759",
+  "run_name": "host-docker-internal-8088_e759",
+  "scope": {
+    "targets": [
+      {
+        "type": "web_application",
+        "details": {
+          "target_url": "http://host.docker.internal:8088"
+        },
+        "original": "http://host.docker.internal:8088"
+      }
+    ],
+    "scan_mode": "quick",
+    "scope_mode": "auto",
+    "diff_scope": {
+      "active": false,
+      "mode": "auto"
+    },
+    "instruction": ""
+  },
+  "summary": {
+    "surfaces_reviewed": 0,
+    "outcomes": {},
+    "findings_filed": 0,
+    "gaps": 2
+  },
+  "machine_observed": {
+    "agents": [
+      {
+        "agent_id": "6e0c36d9",
+        "agent_name": "Recon & Surface Mapping Agent",
+        "status": "failed",
+        "skills": [
+          "tooling/httpx",
+          "tooling/katana",
+          "tooling/ffuf"
+        ],
+        "task": "Perform comprehensive reconnaissance and attack surface mapping on http://host.docker.internal:8088.\nObjectives:\n1. Fingerprint technologies, server headers, frameworks, and versions.\n2. Crawl and spider the web application (using katana, httpx, ffuf, or other discovery tools) to discover all endpoints, forms, parameters, hidden directories, APIs, JS files, and interactive functionality.\n3. Identify authentication mechanisms, session management, roles, input entrypoints, and sensitive functions.\n4. Document all mapped findings in shared notes and record coverage for discovered surfaces.\n5. Report back a clear summary of the discovered attack surface to guide threat modeling and specialized vulnerability testing.",
+        "is_root": false
+      },
+      {
+        "agent_id": "f9f67215",
+        "agent_name": "Recon Specialist",
+        "status": "running",
+        "skills": [
+          "httpx",
+          "katana",
+          "ffuf"
+        ],
+        "task": "Perform full reconnaissance and attack surface mapping on http://host.docker.internal:8088.\n\nInstructions:\n1. Probe http://host.docker.internal:8088 with httpx and curl to inspect headers, title, server banner, tech stack.\n2. Crawl and spider with katana / gospider / curl to map all HTML pages, JS files, API routes, forms, parameters, and links.\n3. Use directory and endpoint discovery (e.g. ffuf, dirsearch, wordlists) to find hidden files, backup files, configuration endpoints, admin interfaces, API specifications (like /swagger, /openapi.json, /api, /docs), etc.\n4. Record coverage for all discovered surfaces using record_coverage.\n5. Create shared notes (category: 'wiki' or 'general') documenting:\n   - All discovered URLs, routes, endpoints, methods, and parameters.\n   - Technology stack and versions.\n   - Authentication / authorization mechanisms observed.\n   - Potential vulnerability hypotheses (SQLi, IDOR, RCE, SSRF, XSS, etc.).\n6. When done, summarize findings in your agent_finish call.",
+        "is_root": false
+      },
+      {
+        "agent_id": "e25c9da3",
+        "agent_name": "Root Agent",
+        "status": "failed",
+        "skills": [],
+        "task": "\n\nURLs: - http://host.docker.internal:8088",
+        "is_root": true
+      }
+    ],
+    "skills_exercised": [
+      "ffuf",
+      "httpx",
+      "katana"
+    ],
+    "findings_filed": 0,
+    "source": "runtime"
+  },
+  "completeness": {
+    "complete": false,
+    "scan_status": "failed",
+    "exit_reason": "error",
+    "caveats": [
+      "The scan ended with status 'failed' rather than completing, so coverage reflects only the work finished before it stopped.",
+      "1 agent(s) did not finish cleanly (Recon Specialist); any surface they held is under-covered.",
+      "The run terminated via 'error' rather than the root agent finishing, so remaining scope was not reached."
+    ]
+  },
+  "entries": [],
+  "gaps": [
+    {
+      "kind": "agent_recorded_no_coverage",
+      "agent_name": "Recon & Surface Mapping Agent",
+      "detail": "Recon & Surface Mapping Agent ran (status: failed) without recording any coverage. Whatever it examined is absent from this record."
+    },
+    {
+      "kind": "agent_recorded_no_coverage",
+      "agent_name": "Recon Specialist",
+      "detail": "Recon Specialist ran (status: running) without recording any coverage. Whatever it examined is absent from this record."
+    }
+  ]
+}

@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../main.dart';
 import '../../models/startup_health_models.dart';
 import '../../utils/haptic_manager.dart';
+import '../../components/buttons.dart';
+import '../../components/ai_evidence_insight_sheet.dart';
 
 class AIValidationView extends StatefulWidget {
   final AIValidationReport report;
@@ -23,8 +25,8 @@ class _AIValidationViewState extends State<AIValidationView> {
     setState(() => _isReanalyzing = true);
     HapticManager.shared.mediumImpact();
     
-    final geminiKey = dotenv.env['GEMINI_API_KEY'];
-    if (geminiKey != null && geminiKey.isNotEmpty && geminiKey != 'your_gemini_api_key_here') {
+    const geminiKey = AppConfig.geminiApiKey;
+    if (geminiKey.isNotEmpty && geminiKey != 'your_gemini_api_key_here') {
       // Call Gemini 1.5 Flash API here
       await Future.delayed(const Duration(seconds: 2));
     } else {
@@ -371,6 +373,23 @@ class _AIValidationViewState extends State<AIValidationView> {
                 ),
               ),
             ],
+
+            const SizedBox(height: AppSpacing.lg),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: PrimaryButton(
+                title: "View Evidence & Action Roadmap",
+                icon: Icons.insights_rounded,
+                action: () {
+                  HapticManager.shared.selection();
+                  AIEvidenceInsightSheet.show(
+                    context,
+                    report: report,
+                    onReanalyze: _reanalyzeReport,
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

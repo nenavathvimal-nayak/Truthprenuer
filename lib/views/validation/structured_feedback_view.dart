@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../components/buttons.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 
 class StructuredFeedbackView extends ConsumerStatefulWidget {
   final ValidationRequest validation;
@@ -61,15 +62,12 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
       _isSubmitting = true;
     });
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
-    final currentUser = ref.read(mockDataStoreProvider).currentUser;
+    final currentUser = ref.read(currentUserProvider).value;
 
     final newFeedback = StructuredFeedback(
-      id: "fb_${DateTime.now().millisecondsSinceEpoch}",
+      id: const Uuid().v4(),
       validationId: widget.validation.id,
-      validatorId: currentUser?.id ?? "me",
+      validatorId: currentUser?.id ?? "founder_dev_1",
       problemFrequency: _problemFrequency,
       currentSolution: _currentSolutionCtrl.text,
       willingToPay: _willingToPay,
@@ -81,7 +79,9 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
       createdAt: DateTime.now(),
     );
 
-    ref.read(mockDataStoreProvider).addStructuredFeedback(newFeedback);
+    await ref.read(feedbackRepositoryProvider).addStructuredFeedback(newFeedback);
+
+    if (!mounted) return;
 
     setState(() {
       _isSubmitting = false;

@@ -27,16 +27,35 @@ import '../views/profile/notification_preferences_view.dart';
 import '../views/profile/edit_profile_view.dart';
 import '../views/validation/startup_health_dashboard_view.dart';
 import '../views/validation/evidence_locker_view.dart';
-import '../views/main/founder_home_view.dart';
-import '../views/main/investor_home_view.dart';
-import '../views/main/professional_home_view.dart';
-import '../views/main/creator_home_view.dart';
-import '../views/main/student_home_view.dart';
+import '../views/main/dashboard_view.dart';
 import '../models/models.dart';
-import '../models/mock_data_store.dart';
+
+import '../repositories/supabase_client.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
+  redirect: (context, state) {
+    final isAuthRoute = [
+      '/splash',
+      '/onboarding',
+      '/action',
+      '/auth',
+      '/signup',
+      '/otp',
+      '/forgot-password'
+    ].contains(state.matchedLocation);
+
+    final isAuthenticated = safeSupabaseClient?.auth.currentUser != null;
+
+    if (!isAuthenticated) {
+      return isAuthRoute ? null : '/auth';
+    } else {
+      if (state.matchedLocation == '/auth' || state.matchedLocation == '/signup') {
+        return '/';
+      }
+      return null;
+    }
+  },
   routes: [
     GoRoute(
       path: '/splash',
@@ -149,45 +168,27 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const EvidenceLockerView(),
     ),
     GoRoute(
-      path: '/founder-home',
-      builder: (context, state) => const FounderHomeView(),
-    ),
-    GoRoute(
-      path: '/investor-home',
-      builder: (context, state) => const InvestorHomeView(),
-    ),
-    GoRoute(
-      path: '/professional-home',
-      builder: (context, state) => const ProfessionalHomeView(),
-    ),
-    GoRoute(
-      path: '/creator-home',
-      builder: (context, state) => const CreatorHomeView(),
-    ),
-    GoRoute(
-      path: '/student-home',
-      builder: (context, state) => const StudentHomeView(),
+      path: '/dashboard',
+      builder: (context, state) => const DashboardView(),
     ),
     GoRoute(
       path: '/validation-detail/:id',
       builder: (context, state) {
         final id = state.pathParameters['id'];
-        final dataStore = MockDataStore();
-        final validation = dataStore.validations.firstWhere(
-          (v) => v.id == id,
-          orElse: () => dataStore.validations.first,
+        final extra = state.extra;
+        ValidationRequest? validation;
+        User? author;
+        if (extra is Map<String, dynamic>) {
+          validation = extra['validation'] as ValidationRequest?;
+          author = extra['author'] as User?;
+        } else if (extra is ValidationRequest) {
+          validation = extra;
+        }
+        return ValidationDetailView(
+          validationId: id,
+          validation: validation,
+          author: author,
         );
-        final author = dataStore.users.firstWhere(
-          (u) => u.id == validation.authorId,
-          orElse: () => User(
-            id: validation.authorId,
-            name: validation.authorName ?? 'Founder',
-            username: 'founder',
-            bio: '',
-            role: validation.authorRole ?? 'Builder',
-          ),
-        );
-        return ValidationDetailView(validation: validation, author: author);
       },
     ),
     GoRoute(
@@ -209,29 +210,19 @@ final GoRouter appRouter = GoRouter(
       path: '/validation-detail',
       builder: (context, state) {
         final extra = state.extra;
+        ValidationRequest? validation;
+        User? author;
         if (extra is Map<String, dynamic>) {
-          return ValidationDetailView(
-            validation: extra['validation'] as ValidationRequest,
-            author: extra['author'] as User,
-          );
+          validation = extra['validation'] as ValidationRequest?;
+          author = extra['author'] as User?;
+        } else if (extra is ValidationRequest) {
+          validation = extra;
         }
-        // Fallback: if only validation is passed, look up author from data store
-        if (extra is ValidationRequest) {
-          final dataStore = MockDataStore();
-          final author = dataStore.users.firstWhere(
-            (u) => u.id == extra.authorId,
-            orElse: () => User(
-              id: extra.authorId,
-              name: extra.authorName ?? 'Founder',
-              username: 'founder',
-              bio: '',
-              role: extra.authorRole ?? 'Builder',
-            ),
-          );
-          return ValidationDetailView(validation: extra, author: author);
-        }
-        // Safety fallback
-        return const Scaffold(body: Center(child: Text('Invalid navigation')));
+        return ValidationDetailView(
+          validationId: validation?.id ?? "val_auto_inventory",
+          validation: validation,
+          author: author,
+        );
       },
     ),
     GoRoute(

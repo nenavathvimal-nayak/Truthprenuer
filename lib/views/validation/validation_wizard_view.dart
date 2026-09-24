@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../components/buttons.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
 import '../../utils/haptic_manager.dart';
-import '../../repositories/validation_repository.dart';
+import '../../repositories/app_providers.dart';
 
 class ValidationWizardView extends ConsumerStatefulWidget {
   const ValidationWizardView({super.key});
@@ -245,28 +245,26 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
     if (!mounted) return;
     setState(() => _publishingStatus = "Indexing on Truthprenuer marketplace...");
 
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-
-    final dataStore = ref.read(mockDataStoreProvider);
+    final currentUser = ref.read(currentUserProvider).value;
     final repository = ref.read(validationRepositoryProvider);
 
     final newValidation = ValidationRequest(
-      id: "val_${DateTime.now().millisecondsSinceEpoch}",
+      id: const Uuid().v4(),
       title: _titleCtrl.text.trim(),
       problem: _problemCtrl.text.trim(),
       solution: _contextCtrl.text.trim().isNotEmpty ? _contextCtrl.text.trim() : "Proposed solution under validation",
       targetAudience: _selectedAudienceRoles.join(", "),
-      authorId: dataStore.currentUser?.id ?? "me",
-      authorName: dataStore.currentUser?.name ?? "Founder",
-      authorRole: dataStore.currentUser?.role ?? "Founder",
-      authorAvatarURL: dataStore.currentUser?.avatarURL,
+      authorId: currentUser?.id ?? "founder_1",
+      authorName: currentUser?.name ?? "Founder",
+      authorRole: currentUser?.role ?? "Founder",
+      authorAvatarURL: currentUser?.avatarURL,
       tags: [_selectedType, ..._selectedAudienceRoles],
       createdAt: DateTime.now(),
       status: "active",
     );
 
     await repository.createValidation(newValidation, []);
+    ref.invalidate(validationsProvider);
 
     setState(() {
       _isPublishing = false;

@@ -6,7 +6,6 @@ import '../../components/custom_text_field.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../utils/haptic_manager.dart';
 
 class ProfileSetupWizardView extends ConsumerStatefulWidget {
@@ -28,6 +27,12 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
   final TextEditingController _locationController = TextEditingController();
   bool _notificationsEnabled = false;
 
+  // Privacy & Consent State
+  bool _isAdult = false;
+  bool _consentTerms = false;
+  bool _consentData = false;
+  bool _consentAI = false;
+
   bool _isFinishing = false;
 
   @override
@@ -44,7 +49,6 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
     });
     
     HapticManager.shared.notificationSuccess();
-    ref.read(mockDataStoreProvider).login();
 
     await Future.delayed(const Duration(milliseconds: 1000));
     
@@ -52,11 +56,11 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
     
     setState(() {
       _isFinishing = false;
-      _currentStep = 4;
+      _currentStep = 5;
     });
 
     _pageController.animateToPage(
-      4,
+      5,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -80,7 +84,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header / Progress
-            if (_currentStep < 4)
+            if (_currentStep < 5)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.md),
                 child: Column(
@@ -109,7 +113,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                           const Spacer(),
                           
                           Text(
-                            "Step ${_currentStep + 1} of 4",
+                            "Step ${_currentStep + 1} of 5",
                             style: AppTypography.headline.copyWith(
                               color: colors.textSecondary,
                             ),
@@ -141,7 +145,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                                 duration: const Duration(milliseconds: 300),
                                 curve: Curves.easeOutCubic,
                                 height: 8,
-                                width: constraints.maxWidth * (_currentStep + 1) / 4,
+                                width: constraints.maxWidth * (_currentStep + 1) / 5,
                                 decoration: BoxDecoration(
                                   color: colors.primary,
                                   borderRadius: BorderRadius.circular(4),
@@ -190,20 +194,30 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                       });
                     },
                   ),
+                  _PrivacyConsentStepView(
+                    isAdult: _isAdult,
+                    consentTerms: _consentTerms,
+                    consentData: _consentData,
+                    consentAI: _consentAI,
+                    onToggleAdult: (val) => setState(() => _isAdult = val),
+                    onToggleTerms: (val) => setState(() => _consentTerms = val),
+                    onToggleData: (val) => setState(() => _consentData = val),
+                    onToggleAI: (val) => setState(() => _consentAI = val),
+                  ),
                   const _SetupSuccessStepView(),
                 ],
               ),
             ),
             
             // Bottom Action
-            if (_currentStep < 4)
+            if (_currentStep < 5)
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
                 child: GestureDetector(
-                  onTap: _isFinishing
+                  onTap: _isFinishing || (_currentStep == 4 && (!_isAdult || !_consentTerms || !_consentData))
                       ? null
                       : () {
-                          if (_currentStep < 3) {
+                          if (_currentStep < 4) {
                             _pageController.nextPage(
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeInOut,
@@ -216,7 +230,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: colors.primary,
+                      color: (_currentStep == 4 && (!_isAdult || !_consentTerms || !_consentData)) ? colors.border : colors.primary,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     alignment: Alignment.center,
@@ -224,7 +238,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _currentStep == 3 ? "Complete Profile" : "Continue",
+                          _currentStep == 4 ? "Complete Profile" : "Continue",
                           style: AppTypography.headline.copyWith(color: Colors.white),
                         ),
                         if (_isFinishing) ...[
@@ -573,6 +587,134 @@ class _LocationStepView extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrivacyConsentStepView extends StatelessWidget {
+  final bool isAdult;
+  final bool consentTerms;
+  final bool consentData;
+  final bool consentAI;
+  final ValueChanged<bool> onToggleAdult;
+  final ValueChanged<bool> onToggleTerms;
+  final ValueChanged<bool> onToggleData;
+  final ValueChanged<bool> onToggleAI;
+
+  const _PrivacyConsentStepView({
+    required this.isAdult,
+    required this.consentTerms,
+    required this.consentData,
+    required this.consentAI,
+    required this.onToggleAdult,
+    required this.onToggleTerms,
+    required this.onToggleData,
+    required this.onToggleAI,
+  });
+
+  Widget _buildConsentRow(BuildContext context, String title, String description, bool value, ValueChanged<bool> onChanged, bool isRequired) {
+    final colors = Theme.of(context).appColors;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: isRequired && !value ? Border.all(color: colors.error.withValues(alpha: 0.3), width: 1) : null,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.headline.copyWith(color: colors.text),
+                    ),
+                    if (isRequired) ...[
+                      const SizedBox(width: 4),
+                      Text("*", style: AppTypography.headline.copyWith(color: colors.error)),
+                    ]
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          CupertinoSwitch(
+            value: value,
+            activeTrackColor: colors.primary,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(left: AppSpacing.lg, right: AppSpacing.lg, top: AppSpacing.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Privacy & Consent",
+            style: AppTypography.title1.copyWith(color: colors.text),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            "Your data is yours. We need your explicit consent to process it according to the DPDP Act.",
+            style: AppTypography.body.copyWith(color: colors.textSecondary),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          
+          _buildConsentRow(
+            context,
+            "Age Verification",
+            "I confirm that I am 18 years of age or older.",
+            isAdult,
+            onToggleAdult,
+            true,
+          ),
+          _buildConsentRow(
+            context,
+            "Terms & Privacy Policy",
+            "I agree to the TAEED Terms of Service and Privacy Policy.",
+            consentTerms,
+            onToggleTerms,
+            true,
+          ),
+          _buildConsentRow(
+            context,
+            "Data Processing",
+            "I consent to the processing of my profile and validation data to provide the TAEED service.",
+            consentData,
+            onToggleData,
+            true,
+          ),
+          _buildConsentRow(
+            context,
+            "AI Features",
+            "I consent to third-party AI models processing my ideas. (You can revoke this anytime).",
+            consentAI,
+            onToggleAI,
+            false,
+          ),
+          
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );

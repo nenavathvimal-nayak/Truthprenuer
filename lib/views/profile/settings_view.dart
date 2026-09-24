@@ -5,8 +5,9 @@ import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../design_system/theme_mode_provider.dart';
+import '../../components/buttons.dart';
 import '../../models/auth_provider.dart';
-import '../../models/mock_data_store_provider.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class SettingsView extends ConsumerStatefulWidget {
@@ -44,6 +45,69 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             child: Text("Close", style: TextStyle(color: colors.primary)),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPrivacyCenterModal(BuildContext context) {
+    HapticManager.shared.impactLight();
+    final colors = Theme.of(context).appColors;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colors.cardBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colors.textTertiary.withAlpha(80),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  const Icon(Icons.shield_outlined, color: AppPalette.orange, size: 24),
+                  const SizedBox(width: 8),
+                  Text("Privacy & Governance", style: AppTypography.title2.copyWith(color: colors.text)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                "Truthprenuer treats proprietary startup hypotheses with institutional security.",
+                style: AppTypography.body.copyWith(color: colors.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              _buildExportItem(Icons.lock_outline_rounded, "Private Object Protection", "Validation pitches default to private or community scope with strict RLS.", colors),
+              _buildExportItem(Icons.memory_outlined, "AI Processing Safeguards", "No founder data is sold or used to train public foundation models.", colors),
+              _buildExportItem(Icons.folder_shared_outlined, "Data Portability", "Export complete evidence packages in standard JSON anytime.", colors),
+              _buildExportItem(Icons.delete_outline_rounded, "Right to Erasure", "Hard deletion cascades across all validations, responses, and evidence.", colors),
+
+              const SizedBox(height: AppSpacing.xl),
+              SizedBox(
+                width: double.infinity,
+                child: PrimaryButton(
+                  title: "Close Privacy Center",
+                  action: () => Navigator.pop(ctx),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -271,6 +335,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                     HapticManager.shared.selection();
                   },
                 ),
+                Container(height: 1, color: colors.divider, margin: const EdgeInsets.only(left: 52)),
+                _SettingsNavRow(
+                  icon: Icons.shield_outlined,
+                  iconColor: AppPalette.orange,
+                  title: "Privacy & Governance Center",
+                  onTap: () => _showPrivacyCenterModal(context),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -394,7 +465,6 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
           TextButton(
             onPressed: () async {
-              ref.read(mockDataStoreProvider).logout();
               await ref.read(authProvider.notifier).logout();
               if (!context.mounted) return;
               Navigator.pop(ctx);
@@ -413,9 +483,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).appColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Delete Account?", style: AppTypography.headline.copyWith(color: Theme.of(context).appColors.text)),
+        title: Text("Delete Account Permanently?", style: AppTypography.headline.copyWith(color: Theme.of(context).appColors.text)),
         content: Text(
-          "This action is permanent and cannot be undone. All your validations, responses, and metrics will be erased.",
+          "This action is permanent and irreversible. All your startup validations, evidence items, feedback responses, and health metrics will be wiped and your session revoked.",
           style: AppTypography.body.copyWith(color: Theme.of(context).appColors.textSecondary),
         ),
         actions: [
@@ -423,17 +493,23 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
           TextButton(
             onPressed: () async {
               HapticManager.shared.heavyImpact();
-              ref.read(mockDataStoreProvider).logout();
+              try {
+                await ref.read(privacyRepositoryProvider).requestAccountDeletion();
+                await ref.read(authRepositoryProvider).deleteAccount();
+              } catch (_) {}
               await ref.read(authProvider.notifier).logout();
               if (!context.mounted) return;
               Navigator.pop(ctx);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Account successfully deleted")),
+                const SnackBar(
+                  content: Text("Account and associated startup data permanently deleted."),
+                  backgroundColor: AppPalette.midnight,
+                ),
               );
               context.go('/auth');
             },
-            child: Text("Delete", style: AppTypography.buttonLabel.copyWith(color: Colors.red)),
+            child: Text("Permanently Delete", style: AppTypography.buttonLabel.copyWith(color: Colors.red)),
           ),
         ],
       ),

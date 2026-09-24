@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
 import '../../models/models.dart';
 import '../../models/startup_health_models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class EvidenceLockerView extends ConsumerStatefulWidget {
@@ -16,8 +17,8 @@ class EvidenceLockerView extends ConsumerStatefulWidget {
 }
 
 class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
-  String _selectedFilter = "All Evidence";
-  final List<String> _filters = ["All Evidence", "Raw Feedback", "AI Insights", "Decisions"];
+  String _selectedFilter = "All";
+  final List<String> _filters = ["All", "Supports", "Contradicts", "Mixed", "Inconclusive"];
 
   void _openAddEvidenceSheet(BuildContext context, AppThemeColors colors) {
     HapticManager.shared.mediumImpact();
@@ -48,23 +49,13 @@ class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
+    final allEvidence = ref.watch(evidenceListProvider);
 
     List<EvidenceItem> filteredEvidence;
-    switch (_selectedFilter) {
-      case "Raw Feedback":
-        filteredEvidence = dataStore.evidenceItems
-            .where((e) => e.type == EvidenceItemType.userInterview || e.type == EvidenceItemType.prototypeTest)
-            .toList();
-        break;
-      case "AI Insights":
-        filteredEvidence = dataStore.evidenceItems.where((e) => e.type == EvidenceItemType.aiCritique).toList();
-        break;
-      case "Decisions":
-        filteredEvidence = dataStore.evidenceItems.where((e) => e.type == EvidenceItemType.expertReview).toList();
-        break;
-      default:
-        filteredEvidence = dataStore.evidenceItems;
+    if (_selectedFilter == "All") {
+      filteredEvidence = allEvidence;
+    } else {
+      filteredEvidence = allEvidence.where((e) => e.tags.contains(_selectedFilter)).toList();
     }
 
     return SafeArea(
@@ -211,27 +202,23 @@ class _EvidenceItemCard extends StatelessWidget {
 
   IconData _iconForType(EvidenceItemType type) {
     switch (type) {
-      case EvidenceItemType.userInterview:
-      case EvidenceItemType.prototypeTest:
-      case EvidenceItemType.marketData:
+      case EvidenceItemType.interview:
+      case EvidenceItemType.survey:
+      case EvidenceItemType.data:
         return Icons.people_outline;
-      case EvidenceItemType.aiCritique:
+      case EvidenceItemType.other:
         return Icons.auto_awesome;
-      case EvidenceItemType.expertReview:
-        return Icons.verified_user_outlined;
     }
   }
 
   Color _colorForType(EvidenceItemType type, AppThemeColors colors) {
     switch (type) {
-      case EvidenceItemType.userInterview:
-      case EvidenceItemType.prototypeTest:
-      case EvidenceItemType.marketData:
+      case EvidenceItemType.interview:
+      case EvidenceItemType.survey:
+      case EvidenceItemType.data:
         return colors.evidenceGreen;
-      case EvidenceItemType.aiCritique:
+      case EvidenceItemType.other:
         return colors.primary;
-      case EvidenceItemType.expertReview:
-        return colors.warning;
     }
   }
 
@@ -285,12 +272,12 @@ class _EvidenceItemCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              item.content,
+              item.summary,
               style: AppTypography.bodyMedium.copyWith(color: colors.textSecondary, height: 1.4),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            if (item.confidenceLevel > 0) ...[
+            if (item.confidenceScore > 0) ...[
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
@@ -299,9 +286,9 @@ class _EvidenceItemCard extends StatelessWidget {
                     style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
                   ),
                   Text(
-                    "${item.confidenceLevel}%",
+                    "${item.confidenceScore}%",
                     style: AppTypography.caption.copyWith(
-                      color: item.confidenceLevel > 70 ? colors.evidenceGreen : colors.warning,
+                      color: item.confidenceScore > 70 ? colors.evidenceGreen : colors.warning,
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                     ),
@@ -326,7 +313,6 @@ class _EvidenceDetailSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.read(mockDataStoreProvider);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -362,7 +348,7 @@ class _EvidenceDetailSheet extends ConsumerWidget {
                 icon: Icon(Icons.delete_outline, color: colors.riskRed),
                 onPressed: () {
                   HapticManager.shared.warning();
-                  dataStore.deleteEvidenceItem(item.id);
+                  ref.read(evidenceListProvider.notifier).deleteEvidence(item.id);
                   Navigator.pop(context);
                 },
               ),
@@ -383,7 +369,7 @@ class _EvidenceDetailSheet extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "${item.confidenceLevel}% Confidence",
+                  "${item.confidenceScore}% Confidence",
                   style: AppTypography.caption.copyWith(color: colors.evidenceGreen, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -409,7 +395,7 @@ class _EvidenceDetailSheet extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  item.content,
+                  item.summary,
                   style: AppTypography.body.copyWith(color: colors.text, height: 1.5),
                 ),
               ],
@@ -451,7 +437,7 @@ class _AddEvidenceSheet extends ConsumerStatefulWidget {
 class _AddEvidenceSheetState extends ConsumerState<_AddEvidenceSheet> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  EvidenceItemType _selectedType = EvidenceItemType.userInterview;
+  EvidenceItemType _selectedType = EvidenceItemType.interview;
   double _confidence = 85;
 
   @override
@@ -473,16 +459,17 @@ class _AddEvidenceSheetState extends ConsumerState<_AddEvidenceSheet> {
     }
 
     final newItem = EvidenceItem(
-      id: "ev_${DateTime.now().millisecondsSinceEpoch}",
-      startupId: "mock_startup",
+      id: const Uuid().v4(),
+      validationId: "mock_validation",
       type: _selectedType,
       title: title,
-      content: content,
-      confidenceLevel: _confidence.toInt(),
+      summary: content,
+      keyInsight: content,
+      confidenceScore: _confidence.toInt(),
       createdAt: DateTime.now(),
     );
 
-    ref.read(mockDataStoreProvider).addEvidenceItem(newItem);
+    ref.read(evidenceListProvider.notifier).addEvidence(newItem);
     HapticManager.shared.success();
     Navigator.pop(context);
   }

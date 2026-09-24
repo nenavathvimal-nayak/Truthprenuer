@@ -4,7 +4,7 @@ import '../../design_system/app_colors.dart';
 import '../../components/avatar_picker_modal.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class EditProfileView extends ConsumerStatefulWidget {
@@ -35,7 +35,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = ref.read(mockDataStoreProvider).currentUser;
+      final user = ref.read(currentUserProvider).value;
       if (user != null) {
         setState(() {
           _nameCtrl.text = user.name;
@@ -62,7 +62,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     super.dispose();
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     HapticManager.shared.impactMedium();
     setState(() => _isSaving = true);
     
@@ -71,28 +71,33 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
         .where((e) => e.isNotEmpty)
         .toList();
 
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (mounted) {
-        ref.read(mockDataStoreProvider).updateProfile(
-          name: _nameCtrl.text,
-          bio: _bioCtrl.text,
-          role: _roleCtrl.text,
-          website: _websiteCtrl.text,
-          twitter: _twitterCtrl.text,
-          location: _locationCtrl.text,
-          skills: skills,
-        );
-        setState(() {
-          _isSaving = false;
-          _saveSuccess = true;
-        });
-        HapticManager.shared.notificationSuccess(); // notification success
-        
-        Future.delayed(const Duration(milliseconds: 1200), () {
-          if (mounted) Navigator.pop(context);
-        });
-      }
-    });
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser != null) {
+      final updatedUser = currentUser.copyWith(
+        name: _nameCtrl.text.trim(),
+        bio: _bioCtrl.text.trim(),
+        role: _roleCtrl.text.trim(),
+        website: _websiteCtrl.text.trim(),
+        twitterHandle: _twitterCtrl.text.trim(),
+        location: _locationCtrl.text.trim(),
+        skills: skills,
+      );
+
+      await ref.read(profileRepositoryProvider).saveProfile(updatedUser);
+      ref.invalidate(currentUserProvider);
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+        _saveSuccess = true;
+      });
+      HapticManager.shared.notificationSuccess();
+      
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) Navigator.pop(context);
+      });
+    }
   }
 
   @override
@@ -123,7 +128,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
             // Avatar section
             Consumer(
               builder: (context, ref, _) {
-                final user = ref.watch(mockDataStoreProvider).currentUser;
+                final user = ref.watch(currentUserProvider).value;
                 return GestureDetector(
                   onTap: () {
                     HapticManager.shared.impactLight();
@@ -229,7 +234,7 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
             ),
             const SizedBox(height: AppSpacing.md),
             
-            _BioEditField(label: "Bio", placeholder: "Tell the TAEED community who you are...", controller: _bioCtrl),
+            _BioEditField(label: "Bio", placeholder: "Tell the TRUTHPRENUER community who you are...", controller: _bioCtrl),
             const SizedBox(height: AppSpacing.md),
             
             _EditField(label: "Location", icon: Icons.location_on, placeholder: "City, Country", controller: _locationCtrl),

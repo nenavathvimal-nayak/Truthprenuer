@@ -68,8 +68,8 @@ class AppTypography {
   static TextStyle get callout => TypographyTokens.fontPrimary(fontSize: 14, fontWeight: FontWeight.w500, height: 1.4);
   static TextStyle get footnote => TypographyTokens.fontPrimary(fontSize: 13, fontWeight: FontWeight.w400, height: 1.4);
   static TextStyle get caption => TypographyTokens.fontPrimary(fontSize: 12, fontWeight: FontWeight.w500, height: 1.4);
-  static TextStyle get label => TypographyTokens.fontPrimary(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0.5);
-  static TextStyle get labelSmall => TypographyTokens.fontPrimary(fontSize: 10, fontWeight: FontWeight.w700, height: 1.2, letterSpacing: 0.5);
+  static TextStyle get label => TypographyTokens.fontPrimary(fontSize: 12, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0.5);
+  static TextStyle get labelSmall => TypographyTokens.fontPrimary(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0.5);
 
   // Metrics (Data, Numbers)
   static TextStyle get metricLarge => TypographyTokens.fontPrimary(fontSize: 48, fontWeight: FontWeight.w900, height: 1.0, letterSpacing: -1.0);
@@ -78,6 +78,10 @@ class AppTypography {
   // Semantic UI tokens
   static TextStyle get appBarTitle => TypographyTokens.fontPrimary(fontSize: 18, fontWeight: FontWeight.w700, height: 1.3);
   static TextStyle get buttonLabel => TypographyTokens.fontPrimary(fontSize: 15, fontWeight: FontWeight.w600, height: 1.2);
+  static TextStyle get tabBarLabel => TypographyTokens.fontPrimary(fontSize: 11, fontWeight: FontWeight.w600, height: 1.2, letterSpacing: 0.5);
+  static TextStyle get inputLabel => TypographyTokens.fontPrimary(fontSize: 13, fontWeight: FontWeight.w600, height: 1.3);
+  static TextStyle get inputHelper => TypographyTokens.fontPrimary(fontSize: 12, fontWeight: FontWeight.w400, height: 1.3);
+  static TextStyle get inputError => TypographyTokens.fontPrimary(fontSize: 12, fontWeight: FontWeight.w500, height: 1.3);
 
   // ---------------------------------------------------------
   // PARISIAN (Editorial, Brand, Emotional, 10-20%)
@@ -99,5 +103,11 @@ class AppTypography {
   static TextStyle get monoSmall => caption;
   static TextStyle get brandLogo => title1;
   static TextStyle get brandHero => editorialDisplay;
+  static TextStyle get bodySmall => footnote;
+  static TextStyle get button => buttonLabel;
+  static TextStyle get headline1 => h1;
+  static TextStyle get headline2 => h2;
+  static TextStyle get body1 => body;
+  static TextStyle get body2 => subheadline;
 }
 

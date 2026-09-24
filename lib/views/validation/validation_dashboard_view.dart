@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../components/shared_top_nav_bar.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
-import 'ai_validation_view.dart';
-import 'evidence_locker_view.dart';
-import 'startup_health_dashboard_view.dart';
+import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
+import '../../utils/haptic_manager.dart';
 
 class ValidationDashboardView extends ConsumerStatefulWidget {
   const ValidationDashboardView({super.key});
@@ -16,112 +16,273 @@ class ValidationDashboardView extends ConsumerStatefulWidget {
   ConsumerState<ValidationDashboardView> createState() => _ValidationDashboardViewState();
 }
 
-class _ValidationDashboardViewState extends ConsumerState<ValidationDashboardView> {
-  String _selectedSection = "Startup Health";
-  final List<String> _sections = ["Startup Health", "AI Validation", "Evidence Locker"];
-  
-  late PageController _pageController;
+class _ValidationDashboardViewState extends ConsumerState<ValidationDashboardView> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _tabController.dispose();
     super.dispose();
-  }
-
-  void _onSectionChanged(String? newValue) {
-    if (newValue != null && newValue != _selectedSection) {
-      setState(() {
-        _selectedSection = newValue;
-      });
-      final index = _sections.indexOf(newValue);
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final report = dataStore.aiReports.isNotEmpty ? dataStore.aiReports.first : null;
+    final validationsAsync = ref.watch(validationsProvider);
 
-    // Use CupertinoSegmentedControl for iOS-like segmented picker
     return Scaffold(
+      appBar: const SharedTopNavBar(title: "Validate"),
       backgroundColor: colors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Title Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.xs),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Validation Hub",
-                    style: AppTypography.h1.copyWith(color: colors.text),
+      body: Column(
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screenPadding, AppSpacing.md, AppSpacing.screenPadding, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "Workspaces",
+                  style: AppTypography.h2.copyWith(
+                    color: colors.text,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.4,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Track health, AI insights, and evidence",
-                    style: AppTypography.footnote.copyWith(color: colors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            // Segmented Picker
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-              child: CupertinoSlidingSegmentedControl<String>(
-                groupValue: _selectedSection,
-                children: {
-                  for (final section in _sections)
-                    section: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        section,
-                        style: AppTypography.footnote.copyWith(
-                          color: _selectedSection == section ? colors.text : colors.textSecondary,
-                          fontWeight: _selectedSection == section ? FontWeight.bold : FontWeight.normal,
-                        ),
+                ),
+                Material(
+                  color: AppPalette.orange,
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    onTap: () {
+                      HapticManager.shared.impactMedium();
+                      context.push('/validation-wizard');
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.add, size: 17, color: Colors.white),
+                          const SizedBox(width: 5),
+                          Text(
+                            "New Validation",
+                            style: AppTypography.caption.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
                       ),
-                    )
-                },
-                onValueChanged: _onSectionChanged,
-                backgroundColor: colors.cardBackgroundLight,
-                thumbColor: colors.cardBackground,
-              ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            
-            Divider(color: colors.divider, height: 1, thickness: 1),
-            
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() {
-                    _selectedSection = _sections[index];
-                  });
-                },
+          ),
+
+          const SizedBox(height: 16),
+
+          // Segmented Tab Control — pill-style, borderless
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: AppPalette.orange,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              labelColor: Colors.white,
+              unselectedLabelColor: colors.textTertiary,
+              labelStyle: AppTypography.caption.copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.4),
+              unselectedLabelStyle: AppTypography.caption.copyWith(fontWeight: FontWeight.w600),
+              dividerColor: Colors.transparent,
+              indicatorSize: TabBarIndicatorSize.tab,
+              tabs: const [
+                Tab(text: "ACTIVE"),
+                Tab(text: "DRAFTS"),
+                Tab(text: "COMPLETED"),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Tab Views
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _ActiveValidationsTab(validationsAsync: validationsAsync),
+                _DraftsTab(),
+                _CompletedTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActiveValidationsTab extends StatelessWidget {
+  final AsyncValue<List<ValidationRequest>> validationsAsync;
+
+  const _ActiveValidationsTab({required this.validationsAsync});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+
+    return validationsAsync.when(
+      data: (validations) {
+        if (validations.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const StartupHealthDashboardView(),
-                  if (report != null)
-                    AIValidationView(report: report)
-                  else
-                    _EmptyAIValidationView(),
-                  const EvidenceLockerView(),
+                  Icon(Icons.verified_outlined, size: 44, color: colors.textTertiary),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No active validations",
+                    style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Create your first validation sprint to test assumptions with real market evidence.",
+                    textAlign: TextAlign.center,
+                    style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                  ),
                 ],
               ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.sm),
+          itemCount: validations.length,
+          itemBuilder: (context, index) {
+            final v = validations[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: colors.cardBackground,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    context.push('/validation-detail/${v.id}', extra: v);
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppPalette.orange.withValues(alpha: 0.10),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppPalette.orange,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              "${v.responsesCount} Responses",
+                              style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          v.title,
+                          style: AppTypography.subheadline.copyWith(
+                            color: colors.text,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          v.problem,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Active • Testing Problem Fit",
+                              style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
+                            ),
+                            Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
+      error: (err, _) => Center(child: Text("Error: $err")),
+    );
+  }
+}
+
+class _DraftsTab extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.edit_note_rounded, size: 44, color: colors.textTertiary),
+            const SizedBox(height: 16),
+            Text(
+              "No unfinished drafts",
+              style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Validations you start creating will be saved here automatically.",
+              textAlign: TextAlign.center,
+              style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
             ),
           ],
         ),
@@ -130,27 +291,28 @@ class _ValidationDashboardViewState extends ConsumerState<ValidationDashboardVie
   }
 }
 
-class _EmptyAIValidationView extends StatelessWidget {
+class _CompletedTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    return SingleChildScrollView(
+
+    return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 100, horizontal: AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_awesome, size: 40, color: colors.textTertiary),
-            const SizedBox(height: AppSpacing.md),
+            Icon(Icons.task_alt_rounded, size: 44, color: colors.textTertiary),
+            const SizedBox(height: 16),
             Text(
-              "No AI Validation Yet",
-              style: AppTypography.title3.copyWith(color: colors.text),
+              "No completed sprints yet",
+              style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: 8),
             Text(
-              "Create a validation request to generate an AI report.",
-              style: AppTypography.body.copyWith(color: colors.textSecondary),
+              "Completed validation cycles with resolved founder decisions will appear here.",
               textAlign: TextAlign.center,
+              style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
             ),
           ],
         ),

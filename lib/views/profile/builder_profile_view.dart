@@ -8,7 +8,7 @@ import '../../components/tag_view.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../models/mock_data_store_provider.dart';
+import '../../repositories/app_providers.dart';
 import '../../models/models.dart';
 import '../../models/role_provider.dart';
 import '../../utils/haptic_manager.dart';
@@ -58,28 +58,21 @@ class _BuilderProfileViewState extends ConsumerState<BuilderProfileView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final currentRole = ref.watch(roleProvider);
-    final dataStore = ref.watch(mockDataStoreProvider);
-    final user = dataStore.currentUser ??
-        dataStore.users.firstWhere(
-          (u) => u.id == "me",
-          orElse: () => dataStore.users.isNotEmpty
-              ? dataStore.users.first
-              : User(
-                  id: "me",
-                  name: "Jane Designer",
-                  username: "jane_ui",
-                  bio: "UX Architect & Product Thinker",
-                  role: "UX Architect",
-                  skills: ["UX", "Research"],
-                  location: "New York, NY",
-                  joinedDate: DateTime.now(),
-                ),
-        );
+    final user = ref.watch(currentUserProvider).value ?? User(
+      id: "founder_dev_1",
+      name: "Alex Vimal",
+      username: "alexvimal",
+      bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
+      role: "Founder",
+      userRole: UserRole.founder,
+      skills: ["Product Strategy", "B2B SaaS", "User Research", "Market Validation"],
+      location: "Bangalore, IN",
+      isVerified: true,
+    );
 
-    final myValidations =
-        dataStore.validations.where((v) => v.authorId == user.id).toList();
-    final myPosts =
-        dataStore.posts.where((p) => p.authorId == user.id).toList();
+    final allValidations = ref.watch(validationsProvider).value ?? [];
+    final myValidations = allValidations.where((v) => v.authorId == user.id).toList();
+    final myPosts = <PostItem>[];
 
     final stat1Value = switch (currentRole) {
       UserRole.founder => "${myValidations.length}",
