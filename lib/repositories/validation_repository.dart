@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
@@ -179,7 +179,7 @@ class ValidationRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('ValidationRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'ValidationRepository');
       return [];
     }
   }

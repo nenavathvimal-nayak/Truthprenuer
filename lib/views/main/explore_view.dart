@@ -163,7 +163,7 @@ class _ExploreViewState extends ConsumerState<ExploreView> with SingleTickerProv
   }
 }
 
-class _ValidationsFeed extends StatelessWidget {
+class _ValidationsFeed extends ConsumerWidget {
   final AsyncValue<List<ValidationRequest>> validationsAsync;
   final String searchQuery;
   final String selectedTag;
@@ -175,60 +175,78 @@ class _ValidationsFeed extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
 
-    return validationsAsync.when(
-      data: (validations) {
-        var filtered = validations;
-
-        if (selectedTag != "All") {
-          filtered = filtered.where((v) => v.tags.any((t) => t.toLowerCase() == selectedTag.toLowerCase())).toList();
-        }
-
-        if (searchQuery.isNotEmpty) {
-          filtered = filtered.where((v) =>
-            v.title.toLowerCase().contains(searchQuery) ||
-            v.problem.toLowerCase().contains(searchQuery)
-          ).toList();
-        }
-
-        if (filtered.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off_rounded, size: 40, color: colors.textTertiary),
-                  const SizedBox(height: 16),
-                  Text(
-                    searchQuery.isNotEmpty ? "Nothing matched \"$searchQuery\"" : "No validations in this category",
-                    style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Try broadening your search keywords or switching filters.",
-                    textAlign: TextAlign.center,
-                    style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) {
-            final v = filtered[index];
-            return _ValidationCard(validation: v);
-          },
-        );
+    return RefreshIndicator(
+      color: AppPalette.orange,
+      onRefresh: () async {
+        ref.invalidate(validationsProvider);
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
-      error: (err, _) => Center(child: Text("Error: $err")),
+      child: validationsAsync.when(
+        data: (validations) {
+          var filtered = validations;
+
+          if (selectedTag != "All") {
+            filtered = filtered.where((v) => v.tags.any((t) => t.toLowerCase() == selectedTag.toLowerCase())).toList();
+          }
+
+          if (searchQuery.isNotEmpty) {
+            filtered = filtered.where((v) =>
+              v.title.toLowerCase().contains(searchQuery) ||
+              v.problem.toLowerCase().contains(searchQuery)
+            ).toList();
+          }
+
+          if (filtered.isEmpty) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 40, color: colors.textTertiary),
+                        const SizedBox(height: 16),
+                        Text(
+                          searchQuery.isNotEmpty ? "Nothing matched \"$searchQuery\"" : "No validations in this category",
+                          style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Try broadening your search keywords or switching filters.",
+                          textAlign: TextAlign.center,
+                          style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          return ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+            itemCount: filtered.length,
+            itemBuilder: (context, index) {
+              final v = filtered[index];
+              return _ValidationCard(validation: v);
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
+        error: (err, _) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(child: Padding(padding: const EdgeInsets.all(32), child: Text("Error: $err"))),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -265,20 +283,25 @@ class _ValidationCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppPalette.orange.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        validation.tags.isNotEmpty ? validation.tags.first.toUpperCase() : "VALIDATION",
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppPalette.orange,
-                          fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppPalette.orange.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          validation.tags.isNotEmpty ? validation.tags.first.toUpperCase() : "VALIDATION",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppPalette.orange,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       "${validation.responsesCount} Responses",
                       style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
@@ -336,13 +359,13 @@ class _ValidationCard extends StatelessWidget {
   }
 }
 
-class _PeopleFeed extends StatelessWidget {
+class _PeopleFeed extends ConsumerWidget {
   final String searchQuery;
 
   const _PeopleFeed({required this.searchQuery});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
 
     final dummyPeople = [
@@ -371,66 +394,76 @@ class _PeopleFeed extends StatelessWidget {
       p.skills.any((s) => s.toLowerCase().contains(searchQuery))
     ).toList();
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final person = filtered[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: colors.cardBackground,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
-                child: Text(
-                  person.name[0],
-                  style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
+    return RefreshIndicator(
+      color: AppPalette.orange,
+      onRefresh: () async {
+        ref.invalidate(communityUsersProvider);
+      },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+        itemCount: filtered.length,
+        itemBuilder: (context, index) {
+          final person = filtered[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colors.cardBackground,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
+                  child: Text(
+                    person.name[0],
+                    style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          person.name,
-                          style: AppTypography.subheadline.copyWith(
-                            color: colors.text,
-                            fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              person.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.subheadline.copyWith(
+                                color: colors.text,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: colors.surface,
-                            borderRadius: BorderRadius.circular(4),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: colors.surface,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              person.role,
+                              style: AppTypography.caption.copyWith(fontSize: 10, color: colors.textTertiary),
+                            ),
                           ),
-                          child: Text(
-                            person.role,
-                            style: AppTypography.caption.copyWith(fontSize: 10, color: colors.textTertiary),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      person.bio,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.footnote.copyWith(color: colors.textSecondary),
-                    ),
-                  ],
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        person.bio,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               Material(
                 color: AppPalette.orange,
                 borderRadius: BorderRadius.circular(8),
@@ -453,6 +486,7 @@ class _PeopleFeed extends StatelessWidget {
           ),
         );
       },
-    );
+    ),
+  );
   }
 }

@@ -7,7 +7,6 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
-import 'builder_profile_view.dart'; // For ProfileStat
 
 class UserProfileView extends ConsumerWidget {
   final User user;
@@ -32,51 +31,68 @@ class UserProfileView extends ConsumerWidget {
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.chevron_left, color: colors.text, size: 28),
+          icon: Icon(Icons.chevron_left_rounded, color: colors.text, size: 28),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Column(
-                    children: [
-                      AvatarView(name: user.name, imageURL: user.avatarURL, size: 80),
-                      const SizedBox(height: AppSpacing.md),
-                      Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(user.name, style: AppTypography.title3.copyWith(color: colors.text)),
-                              if (user.isVerified) ...[
-                                const SizedBox(width: 6),
-                                Icon(Icons.verified, size: 16, color: colors.info),
+        child: RefreshIndicator(
+          color: colors.primary,
+          backgroundColor: colors.cardBackground,
+          onRefresh: () async {
+            ref.invalidate(validationsProvider);
+            await Future.delayed(const Duration(milliseconds: 300));
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        AvatarView(name: user.name, imageURL: user.avatarURL, size: 80),
+                        const SizedBox(height: AppSpacing.md),
+                        Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    user.name,
+                                    style: AppTypography.title3.copyWith(color: colors.text),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (user.isVerified) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.verified, size: 16, color: AppPalette.orange),
+                                ],
                               ],
-                            ],
-                          ),
+                            ),
                           const SizedBox(height: 4),
                           Text("@${user.username}", style: AppTypography.subheadline.copyWith(color: colors.textSecondary)),
-                          const SizedBox(height: 4),
-                          Text(
-                            user.bio,
-                            style: AppTypography.editorialQuote.copyWith(color: colors.textSecondary),
-                            textAlign: TextAlign.center,
-                            maxLines: 3,
-                          ),
+                          if (user.bio.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              user.bio,
+                              style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                              textAlign: TextAlign.center,
+                              maxLines: 3,
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: AppSpacing.md),
 
-                      // Stats
+                      // Stats — borderless surface
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         decoration: BoxDecoration(
                           color: colors.cardBackground,
                           borderRadius: BorderRadius.circular(14),
@@ -84,9 +100,9 @@ class UserProfileView extends ConsumerWidget {
                         child: Row(
                           children: [
                             Expanded(child: ProfileStat(value: "${user.validationsCount}", label: "Validations")),
-                            Container(width: 1, height: 30, color: colors.border),
+                            Container(width: 1, height: 26, color: colors.divider),
                             Expanded(child: ProfileStat(value: "${user.validationsCompleted}", label: "Feedback Given")),
-                            Container(width: 1, height: 30, color: colors.border),
+                            Container(width: 1, height: 26, color: colors.divider),
                             Expanded(child: ProfileStat(value: "${(user.helpfulnessScore * 100).toStringAsFixed(0)}%", label: "Helpfulness")),
                           ],
                         ),
@@ -94,7 +110,7 @@ class UserProfileView extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
 
                 // Validations
                 if (theirValidations.isNotEmpty) ...[
@@ -109,43 +125,75 @@ class UserProfileView extends ConsumerWidget {
                   ...theirValidations.map((v) {
                     return Padding(
                       padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.sm),
-                      child: GestureDetector(
-                        onTap: () {
-                          context.push(
-                            '/validation-detail',
-                            extra: {
-                              'validation': v,
-                              'author': user,
-                            },
-                          );
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: colors.cardBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: colors.border, width: 1),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(v.title, style: AppTypography.headline.copyWith(color: colors.text), maxLines: 2),
-                              const SizedBox(height: 4),
-                              Text(v.problem, style: AppTypography.caption.copyWith(color: colors.textSecondary), maxLines: 2),
-                            ],
+                      child: Material(
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            context.push(
+                              '/validation-detail/${v.id}',
+                              extra: v,
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(v.title, style: AppTypography.headline.copyWith(color: colors.text), maxLines: 2),
+                                const SizedBox(height: 4),
+                                Text(v.problem, style: AppTypography.caption.copyWith(color: colors.textSecondary), maxLines: 2),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     );
                   }),
                 ],
-                const SizedBox(height: 100),
+                const SizedBox(height: 80),
               ],
             ),
           ),
         ),
       ),
+    ),
+  );
+  }
+}
+
+class ProfileStat extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const ProfileStat({super.key, required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: AppTypography.headline.copyWith(
+            color: colors.text,
+            fontWeight: FontWeight.w700,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            color: colors.textTertiary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }

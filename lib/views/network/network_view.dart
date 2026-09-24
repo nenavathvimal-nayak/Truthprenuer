@@ -5,6 +5,7 @@ import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
+import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
 class NetworkView extends ConsumerStatefulWidget {
@@ -152,36 +153,50 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
 
           // Person List
           Expanded(
-            child: filtered.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xxl),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.people_outline_rounded, size: 40, color: colors.textTertiary),
-                          const SizedBox(height: 16),
-                          Text(
-                            "No people found",
-                            style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+            child: RefreshIndicator(
+              color: AppPalette.orange,
+              onRefresh: () async {
+                ref.invalidate(communityUsersProvider);
+                await Future.delayed(const Duration(milliseconds: 300));
+              },
+              child: filtered.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xxl),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.people_outline_rounded, size: 40, color: colors.textTertiary),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "No people found",
+                                  style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  "Try adjusting your search query or role filter.",
+                                  style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            "Try adjusting your search query or role filter.",
-                            style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final person = filtered[index];
+                        return _PersonCard(person: person);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final person = filtered[index];
-                      return _PersonCard(person: person);
-                    },
-                  ),
+            ),
           ),
         ],
       ),

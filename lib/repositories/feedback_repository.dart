@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -162,7 +162,7 @@ class FeedbackRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('FeedbackRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'FeedbackRepository');
       return [];
     }
   }

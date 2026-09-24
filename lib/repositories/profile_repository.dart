@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/models.dart';
@@ -138,7 +139,7 @@ class ProfileRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('ProfileRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'ProfileRepository');
       return [];
     }
   }

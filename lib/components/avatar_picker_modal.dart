@@ -91,11 +91,15 @@ class _AvatarPickerModalState extends ConsumerState<AvatarPickerModal> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Update Profile Photo",
-                style: AppTypography.title2.copyWith(
-                  color: colors.text,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  "Update Profile Photo",
+                  style: AppTypography.title2.copyWith(
+                    color: colors.text,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               IconButton(

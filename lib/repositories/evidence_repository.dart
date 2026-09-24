@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/startup_health_models.dart';
@@ -91,7 +91,7 @@ class EvidenceRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('EvidenceRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'EvidenceRepository');
       return [];
     }
   }

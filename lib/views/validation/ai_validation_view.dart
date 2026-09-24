@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import '../../main.dart';
 import '../../models/startup_health_models.dart';
 import '../../utils/haptic_manager.dart';
 import '../../components/buttons.dart';
@@ -25,13 +24,8 @@ class _AIValidationViewState extends State<AIValidationView> {
     setState(() => _isReanalyzing = true);
     HapticManager.shared.mediumImpact();
     
-    const geminiKey = AppConfig.geminiApiKey;
-    if (geminiKey.isNotEmpty && geminiKey != 'your_gemini_api_key_here') {
-      // Call Gemini 1.5 Flash API here
-      await Future.delayed(const Duration(seconds: 2));
-    } else {
-      await Future.delayed(const Duration(milliseconds: 1200));
-    }
+    await Future.delayed(const Duration(seconds: 2));
+
 
     if (!mounted) return;
     setState(() => _isReanalyzing = false);

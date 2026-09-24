@@ -137,43 +137,55 @@ class _ValidationDashboardViewState extends ConsumerState<ValidationDashboardVie
   }
 }
 
-class _ActiveValidationsTab extends StatelessWidget {
+class _ActiveValidationsTab extends ConsumerWidget {
   final AsyncValue<List<ValidationRequest>> validationsAsync;
 
   const _ActiveValidationsTab({required this.validationsAsync});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
 
-    return validationsAsync.when(
+    return RefreshIndicator(
+      color: AppPalette.orange,
+      onRefresh: () async {
+        ref.invalidate(validationsProvider);
+      },
+      child: validationsAsync.when(
       data: (validations) {
         if (validations.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxl),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.verified_outlined, size: 44, color: colors.textTertiary),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No active validations",
-                    style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.verified_outlined, size: 44, color: colors.textTertiary),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No active validations",
+                        style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Create your first validation sprint to test assumptions with real market evidence.",
+                        textAlign: TextAlign.center,
+                        style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Create your first validation sprint to test assumptions with real market evidence.",
-                    textAlign: TextAlign.center,
-                    style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           );
         }
 
         return ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.sm),
           itemCount: validations.length,
           itemBuilder: (context, index) {
@@ -200,20 +212,25 @@ class _ActiveValidationsTab extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppPalette.orange.withValues(alpha: 0.10),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: AppPalette.orange,
-                                  fontWeight: FontWeight.w700,
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: AppPalette.orange.withValues(alpha: 0.10),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppPalette.orange,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               "${v.responsesCount} Responses",
                               style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
@@ -255,8 +272,14 @@ class _ActiveValidationsTab extends StatelessWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
-      error: (err, _) => Center(child: Text("Error: $err")),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
+        error: (err, _) => ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(child: Padding(padding: const EdgeInsets.all(32), child: Text("Error: $err"))),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -266,27 +289,33 @@ class _DraftsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.edit_note_rounded, size: 44, color: colors.textTertiary),
-            const SizedBox(height: 16),
-            Text(
-              "No unfinished drafts",
-              style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.edit_note_rounded, size: 44, color: colors.textTertiary),
+                const SizedBox(height: 16),
+                Text(
+                  "No unfinished drafts",
+                  style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Validations you start creating will be saved here automatically.",
+                  textAlign: TextAlign.center,
+                  style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              "Validations you start creating will be saved here automatically.",
-              textAlign: TextAlign.center,
-              style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -296,27 +325,33 @@ class _CompletedTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.task_alt_rounded, size: 44, color: colors.textTertiary),
-            const SizedBox(height: 16),
-            Text(
-              "No completed sprints yet",
-              style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xxl),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.task_alt_rounded, size: 44, color: colors.textTertiary),
+                const SizedBox(height: 16),
+                Text(
+                  "No completed sprints yet",
+                  style: AppTypography.title3.copyWith(color: colors.text, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Completed validation cycles with resolved founder decisions will appear here.",
+                  textAlign: TextAlign.center,
+                  style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              "Completed validation cycles with resolved founder decisions will appear here.",
-              textAlign: TextAlign.center,
-              style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

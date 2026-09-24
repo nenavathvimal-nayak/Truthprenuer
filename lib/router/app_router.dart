@@ -33,7 +33,7 @@ import '../models/models.dart';
 import '../repositories/supabase_client.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/',
   redirect: (context, state) {
     final isAuthRoute = [
       '/splash',
@@ -45,7 +45,9 @@ final GoRouter appRouter = GoRouter(
       '/forgot-password'
     ].contains(state.matchedLocation);
 
-    final isAuthenticated = safeSupabaseClient?.auth.currentUser != null;
+    final client = safeSupabaseClient;
+    // In standalone/offline preview mode, allow direct access to app
+    final isAuthenticated = client == null || client.auth.currentUser != null;
 
     if (!isAuthenticated) {
       return isAuthRoute ? null : '/auth';

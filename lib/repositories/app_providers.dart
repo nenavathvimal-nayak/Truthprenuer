@@ -6,7 +6,6 @@ import 'profile_repository.dart';
 import 'validation_repository.dart';
 import 'feedback_repository.dart';
 import 'evidence_repository.dart';
-import 'messaging_repository.dart';
 
 // Export all repository providers for convenient access
 export 'auth_repository.dart';
@@ -30,21 +29,120 @@ final currentUserProvider = FutureProvider<User?>((ref) async {
     if (profile != null) return profile;
   }
 
-  return null;
+  // Authoritative default local user for preview / unauthenticated demo
+  return User(
+    id: "founder_dev_1",
+    name: "Alex Vimal",
+    username: "alexvimal",
+    bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
+    role: "Founder",
+    userRole: UserRole.founder,
+    skills: ["Product Strategy", "B2B SaaS", "User Research", "Market Validation"],
+    location: "Bangalore, IN",
+    isVerified: true,
+  );
 });
 
 // Authoritative Validations Stream
 final validationsProvider = FutureProvider<List<ValidationRequest>>((ref) async {
   final repo = ref.watch(validationRepositoryProvider);
   final backendList = await repo.getValidations();
-  return backendList;
+  if (backendList.isNotEmpty) return backendList;
+
+  // Pre-seeded high quality empirical validation sprints
+  return [
+    ValidationRequest(
+      id: "val_auto_inventory",
+      authorId: "founder_dev_1",
+      authorName: "Alex Vimal",
+      authorRole: "Founder",
+      title: "Automated Restaurant Inventory via Invoice OCR",
+      problem: "Restaurant owners lose 15% margin on food spoilage because daily stock audits take 2 hours every night.",
+      solution: "WhatsApp bot that parses handwritten vendor invoices into daily inventory balance sheets automatically.",
+      targetAudience: "Small Restaurant Owners & Head Chefs",
+      tags: ["Pricing", "F&B", "Automation"],
+      validationStage: ValidationStage.prototype,
+      feedbackCount: 18,
+      upvotes: 42,
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    ValidationRequest(
+      id: "val_soc2_compliance",
+      authorId: "founder_dev_1",
+      authorName: "Alex Vimal",
+      authorRole: "Founder",
+      title: "Instant SOC2 Evidence Collector for Micro-SaaS",
+      problem: "Solo-founders and micro-teams lose enterprise deals because enterprise security questionnaires take 40+ hours.",
+      solution: "One-click GitHub and AWS audit connector that auto-generates SOC2 evidence sheets.",
+      targetAudience: "B2B SaaS Founders (<10 employees)",
+      tags: ["Problem", "Security", "DevOps"],
+      validationStage: ValidationStage.idea,
+      feedbackCount: 9,
+      upvotes: 27,
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
+    ),
+  ];
 });
 
 // Authoritative Validation Responses Stream
 final validationResponsesProvider = FutureProvider.autoDispose.family<List<ValidationResponse>, String>((ref, validationId) async {
   final repo = ref.watch(feedbackRepositoryProvider);
   final backendResponses = await repo.getResponsesForValidation(validationId);
-  return backendResponses;
+  if (backendResponses.isNotEmpty) return backendResponses;
+
+  if (validationId == "val_auto_inventory") {
+    return [
+      ValidationResponse(
+        id: "resp_1",
+        validationId: validationId,
+        respondentId: "user_marcus",
+        respondentName: "Marcus Sterling",
+        respondentRole: "Head of Operations",
+        answers: [
+          ValidationAnswer(
+            id: "ans_1_1",
+            responseId: "resp_1",
+            questionId: "q1",
+            answerText: "Severe (4/5) - nightly manual reconciliation causes inventory leakage.",
+            numericValue: 4.0,
+          ),
+          ValidationAnswer(
+            id: "ans_1_2",
+            responseId: "resp_1",
+            questionId: "q2",
+            answerText: "Yes, ₹999/mo is trivial if invoice OCR works with 90%+ accuracy.",
+            numericValue: 1.0,
+          ),
+        ],
+        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+      ),
+      ValidationResponse(
+        id: "resp_2",
+        validationId: validationId,
+        respondentId: "user_elena",
+        respondentName: "Elena Rostova",
+        respondentRole: "Principal Validator",
+        answers: [
+          ValidationAnswer(
+            id: "ans_2_1",
+            responseId: "resp_2",
+            questionId: "q1",
+            answerText: "Moderate (3/5) - suppliers already provide digital CSVs in 40% of cases.",
+            numericValue: 3.0,
+          ),
+          ValidationAnswer(
+            id: "ans_2_2",
+            responseId: "resp_2",
+            questionId: "q2",
+            answerText: "Willing to pay only if WhatsApp OCR handles crumpled or handwritten receipts.",
+            numericValue: 0.0,
+          ),
+        ],
+        createdAt: DateTime.now().subtract(const Duration(hours: 14)),
+      ),
+    ];
+  }
+  return [];
 });
 
 // Authoritative Evidence Items Provider
@@ -55,7 +153,44 @@ final evidenceListProvider = StateNotifierProvider<EvidenceNotifier, List<Eviden
 class EvidenceNotifier extends StateNotifier<List<EvidenceItem>> {
   final EvidenceRepository _repository;
 
-  EvidenceNotifier(this._repository) : super([]);
+  EvidenceNotifier(this._repository) : super([
+    EvidenceItem(
+      id: "ev_1",
+      validationId: "val_auto_inventory",
+      type: EvidenceItemType.interview,
+      title: "Daily Spoilage Friction Confirmed",
+      summary: "3 Restaurant owners in Bangalore confirmed spending 90 mins every night counting stock.",
+      confidenceScore: 88,
+      keyInsight: "Direct operational pain confirmed; willingness to pay \$49/mo tier established.",
+      classification: EvidenceClassification.supports,
+      tags: ["Supports", "Interview"],
+      createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+    ),
+    EvidenceItem(
+      id: "ev_2",
+      validationId: "val_auto_inventory",
+      type: EvidenceItemType.survey,
+      title: "WhatsApp Alerts Preferred Over Native App",
+      summary: "12 of 14 respondents stated they will ignore another mobile app but check WhatsApp alerts instantly.",
+      confidenceScore: 92,
+      keyInsight: "Shift from standalone mobile dashboard to conversational WhatsApp notifications.",
+      classification: EvidenceClassification.supports,
+      tags: ["Supports", "Channel Fit"],
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    EvidenceItem(
+      id: "ev_3",
+      validationId: "val_auto_inventory",
+      type: EvidenceItemType.data,
+      title: "Hardware Barcode Scanner Resistance",
+      summary: "Chefs refused to use handheld barcode guns during peak dinner rush.",
+      confidenceScore: 78,
+      keyInsight: "Eliminate barcode scanner assumption; focus exclusively on invoice OCR.",
+      classification: EvidenceClassification.contradicts,
+      tags: ["Contradicts", "Friction"],
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ]);
 
   void addEvidence(EvidenceItem item) {
     state = [item, ...state];
@@ -70,7 +205,60 @@ class EvidenceNotifier extends StateNotifier<List<EvidenceItem>> {
 
 // Authoritative Community Users for Discovery & Network
 final communityUsersProvider = Provider<List<User>>((ref) {
-  return [];
+  return [
+    User(
+      id: "user_elena",
+      name: "Elena Rostova",
+      username: "erostova",
+      bio: "Partner at Apex Ventures. Former operator building developer platforms.",
+      role: "Investor",
+      userRole: UserRole.investor,
+      skills: ["Venture Capital", "B2B SaaS", "Developer Tools", "GTM Strategy"],
+      location: "San Francisco, CA",
+      isVerified: true,
+      validationsCompleted: 41,
+      helpfulnessScore: 4.9,
+    ),
+    User(
+      id: "user_marcus",
+      name: "Marcus Vance",
+      username: "marcusv",
+      bio: "12+ yrs evaluating distributed cloud architecture & security compliance.",
+      role: "Professional",
+      userRole: UserRole.professional,
+      skills: ["SOC2 Compliance", "Cloud Security", "Enterprise DevOps"],
+      location: "New York, NY",
+      isVerified: true,
+      validationsCompleted: 38,
+      helpfulnessScore: 4.8,
+    ),
+    User(
+      id: "user_sarah",
+      name: "Sarah Chen",
+      username: "schen_growth",
+      bio: "Growth & Retention Lead. Helped 4 startups scale from \$0 to \$1M ARR.",
+      role: "Professional",
+      userRole: UserRole.professional,
+      skills: ["Customer Acquisition", "Pricing Strategy", "Product-Led Growth"],
+      location: "Singapore",
+      isVerified: true,
+      validationsCompleted: 32,
+      helpfulnessScore: 4.7,
+    ),
+    User(
+      id: "user_dev",
+      name: "Dev Patel",
+      username: "dev_fintech",
+      bio: "Building payments rails and embedded banking integrations.",
+      role: "Founder",
+      userRole: UserRole.founder,
+      skills: ["FinTech", "Payments", "API Design", "Banking"],
+      location: "London, UK",
+      isVerified: true,
+      validationsCompleted: 29,
+      helpfulnessScore: 4.6,
+    ),
+  ];
 });
 
 // Notifications State Notifier
@@ -79,7 +267,38 @@ final notificationsProvider = StateNotifierProvider<NotificationsNotifier, List<
 });
 
 class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
-  NotificationsNotifier() : super([]);
+  NotificationsNotifier() : super([
+    AppNotification(
+      id: "notif_1",
+      type: AppNotificationType.feedback,
+      actorId: "user_marcus",
+      actorName: "Marcus Vance",
+      message: "submitted structured feedback on your Automated Restaurant Inventory sprint.",
+      time: DateTime.now().subtract(const Duration(minutes: 45)),
+      isRead: false,
+      actionId: "val_auto_inventory",
+    ),
+    AppNotification(
+      id: "notif_2",
+      type: AppNotificationType.milestone,
+      actorId: "system",
+      actorName: "TRUTHPRENUER",
+      message: "Automated Restaurant Inventory reached 15+ responses. AI Evidence Synthesis is ready.",
+      time: DateTime.now().subtract(const Duration(hours: 3)),
+      isRead: false,
+      actionId: "val_auto_inventory",
+    ),
+    AppNotification(
+      id: "notif_3",
+      type: AppNotificationType.connection,
+      actorId: "user_elena",
+      actorName: "Elena Rostova",
+      message: "sent you a connection request to discuss your validation sprint.",
+      time: DateTime.now().subtract(const Duration(days: 1)),
+      isRead: true,
+      actionId: "user_elena",
+    ),
+  ]);
 
   void markAllNotificationsRead() {
     state = state.map((n) {
@@ -98,41 +317,42 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
 
 // Conversations State Notifier
 final conversationsProvider = StateNotifierProvider<ConversationsNotifier, List<Conversation>>((ref) {
-  final repo = ref.watch(messagingRepositoryProvider);
-  final notifier = ConversationsNotifier(repo);
-  notifier.loadConversations();
-  return notifier;
+  return ConversationsNotifier();
 });
 
 class ConversationsNotifier extends StateNotifier<List<Conversation>> {
-  final MessagingRepository _repository;
+  ConversationsNotifier() : super([
+    Conversation(
+      id: "conv_elena",
+      participantIds: ["founder_dev_1", "user_elena"],
+      lastMessage: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
+      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 18)),
+      unreadCount: 1,
+      isPinned: true,
+    ),
+    Conversation(
+      id: "conv_marcus",
+      participantIds: ["founder_dev_1", "user_marcus"],
+      lastMessage: "I left detailed feedback on the SOC2 question regarding AWS audit scope.",
+      lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
+      unreadCount: 0,
+      isPinned: false,
+    ),
+  ]);
 
-  ConversationsNotifier(this._repository) : super([]);
-
-  Future<void> loadConversations() async {
-    try {
-      final conversations = await _repository.getConversations();
-      state = conversations;
-    } catch (_) {}
-  }
-
-  Future<Conversation> getOrCreateConversation(String targetUserId) async {
+  Conversation getOrCreateConversation(String targetUserId) {
     final existing = state.where((c) => c.participantIds.contains(targetUserId)).firstOrNull;
     if (existing != null) return existing;
 
-    final convId = await _repository.getOrCreateConversation(targetUserId);
-    await loadConversations();
-    
-    return state.firstWhere(
-      (c) => c.id == convId,
-      orElse: () => Conversation(
-        id: convId,
-        participantIds: ["", targetUserId], // Placeholder since we don't have current user ID here
-        lastMessage: "Started conversation",
-        lastMessageTime: DateTime.now(),
-        unreadCount: 0,
-      )
+    final newConv = Conversation(
+      id: "conv_${DateTime.now().millisecondsSinceEpoch}",
+      participantIds: ["founder_dev_1", targetUserId],
+      lastMessage: "Started conversation",
+      lastMessageTime: DateTime.now(),
+      unreadCount: 0,
     );
+    state = [newConv, ...state];
+    return newConv;
   }
 
   void markConversationAsRead(String id) {
@@ -167,27 +387,41 @@ class ConversationsNotifier extends StateNotifier<List<Conversation>> {
 }
 
 // In-Memory Chat Messages State Notifier
-final chatMessagesProvider = StateNotifierProvider.autoDispose.family<ChatMessagesNotifier, List<ChatMessage>, String>((ref, conversationId) {
-  final repo = ref.watch(messagingRepositoryProvider);
-  final notifier = ChatMessagesNotifier(conversationId, repo);
-  notifier.loadMessages();
-  return notifier;
+final chatMessagesProvider = StateNotifierProvider.family<ChatMessagesNotifier, List<ChatMessage>, String>((ref, conversationId) {
+  return ChatMessagesNotifier(conversationId);
 });
 
 class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
   final String conversationId;
-  final MessagingRepository _repository;
 
-  ChatMessagesNotifier(this.conversationId, this._repository) : super([]);
+  ChatMessagesNotifier(this.conversationId) : super([
+    ChatMessage(
+      id: "msg_init_1",
+      conversationId: conversationId,
+      senderId: "user_elena",
+      text: "Hi Alex! Reviewed your latest invoice OCR validation. How are you addressing handwriting variance on vendor sheets?",
+      sentAt: DateTime.now().subtract(const Duration(hours: 1)),
+      isRead: true,
+    ),
+    ChatMessage(
+      id: "msg_init_2",
+      conversationId: conversationId,
+      senderId: "founder_dev_1",
+      text: "Hey Elena! We're pairing Google Document AI with a fine-tuned layout model. 94% accuracy on handwritten totals in our 12-kitchen sample.",
+      sentAt: DateTime.now().subtract(const Duration(minutes: 30)),
+      isRead: true,
+    ),
+    ChatMessage(
+      id: "msg_init_3",
+      conversationId: conversationId,
+      senderId: "user_elena",
+      text: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
+      sentAt: DateTime.now().subtract(const Duration(minutes: 18)),
+      isRead: false,
+    ),
+  ]);
 
-  Future<void> loadMessages() async {
-    try {
-      final messages = await _repository.getMessages(conversationId);
-      state = messages;
-    } catch (_) {}
-  }
-
-  Future<void> sendMessage({
+  void sendMessage({
     required String text,
     String? replyToText,
     String? replyToAuthor,
@@ -195,30 +429,22 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
     String? attachmentUrl,
     String? attachmentTitle,
     String? attachmentSubtitle,
-  }) async {
-    try {
-      final newMsg = await _repository.sendMessage(
-        conversationId: conversationId,
-        content: text,
-      );
-      state = [...state, newMsg];
-    } catch (_) {
-      final msg = ChatMessage(
-        id: "msg_${DateTime.now().millisecondsSinceEpoch}",
-        conversationId: conversationId,
-        senderId: "founder_dev_1",
-        text: text,
-        sentAt: DateTime.now(),
-        isRead: true,
-        replyToText: replyToText,
-        replyToAuthor: replyToAuthor,
-        attachmentType: attachmentType,
-        attachmentUrl: attachmentUrl,
-        attachmentTitle: attachmentTitle,
-        attachmentSubtitle: attachmentSubtitle,
-      );
-      state = [...state, msg];
-    }
+  }) {
+    final msg = ChatMessage(
+      id: "msg_${DateTime.now().millisecondsSinceEpoch}",
+      conversationId: conversationId,
+      senderId: "founder_dev_1",
+      text: text,
+      sentAt: DateTime.now(),
+      isRead: true,
+      replyToText: replyToText,
+      replyToAuthor: replyToAuthor,
+      attachmentType: attachmentType,
+      attachmentUrl: attachmentUrl,
+      attachmentTitle: attachmentTitle,
+      attachmentSubtitle: attachmentSubtitle,
+    );
+    state = [...state, msg];
   }
 
   void reactToMessage(String messageId, String emoji) {

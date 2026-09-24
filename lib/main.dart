@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -56,11 +57,22 @@ class TruthprenuerApp extends ConsumerWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: darkColors.background,
         primaryColor: darkColors.primary,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
         textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
         colorScheme: ColorScheme.dark(
           primary: darkColors.primary,
           surface: darkColors.cardBackground,
           onSurface: darkColors.text,
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          },
         ),
         extensions: <ThemeExtension<dynamic>>[darkColors],
       ),
@@ -68,11 +80,22 @@ class TruthprenuerApp extends ConsumerWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: lightColors.background,
         primaryColor: lightColors.primary,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
         textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
         colorScheme: ColorScheme.light(
           primary: lightColors.primary,
           surface: lightColors.cardBackground,
           onSurface: lightColors.text,
+        ),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+          },
         ),
         extensions: <ThemeExtension<dynamic>>[lightColors],
       ),

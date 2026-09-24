@@ -20,20 +20,30 @@ class DashboardView extends ConsumerWidget {
     final validationsAsync = ref.watch(validationsProvider);
 
     return Scaffold(
-      appBar: const SharedTopNavBar(),
+      appBar: const SharedTopNavBar(isHome: true),
       backgroundColor: colors.background,
-      body: RefreshIndicator(
-        color: AppPalette.orange,
-        onRefresh: () async {
-          ref.invalidate(currentUserProvider);
-          ref.invalidate(validationsProvider);
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragEnd: (DragEndDetails details) {
+          // Swipe left-to-right on HOME opens [new validation]
+          if ((details.primaryVelocity ?? 0) > 250) {
+            HapticManager.shared.impactMedium();
+            context.push('/validation-wizard');
+          }
         },
-        child: switch (currentRole) {
-          UserRole.founder => _FounderHomeView(validationsAsync: validationsAsync),
-          UserRole.investor => _InvestorHomeView(validationsAsync: validationsAsync),
-          UserRole.professional => _ProfessionalHomeView(validationsAsync: validationsAsync),
-          UserRole.creator || UserRole.student => _CreatorHomeView(validationsAsync: validationsAsync),
-        },
+        child: RefreshIndicator(
+          color: AppPalette.orange,
+          onRefresh: () async {
+            ref.invalidate(currentUserProvider);
+            ref.invalidate(validationsProvider);
+          },
+          child: switch (currentRole) {
+            UserRole.founder => _FounderHomeView(validationsAsync: validationsAsync),
+            UserRole.investor => _InvestorHomeView(validationsAsync: validationsAsync),
+            UserRole.professional => _ProfessionalHomeView(validationsAsync: validationsAsync),
+            UserRole.creator || UserRole.student => _CreatorHomeView(validationsAsync: validationsAsync),
+          },
+        ),
       ),
     );
   }
@@ -56,6 +66,7 @@ class _FounderHomeView extends ConsumerWidget {
         // Empty State
         if (validations.isEmpty) {
           return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.screenPadding,
               vertical: AppSpacing.xxl,
@@ -118,6 +129,7 @@ class _FounderHomeView extends ConsumerWidget {
         final activeValidation = validations.first;
 
         return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.screenPadding),
           children: [
             // CURRENT FOCUS
@@ -136,23 +148,28 @@ class _FounderHomeView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppPalette.orange.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          activeValidation.tags.isNotEmpty ? activeValidation.tags.first.toUpperCase() : "HYPOTHESIS",
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppPalette.orange,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.6,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppPalette.orange.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            activeValidation.tags.isNotEmpty ? activeValidation.tags.first.toUpperCase() : "HYPOTHESIS",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppPalette.orange,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.6,
+                            ),
                           ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 8),
                       Text(
                         "${activeValidation.responsesCount} RESPONSES",
                         style: AppTypography.labelSmall.copyWith(
@@ -268,6 +285,7 @@ class _InvestorHomeView extends StatelessWidget {
     final colors = Theme.of(context).appColors;
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
       children: [
         const SizedBox(height: 4),
@@ -414,6 +432,7 @@ class _ProfessionalHomeView extends StatelessWidget {
     final colors = Theme.of(context).appColors;
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
       children: [
         const SizedBox(height: 4),
@@ -526,6 +545,7 @@ class _CreatorHomeView extends StatelessWidget {
     final colors = Theme.of(context).appColors;
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(AppSpacing.screenPadding),
       children: [
         const SizedBox(height: 4),

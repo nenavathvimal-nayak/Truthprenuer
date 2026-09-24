@@ -1,9 +1,10 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../models/startup_health_models.dart';
-
 import 'supabase_client.dart';
 
 final aiRepositoryProvider = Provider<AIRepository>((ref) {
@@ -12,6 +13,8 @@ final aiRepositoryProvider = Provider<AIRepository>((ref) {
 
 class AIRepository {
   final SupabaseClient? _client;
+  // TODO: Use environment variable for backend URL in production
+  final String _backendUrl = const String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8000');
 
   AIRepository([this._client]);
 
@@ -23,91 +26,73 @@ class AIRepository {
     final user = _client?.auth.currentUser;
     final authorId = user?.id ?? validation.authorId;
 
-    // Synthesize observations and contradictions from empirical evidence
-    final supportedCount = evidence.where((e) => e.classification == EvidenceClassification.supports).length;
-    final contradictedCount = evidence.where((e) => e.classification == EvidenceClassification.contradicts).length;
-
-    final observations = [
-      "${responses.length} respondent signals collected across target persona '${validation.targetAudience}'.",
-      if (evidence.isNotEmpty) "${evidence.length} empirical evidence artifacts cataloged in evidence locker.",
-      "Primary assumption under test: '${validation.solution}'.",
-    ];
-
-    final patterns = [
-      if (supportedCount > 0) "$supportedCount data points validate core problem urgency.",
-      "Validators actively compare against existing manual workarounds.",
-      "Clear preference for lightweight, non-intrusive automation.",
-    ];
-
-    final contradictions = [
-      if (contradictedCount > 0)
-        "$contradictedCount validator observations directly contradict proposed delivery mechanism.",
-      "Price sensitivity observed at enterprise tier vs self-serve adoption.",
-    ];
-
-    final uncertainties = [
-      "Willingness to pay annual upfront contracts remains unverified.",
-      "Integration friction with legacy internal tools requires empirical test.",
-    ];
-
-    final missingInformation = [
-      "Quantitative churn rate of existing alternatives.",
-      "Decision-maker sign-off timeline for commercial pilots.",
-    ];
-
-    final suggestedQuestions = [
-      "What is the exact dollar loss incurred when this workflow breaks?",
-      "Who inside your team approves software purchases under \$500/year?",
-    ];
-
-    const nextExperiment = "Conduct 5 focused pricing interviews testing \$49/seat/mo vs \$199 flat tier.";
-
-    final report = AIValidationReport(
-      validationId: validation.id,
-      observations: observations,
-      observedPatterns: patterns,
-      contradictions: contradictions,
-      evidenceStrength: supportedCount >= 3 ? "High Conviction" : "Emerging Signal",
-      uncertainties: uncertainties,
-      missingInformation: missingInformation,
-      suggestedQuestions: suggestedQuestions,
-      nextExperiment: nextExperiment,
-      problemAnalysis: "Empirical validation indicates genuine problem urgency with ongoing friction around pricing and delivery channels.",
-      competitorOverview: "Target audience currently cobbles together manual spreadsheets and ad-hoc notifications.",
-      marketAssumptions: [
-        "Customer willingness to adopt WhatsApp/API notifications over dedicated desktop dashboards.",
-        "Rapid pilot onboarding within 48 hours without engineering support.",
-      ],
-      risks: [
-        "Enterprise compliance objection regarding customer data privacy.",
-        "Low switching friction if competitors add invoice OCR.",
-      ],
-    );
-
-    // Persist to Supabase
     try {
-      await _client?.from('ai_analyses').insert({
-        'id': report.id,
-        'validation_id': validation.id,
-        'author_id': authorId,
-        'observations': report.observations,
-        'observed_patterns': report.observedPatterns,
-        'contradictions': report.contradictions,
-        'evidence_strength': report.evidenceStrength,
-        'uncertainties': report.uncertainties,
-        'missing_information': report.missingInformation,
-        'suggested_questions': report.suggestedQuestions,
-        'next_experiment': {'description': report.nextExperiment},
-        'raw_summary': report.problemAnalysis,
-        'model_version': 'gemini-1.5-pro',
-        'created_at': report.generatedAt.toIso8601String(),
-      });
-    } catch (e) {
-      debugPrint('AIRepository error: $e');
-      throw Exception('Failed to persist AI analysis: $e');
-    }
+      // 1. Ask FastAPI backend for AI Analysis
+      final response = await http.post(
+        Uri.parse('$_backendUrl/api/v1/ai/validate'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'problem': validation.problem,
+          'solution': validation.solution,
+          'industry': validation.tags.join(", "),
+          'target_audience': validation.targetAudience,
+        }),
+      );
 
-    return report;
+      if (response.statusCode != 200) {
+        throw Exception('Backend returned ${response.statusCode}: ${response.body}');
+      }
+
+      final data = jsonDecode(response.body);
+      final aiRawAnalysis = data['analysis'] ?? 'Analysis unavailable.';
+
+      // 2. Synthesize observations based on evidence
+      final supportedCount = evidence.where((e) => e.classification == EvidenceClassification.supports).length;
+      
+      final report = AIValidationReport(
+        validationId: validation.id,
+        observations: [
+          "${responses.length} respondent signals collected across target persona '${validation.targetAudience}'.",
+          if (evidence.isNotEmpty) "${evidence.length} empirical evidence artifacts cataloged in evidence locker.",
+        ],
+        observedPatterns: [],
+        contradictions: [],
+        evidenceStrength: supportedCount >= 3 ? "High Conviction" : "Emerging Signal",
+        uncertainties: [],
+        missingInformation: [],
+        suggestedQuestions: [],
+        nextExperiment: "Review AI analysis and formulate a new hypothesis.",
+        problemAnalysis: aiRawAnalysis,
+        competitorOverview: "",
+        marketAssumptions: [],
+        risks: [],
+      );
+
+      // 3. Persist to Supabase
+      if (_client != null) {
+        await _client.from('ai_analyses').insert({
+          'id': report.id,
+          'validation_id': validation.id,
+          'author_id': authorId,
+          'observations': report.observations,
+          'observed_patterns': report.observedPatterns,
+          'contradictions': report.contradictions,
+          'evidence_strength': report.evidenceStrength,
+          'uncertainties': report.uncertainties,
+          'missing_information': report.missingInformation,
+          'suggested_questions': report.suggestedQuestions,
+          'next_experiment': {'description': report.nextExperiment},
+          'raw_summary': report.problemAnalysis,
+          'model_version': data['model'] ?? 'fastapi-proxy',
+          'created_at': report.generatedAt.toIso8601String(),
+        });
+      }
+
+      return report;
+    } catch (e) {
+      AppLogger.error('Failed to generate AI analysis', e, null, 'AIRepository');
+      throw Exception('Failed to generate AI analysis: $e');
+    }
   }
 
   Future<AIValidationReport?> getAnalysisForValidation(String validationId) async {
@@ -148,7 +133,7 @@ class AIRepository {
         generatedAt: DateTime.tryParse(data['created_at'] ?? '') ?? DateTime.now(),
       );
     } catch (e) {
-      debugPrint('AIRepository query error: $e');
+      AppLogger.error('Failed to fetch AI analysis', e, null, 'AIRepository');
       return null;
     }
   }

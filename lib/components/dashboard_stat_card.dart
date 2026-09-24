@@ -44,10 +44,15 @@ class DashboardStatCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: AppTypography.caption.copyWith(color: colors.textSecondary),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               Icon(
                 icon,
                 size: 18,
@@ -70,10 +75,14 @@ class DashboardStatCard extends StatelessWidget {
                   color: isPositiveTrend ? colors.success : colors.error,
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  trendText!,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: isPositiveTrend ? colors.success : colors.error,
+                Expanded(
+                  child: Text(
+                    trendText!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isPositiveTrend ? colors.success : colors.error,
+                    ),
                   ),
                 ),
               ],

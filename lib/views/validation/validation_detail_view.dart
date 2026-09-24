@@ -338,8 +338,10 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
                       children: [
                         Row(
                           children: [
-                            const _SectionTitle(title: "STRUCTURED SIGNALS & RESPONSES", icon: Icons.forum_outlined),
-                            const Spacer(),
+                            const Expanded(
+                              child: _SectionTitle(title: "STRUCTURED SIGNALS & RESPONSES", icon: Icons.forum_outlined),
+                            ),
+                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
@@ -461,8 +463,10 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
                 // Section 3: EVIDENCE LOCKER
                 Row(
                   children: [
-                    const _SectionTitle(title: "EVIDENCE LOCKER", icon: Icons.folder_open_outlined),
-                    const Spacer(),
+                    const Expanded(
+                      child: _SectionTitle(title: "EVIDENCE LOCKER", icon: Icons.folder_open_outlined),
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       "${allEvidence.length} items",
                       style: AppTypography.caption.copyWith(color: colors.textTertiary),
@@ -600,14 +604,18 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
                         children: [
                           const Icon(Icons.insights_outlined, color: AppPalette.orange, size: 20),
                           const SizedBox(width: 8),
-                          Text(
-                            "Evidence-Derived Signal",
-                            style: AppTypography.headline.copyWith(
-                              color: colors.text,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              "Evidence-Derived Signal",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.headline.copyWith(
+                                color: colors.text,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -753,15 +761,20 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 16, color: AppPalette.orange),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: AppTypography.caption.copyWith(
-            color: colors.text,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.1,
+        Flexible(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.caption.copyWith(
+              color: colors.text,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+            ),
           ),
         ),
       ],

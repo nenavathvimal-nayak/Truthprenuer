@@ -35,6 +35,22 @@
 
   <title>taeed_flutter</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Disable text selection and tap highlights globally */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: none; /* Prevent pull-to-refresh bounce */
+      background-color: #0A0A0A; /* Match dark theme background */
+    }
+    /* Re-enable for inputs */
+    input, textarea {
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+  </style>
 </head>
 <body>
   <!--

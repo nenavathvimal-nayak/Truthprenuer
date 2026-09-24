@@ -58,10 +58,16 @@ class _SplashViewState extends ConsumerState<SplashView> with SingleTickerProvid
   }
 
   Future<void> _navigateAfterDelay() async {
+    // Wait minimum 2 seconds for the animation
     await Future.delayed(const Duration(seconds: 2));
-    
     if (!mounted) return;
     
+    // Wait for auth to initialize if it hasn't already
+    while (ref.read(authProvider).status == AuthStatus.unknown) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (!mounted) return;
+    }
+
     final authState = ref.read(authProvider);
     
     if (authState.status == AuthStatus.authenticated) {

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
@@ -65,7 +65,7 @@ class DecisionRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('DecisionRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'DecisionRepository');
       return [];
     }
   }
@@ -119,7 +119,7 @@ class DecisionRepository {
         );
       }).toList();
     } catch (e) {
-      debugPrint('DecisionRepository error: $e');
+      AppLogger.error('Failed to fetch data', e, null, 'DecisionRepository');
       return [];
     }
   }

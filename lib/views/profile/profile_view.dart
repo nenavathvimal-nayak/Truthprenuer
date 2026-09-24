@@ -23,18 +23,25 @@ class ProfileView extends ConsumerWidget {
     return Scaffold(
       appBar: const SharedTopNavBar(title: "Profile"),
       backgroundColor: colors.background,
-      body: userAsync.when(
-        data: (user) {
-          final displayUser = user ?? User(
-            id: "dev_user",
-            name: "Alex Vimal",
-            username: "alexvimal",
-            bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
-            role: currentRole.label,
-          );
+      body: RefreshIndicator(
+        color: AppPalette.orange,
+        onRefresh: () async {
+          ref.invalidate(currentUserProvider);
+          ref.invalidate(validationsProvider);
+        },
+        child: userAsync.when(
+          data: (user) {
+            final displayUser = user ?? User(
+              id: "dev_user",
+              name: "Alex Vimal",
+              username: "alexvimal",
+              bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
+              role: currentRole.label,
+            );
 
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.screenPadding),
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(AppSpacing.screenPadding),
             children: [
               // Header — borderless
               Container(
@@ -300,7 +307,8 @@ class ProfileView extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
         error: (err, _) => Center(child: Text("Error: $err")),
       ),
-    );
+    ),
+  );
   }
 }
 
