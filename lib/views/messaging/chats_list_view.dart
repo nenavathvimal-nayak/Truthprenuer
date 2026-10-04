@@ -23,7 +23,9 @@ extension ChatFilterExtension on ChatFilter {
 }
 
 class ChatsListView extends ConsumerStatefulWidget {
-  const ChatsListView({super.key});
+  final String? noticeBanner;
+
+  const ChatsListView({super.key, this.noticeBanner});
 
   @override
   ConsumerState<ChatsListView> createState() => _ChatsListViewState();
@@ -32,6 +34,7 @@ class ChatsListView extends ConsumerStatefulWidget {
 class _ChatsListViewState extends ConsumerState<ChatsListView> {
   String _searchText = "";
   ChatFilter _selectedFilter = ChatFilter.active;
+  bool _dismissedBanner = false;
 
   void _showNewMessageBottomSheet() {
     HapticManager.shared.impactLight();
@@ -324,6 +327,34 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
       ),
       body: Column(
         children: [
+          if (widget.noticeBanner != null && !_dismissedBanner)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.primary.withAlpha(25),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: colors.primary.withAlpha(80)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: colors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.noticeBanner!,
+                      style: AppTypography.footnote.copyWith(color: colors.text),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, size: 16, color: colors.textSecondary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    onPressed: () => setState(() => _dismissedBanner = true),
+                  ),
+                ],
+              ),
+            ),
           // Search bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),

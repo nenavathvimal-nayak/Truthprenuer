@@ -9,6 +9,7 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
+import '../../repositories/supabase_client.dart';
 import '../../utils/haptic_manager.dart';
 
 class ChatRoomView extends ConsumerStatefulWidget {
@@ -107,7 +108,13 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
     setState(() => _replyingTo = null);
     _scrollToBottom();
 
-    // Auto-reply simulation based on participant role
+    // Auto-reply simulation only for AI Mentor or offline mock demo previews
+    final isAIMentor = widget.otherUser.id == "ai_mentor";
+    final isMockDemo = safeSupabaseClient == null || widget.conversation.id.startsWith('conv_');
+    if (!isAIMentor && !isMockDemo) {
+      return;
+    }
+
     _replyTypingTimer?.cancel();
     _replyTimer?.cancel();
     _replyTypingTimer = Timer(const Duration(milliseconds: 700), () {

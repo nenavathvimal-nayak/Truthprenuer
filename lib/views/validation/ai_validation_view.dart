@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
@@ -9,9 +10,9 @@ import '../../components/buttons.dart';
 import '../../components/ai_evidence_insight_sheet.dart';
 
 class AIValidationView extends StatefulWidget {
-  final AIValidationReport report;
+  final AIValidationReport? report;
 
-  const AIValidationView({super.key, required this.report});
+  const AIValidationView({super.key, this.report});
 
   @override
   State<AIValidationView> createState() => _AIValidationViewState();
@@ -39,7 +40,8 @@ class _AIValidationViewState extends State<AIValidationView> {
   }
 
   void _copyInterviewQuestions(BuildContext context) {
-    final questions = widget.report.interviewQuestions.map((q) => "• $q").join("\n");
+    if (widget.report == null) return;
+    final questions = widget.report!.interviewQuestions.map((q) => "• $q").join("\n");
     Clipboard.setData(ClipboardData(text: "Founder Customer Discovery Questions:\n\n$questions"));
     HapticManager.shared.success();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -51,6 +53,45 @@ class _AIValidationViewState extends State<AIValidationView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final report = widget.report;
+
+    if (report == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: colors.primary.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.auto_awesome, color: colors.primary, size: 36),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                "Choose a Validation to Analyze",
+                style: AppTypography.title2.copyWith(color: colors.text, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                "AI Validation synthesizes live community evidence into thesis risk scores and customer interview scripts. Select an active validation to run analysis.",
+                style: AppTypography.body.copyWith(color: colors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              PrimaryButton(
+                title: "Explore Validations",
+                action: () => context.go('/explore'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return SingleChildScrollView(
       child: Padding(

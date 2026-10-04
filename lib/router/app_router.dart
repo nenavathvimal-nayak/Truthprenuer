@@ -79,9 +79,19 @@ final GoRouter appRouter = GoRouter(
     final isAuthenticated = client == null || client.auth.currentUser != null;
 
     if (!isAuthenticated) {
-      return isAuthRoute ? null : '/auth';
+      if (isAuthRoute) return null;
+      // Preserve target deep link with parameters safely
+      final targetUri = state.uri.toString();
+      return '/auth?redirect=${Uri.encodeComponent(targetUri)}';
     } else {
       if (state.matchedLocation == '/auth' || state.matchedLocation == '/signup') {
+        final redirectParam = state.uri.queryParameters['redirect'];
+        if (redirectParam != null && redirectParam.isNotEmpty) {
+          final decoded = Uri.decodeComponent(redirectParam).trim();
+          if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+            return decoded;
+          }
+        }
         return '/';
       }
       return null;
@@ -166,10 +176,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/chat-room',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>;
-        return ChatRoomView(
-          conversation: args['conversation'] as Conversation,
-          otherUser: args['otherUser'] as User,
+        final extra = state.extra;
+        if (extra is Map<String, dynamic> &&
+            extra['conversation'] is Conversation &&
+            extra['otherUser'] is User) {
+          return ChatRoomView(
+            conversation: extra['conversation'] as Conversation,
+            otherUser: extra['otherUser'] as User,
+          );
+        }
+        return const ChatsListView(
+          noticeBanner: "The requested conversation was not found or could not be restored. Please pick a conversation from your list.",
         );
       },
     ),
@@ -184,7 +201,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/change-password',
       builder: (context, state) {
-        final isRecovery = state.uri.queryParameters['recovery'] == 'true';
+        final isRecovery = state.uri.queryParameters['recovery'] == 'true' ||
+            state.uri.fragment.contains('type=recovery') ||
+            state.uri.queryParameters.containsKey('code') ||
+            state.uri.fragment.contains('access_token');
         return ChangePasswordView(isRecovery: isRecovery);
       },
     ),
@@ -239,8 +259,13 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/user-profile',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>;
-        return UserProfileView(user: args['user'] as User);
+        final extra = state.extra;
+        if (extra is Map<String, dynamic> && extra['user'] is User) {
+          return UserProfileView(user: extra['user'] as User);
+        } else if (extra is User) {
+          return UserProfileView(user: extra);
+        }
+        return const MainTabView(initialIndex: 4);
       },
     ),
     GoRoute(
@@ -265,21 +290,29 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/structured-feedback',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>;
-        return StructuredFeedbackView(
-          validation: args['validation'] as ValidationRequest,
-          author: args['author'] as User,
-        );
+        final extra = state.extra;
+        if (extra is Map<String, dynamic> &&
+            extra['validation'] is ValidationRequest &&
+            extra['author'] is User) {
+          return StructuredFeedbackView(
+            validation: extra['validation'] as ValidationRequest,
+            author: extra['author'] as User,
+          );
+        }
+        return const MainTabView(initialIndex: 2);
       },
     ),
     GoRoute(
       path: '/ai-validation',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>;
+        final extra = state.extra;
+        final report = (extra is Map<String, dynamic>)
+            ? extra['report'] as AIValidationReport?
+            : (extra is AIValidationReport ? extra : null);
         return Scaffold(
           appBar: AppBar(backgroundColor: Theme.of(context).scaffoldBackgroundColor, elevation: 0),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: AIValidationView(report: args['report'] as AIValidationReport),
+          body: AIValidationView(report: report),
         );
       },
     ),
