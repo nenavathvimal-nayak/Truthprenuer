@@ -51,13 +51,25 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
       case 3: return !_willingToPay || _expectedPriceCtrl.text.trim().isNotEmpty;
       case 4: return _missingFeatureCtrl.text.trim().isNotEmpty;
       case 5: return _overallRating > 0;
-      case 6: return true;
+      case 6: return _textFeedbackCtrl.text.trim().length >= 15;
       case 7: return true;
       default: return false;
     }
   }
 
   void _submitFeedback() async {
+    if (_isSubmitting) return;
+
+    if (_textFeedbackCtrl.text.trim().length < 15) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please provide at least 15 characters of qualitative critique."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -490,7 +502,12 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
           decoration: BoxDecoration(
             color: colors.cardBackground,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.divider, width: 1),
+            border: Border.all(
+              color: _textFeedbackCtrl.text.trim().isNotEmpty && _textFeedbackCtrl.text.trim().length < 15
+                  ? colors.destructive
+                  : colors.divider,
+              width: 1,
+            ),
           ),
           child: TextField(
             controller: _textFeedbackCtrl,
@@ -501,8 +518,21 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(AppSpacing.sm),
+              hintText: "Enter at least 15 characters of candid critique...",
             ),
           ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              "${_textFeedbackCtrl.text.trim().length}/15 min characters",
+              style: AppTypography.caption.copyWith(
+                color: _textFeedbackCtrl.text.trim().length >= 15 ? colors.success : colors.textTertiary,
+              ),
+            ),
+          ],
         ),
       ],
     );

@@ -115,6 +115,10 @@ class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
                 child: Row(
                   children: _filters.map((filter) {
                     final isSelected = _selectedFilter == filter;
+                    final int count = filter == "All"
+                        ? allEvidence.length
+                        : allEvidence.where((e) => e.tags.contains(filter)).length;
+
                     return Padding(
                       padding: const EdgeInsets.only(right: AppSpacing.xs),
                       child: GestureDetector(
@@ -126,13 +130,13 @@ class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected ? colors.primary : colors.cardBackground,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: Text(
-                            filter,
+                            "$filter ($count)",
                             style: AppTypography.caption.copyWith(
                               color: isSelected ? Colors.white : colors.textSecondary,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,

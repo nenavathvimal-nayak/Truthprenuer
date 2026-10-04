@@ -55,30 +55,34 @@ class _ValidationDashboardViewState extends ConsumerState<ValidationDashboardVie
                     letterSpacing: -0.4,
                   ),
                 ),
-                Material(
-                  color: AppPalette.orange,
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    onTap: () {
-                      HapticManager.shared.impactMedium();
-                      context.push('/validation-wizard');
-                    },
+                Semantics(
+                  button: true,
+                  label: "Create New Validation",
+                  child: Material(
+                    color: AppPalette.orange,
                     borderRadius: BorderRadius.circular(10),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.add, size: 17, color: Colors.white),
-                          const SizedBox(width: 5),
-                          Text(
-                            "New Validation",
-                            style: AppTypography.caption.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                    child: InkWell(
+                      onTap: () {
+                        HapticManager.shared.impactMedium();
+                        context.push('/validation-wizard');
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add, size: 17, color: Colors.white),
+                            const SizedBox(width: 5),
+                            Text(
+                              "New Validation",
+                              style: AppTypography.caption.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

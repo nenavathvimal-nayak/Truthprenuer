@@ -99,8 +99,65 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
     super.dispose();
   }
 
+  bool _validateStep(int step) {
+    switch (step) {
+      case 2:
+        if (_assumptionCtrl.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please define your core assumption before proceeding."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          return false;
+        }
+        return true;
+      case 3:
+        if (_selectedAudienceRoles.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please select at least one target audience persona."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          return false;
+        }
+        return true;
+      case 4:
+        if (_questions.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Please add at least one question to validate."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          return false;
+        }
+        return true;
+      case 5:
+        final rawLink = _linkCtrl.text.trim();
+        if (rawLink.isNotEmpty) {
+          final uri = Uri.tryParse(rawLink);
+          if (uri == null || (!uri.isScheme('http') && !uri.isScheme('https')) || uri.host.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Please enter a valid URL starting with http:// or https://"),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+            return false;
+          }
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+
   void _nextStep() {
     HapticManager.shared.selection();
+    if (!_validateStep(_currentStep)) return;
+
     if (_currentStep < _totalSteps) {
       setState(() {
         _currentStep++;
@@ -240,6 +297,16 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
   }
 
   void _executePublish() async {
+    if (_assumptionCtrl.text.trim().isEmpty || _selectedAudienceRoles.isEmpty || _questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Cannot publish: core assumption, audience personas, and at least one question are required."),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isPublishing = true;
       _publishingStatus = "Preparing validation...";
@@ -474,7 +541,7 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.15,
+            mainAxisExtent: 142,
           ),
           itemCount: _types.length,
           itemBuilder: (context, idx) {
