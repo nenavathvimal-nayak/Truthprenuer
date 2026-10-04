@@ -33,6 +33,16 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   }
 
   @override
+  void didUpdateWidget(covariant ForgotPasswordView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialError != oldWidget.initialError && widget.initialError != null) {
+      setState(() {
+        _errorMessage = widget.initialError;
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _tokenController.dispose();
@@ -174,7 +184,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +214,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                "Enter your email to receive a reset link.",
+                "Enter your email or paste your recovery link to choose a new password.",
                 style: AppTypography.body.copyWith(
                   color: colors.text.withValues(alpha: 0.7),
                 ),
@@ -239,7 +249,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               
               if (_isSent)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Center(
                     child: Column(
                       children: [
@@ -315,46 +325,100 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   ),
                 )
               else ...[
+                // Option 1: Send reset link
+                Text(
+                  "Option 1: Request Reset Link",
+                  style: AppTypography.caption1.copyWith(color: colors.textSecondary, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.xs),
                 CustomTextField(
                   placeholder: "Email Address",
                   controller: _emailController,
-                  icon: Icons.mail_outline, // envelope
+                  icon: Icons.mail_outline,
                 ),
-              ],
-                
-              const Spacer(),
-              
-              if (!_isSent)
+                const SizedBox(height: AppSpacing.md),
                 PrimaryButton(
-                  title: "Send Link",
+                  title: "Send Reset Link",
                   isLoading: _isLoading,
                   action: _handleSendLink,
-                )
-              else
-                GestureDetector(
-                  onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/auth');
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: colors.cardBackground,
-                      borderRadius: BorderRadius.circular(100), // Capsule
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Back to Login",
-                      style: AppTypography.headline.copyWith(color: colors.text),
-                    ),
-                  ),
                 ),
                 
-              const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: colors.cardBackgroundLight)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      child: Text("OR", style: AppTypography.caption2.copyWith(color: colors.textSecondary)),
+                    ),
+                    Expanded(child: Divider(color: colors.cardBackgroundLight)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                
+                // Option 2: Paste link or token
+                Text(
+                  "Option 2: Already Have Link or Token",
+                  style: AppTypography.caption1.copyWith(color: colors.textSecondary, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  "Paste the link or token from your email to set a new password directly:",
+                  style: AppTypography.caption2.copyWith(color: colors.textSecondary),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                CustomTextField(
+                  placeholder: "Paste reset link or token here",
+                  controller: _tokenController,
+                  icon: Icons.link_rounded,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : _handleVerifyToken,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: colors.primary, width: 1.5),
+                      foregroundColor: colors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Text(
+                            "Verify & Choose New Password",
+                            style: AppTypography.buttonLabel.copyWith(color: colors.primary),
+                          ),
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: AppSpacing.xxl),
+              
+              GestureDetector(
+                onTap: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/auth');
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: BorderRadius.circular(100), // Capsule
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Back to Login",
+                    style: AppTypography.headline.copyWith(color: colors.text),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),
