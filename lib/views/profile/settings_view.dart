@@ -594,6 +594,7 @@ class _SettingsToggleRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 32,
@@ -608,13 +609,23 @@ class _SettingsToggleRow extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: AppTypography.bodyMedium.copyWith(color: colors.text)),
+                Text(
+                  title,
+                  style: AppTypography.bodyMedium.copyWith(color: colors.text),
+                  softWrap: true,
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: AppTypography.caption2.copyWith(color: colors.textTertiary)),
+                Text(
+                  subtitle,
+                  style: AppTypography.caption2.copyWith(color: colors.textTertiary),
+                  softWrap: true,
+                ),
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
           Switch(
             value: isOn,
             onChanged: onChanged,

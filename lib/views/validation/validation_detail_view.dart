@@ -219,9 +219,14 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
         ),
         actions: [
           IconButton(
-            icon: Icon(
-              _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: AppPalette.orange,
+            tooltip: _isBookmarked ? "Remove bookmark" : "Bookmark validation",
+            icon: Semantics(
+              label: _isBookmarked ? "Remove bookmark" : "Bookmark validation",
+              button: true,
+              child: Icon(
+                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                color: AppPalette.orange,
+              ),
             ),
             onPressed: () {
               HapticManager.shared.selection();

@@ -5,6 +5,7 @@ import '../../design_system/app_colors.dart';
 import '../../components/avatar_picker_modal.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
+import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
 import '../../utils/haptic_manager.dart';
 
@@ -106,33 +107,84 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
     }
   }
 
+  bool _isDirty(User? user) {
+    if (user == null) return false;
+    if (_nameCtrl.text.trim() != user.name) return true;
+    if (_bioCtrl.text.trim() != user.bio) return true;
+    if (_roleCtrl.text.trim() != user.role) return true;
+    if (_websiteCtrl.text.trim() != user.website) return true;
+    if (_twitterCtrl.text.trim() != user.twitterHandle) return true;
+    if (_locationCtrl.text.trim() != user.location) return true;
+    final currentSkills = _skillsCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    if (currentSkills.join(',') != user.skills.join(',')) return true;
+    return false;
+  }
+
+  Future<bool> _confirmDiscardChanges(BuildContext context) async {
+    final colors = Theme.of(context).appColors;
+    final shouldDiscard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        title: Text("Discard unsaved changes?", style: TextStyle(color: colors.text)),
+        content: Text("You have unsaved changes that will be lost.", style: TextStyle(color: colors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Keep Editing"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: colors.destructive),
+            child: const Text("Discard"),
+          ),
+        ],
+      ),
+    );
+    return shouldDiscard ?? false;
+  }
+
+  void _handleBackNavigation(BuildContext context, User? user) async {
+    if (_isDirty(user)) {
+      final discard = await _confirmDiscardChanges(context);
+      if (!discard || !context.mounted) return;
+    }
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/profile');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final currentUser = ref.watch(currentUserProvider).value;
     
-    return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDirty(currentUser),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        _handleBackNavigation(context, currentUser);
+      },
+      child: Scaffold(
         backgroundColor: colors.background,
-        elevation: 0,
-        title: Text("Edit Profile", style: AppTypography.appBarTitle.copyWith(color: colors.text)),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(color: colors.cardBackgroundLight, shape: BoxShape.circle),
-            child: Icon(Icons.close, color: colors.textSecondary, size: 18),
+        appBar: AppBar(
+          backgroundColor: colors.background,
+          elevation: 0,
+          title: Text("Edit Profile", style: AppTypography.appBarTitle.copyWith(color: colors.text)),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(color: colors.cardBackgroundLight, shape: BoxShape.circle),
+              child: Icon(Icons.close, color: colors.textSecondary, size: 18),
+            ),
+            tooltip: "Close",
+            onPressed: () => _handleBackNavigation(context, currentUser),
           ),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/profile');
-            }
-          },
         ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg).copyWith(bottom: 50),
         child: Column(
@@ -141,13 +193,16 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
             Consumer(
               builder: (context, ref, _) {
                 final user = ref.watch(currentUserProvider).value;
-                return GestureDetector(
-                  onTap: () {
-                    HapticManager.shared.impactLight();
-                    AvatarPickerModal.show(context);
-                  },
-                  child: Column(
-                    children: [
+                return Semantics(
+                  label: "Change profile photo",
+                  button: true,
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticManager.shared.impactLight();
+                      AvatarPickerModal.show(context);
+                    },
+                    child: Column(
+                      children: [
                       Stack(
                         alignment: Alignment.bottomRight,
                         children: [
@@ -202,9 +257,10 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          ),
             const SizedBox(height: AppSpacing.xl),
 
             // Fields
@@ -294,7 +350,8 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

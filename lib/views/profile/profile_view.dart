@@ -161,10 +161,14 @@ class ProfileView extends ConsumerWidget {
                               context.push('/settings');
                             },
                             borderRadius: BorderRadius.circular(10),
-                            child: const SizedBox(
-                              width: 42,
-                              height: 42,
-                              child: Icon(Icons.settings_outlined, size: 20),
+                            child: Semantics(
+                              label: "Settings",
+                              button: true,
+                              child: const SizedBox(
+                                width: 42,
+                                height: 42,
+                                child: Icon(Icons.settings_outlined, size: 20),
+                              ),
                             ),
                           ),
                         ),
