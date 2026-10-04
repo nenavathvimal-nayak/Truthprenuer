@@ -50,7 +50,7 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
     
     HapticManager.shared.notificationSuccess();
 
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 100));
     
     if (!mounted) return;
     
@@ -61,11 +61,11 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
 
     _pageController.animateToPage(
       5,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
     );
 
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 200));
     
     if (!mounted) return;
     

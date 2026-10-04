@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_typography.dart';
@@ -19,6 +20,7 @@ class MainTabView extends ConsumerStatefulWidget {
 
 class _MainTabViewState extends ConsumerState<MainTabView> {
   late int _selectedTab;
+  DateTime? _lastBackPressTime;
 
   @override
   void initState() {
@@ -40,7 +42,31 @@ class _MainTabViewState extends ConsumerState<MainTabView> {
 
     final safeIndex = _selectedTab.clamp(0, pages.length - 1);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_selectedTab != 0) {
+          HapticManager.shared.impactLight();
+          setState(() => _selectedTab = 0);
+          return;
+        }
+        final now = DateTime.now();
+        if (_lastBackPressTime == null || now.difference(_lastBackPressTime!) > const Duration(seconds: 2)) {
+          _lastBackPressTime = now;
+          HapticManager.shared.impactLight();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Press back again to exit Truthprenuer"),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+          return;
+        }
+        SystemNavigator.pop();
+      },
+      child: Scaffold(
       backgroundColor: colors.background,
       body: IndexedStack(
         index: safeIndex,
@@ -146,6 +172,6 @@ class _MainTabViewState extends ConsumerState<MainTabView> {
           ),
         ),
       ),
-    );
+    ));
   }
 }

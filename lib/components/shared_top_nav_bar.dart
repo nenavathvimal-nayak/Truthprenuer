@@ -51,8 +51,10 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
                         HapticManager.shared.impactLight();
                         if (onBack != null) {
                           onBack!();
-                        } else {
+                        } else if (context.canPop()) {
                           context.pop();
+                        } else {
+                          context.go('/');
                         }
                       },
                     )

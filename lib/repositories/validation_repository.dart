@@ -40,7 +40,10 @@ class ValidationRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-    await client.from('validations').upsert(validationData);
+    await client
+        .from('validations')
+        .upsert(validationData)
+        .timeout(const Duration(seconds: 3));
 
     // 2. Insert Questions
     if (questions.isNotEmpty) {
@@ -53,7 +56,10 @@ class ValidationRepository {
         'created_at': DateTime.now().toIso8601String(),
       }).toList();
 
-      await client.from('validation_questions').upsert(questionsData);
+      await client
+          .from('validation_questions')
+          .upsert(questionsData)
+          .timeout(const Duration(seconds: 3));
     }
   }
 
@@ -82,7 +88,10 @@ class ValidationRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-    await client.from('validations').upsert(draftData);
+    await client
+        .from('validations')
+        .upsert(draftData)
+        .timeout(const Duration(seconds: 3));
 
     if (questions.isNotEmpty) {
       final questionsData = questions.map((q) => {
@@ -94,7 +103,10 @@ class ValidationRepository {
         'created_at': DateTime.now().toIso8601String(),
       }).toList();
 
-      await client.from('validation_questions').upsert(questionsData);
+      await client
+          .from('validation_questions')
+          .upsert(questionsData)
+          .timeout(const Duration(seconds: 3));
     }
   }
 
@@ -121,7 +133,9 @@ class ValidationRepository {
         builder = builder.eq('validation_stage', stage.name);
       }
 
-      final response = await builder.order('created_at', ascending: false);
+      final response = await builder
+          .order('created_at', ascending: false)
+          .timeout(const Duration(seconds: 2));
 
       return (response as List).map((data) => _mapToValidationRequest(data)).toList();
     } catch (_) {
@@ -139,7 +153,8 @@ class ValidationRepository {
           .from('validations')
           .select('*, profiles!validations_author_id_fkey(full_name, role, avatar_url)')
           .eq('id', id)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 2));
 
       if (data == null) return null;
       return _mapToValidationRequest(data);
@@ -157,7 +172,8 @@ class ValidationRepository {
           .from('validation_questions')
           .select()
           .eq('validation_id', validationId)
-          .order('created_at', ascending: true);
+          .order('created_at', ascending: true)
+          .timeout(const Duration(seconds: 2));
 
       return (response as List).map((data) {
         final typeStr = data['question_type'] ?? 'multiple_choice';
@@ -187,7 +203,11 @@ class ValidationRepository {
   Future<void> deleteValidation(String id) async {
     final client = _client;
     if (client == null) return;
-    await client.from('validations').delete().eq('id', id);
+    await client
+        .from('validations')
+        .delete()
+        .eq('id', id)
+        .timeout(const Duration(seconds: 3));
   }
 
   ValidationRequest _mapToValidationRequest(Map<String, dynamic> data) {

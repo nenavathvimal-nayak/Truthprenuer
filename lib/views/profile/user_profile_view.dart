@@ -32,7 +32,13 @@ class UserProfileView extends ConsumerWidget {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.chevron_left_rounded, color: colors.text, size: 28),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SafeArea(
@@ -41,7 +47,7 @@ class UserProfileView extends ConsumerWidget {
           backgroundColor: colors.cardBackground,
           onRefresh: () async {
             ref.invalidate(validationsProvider);
-            await Future.delayed(const Duration(milliseconds: 300));
+            await Future.delayed(const Duration(milliseconds: 50));
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),

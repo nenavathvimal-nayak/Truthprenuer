@@ -23,7 +23,8 @@ class ProfileRepository {
           .from('profiles')
           .select()
           .eq('id', userId)
-          .maybeSingle();
+          .maybeSingle()
+          .timeout(const Duration(seconds: 2));
 
       if (data == null) return null;
 
@@ -112,7 +113,9 @@ class ProfileRepository {
         builder = builder.eq('role', roleFilter.label);
       }
 
-      final response = await builder.limit(30);
+      final response = await builder
+          .limit(30)
+          .timeout(const Duration(seconds: 2));
       return (response as List).map((data) {
         final roleStr = data['role'] ?? 'Founder';
         final roleEnum = UserRole.values.firstWhere(

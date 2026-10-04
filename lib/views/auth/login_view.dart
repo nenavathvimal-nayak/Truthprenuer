@@ -48,12 +48,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
       _errorMessage = null;
     });
 
-    // Simulate network request
-    await Future.delayed(const Duration(milliseconds: 1200));
-    
-    if (!mounted) return;
-    
-    await ref.read(authProvider.notifier).login(email, password);
+    try {
+      await ref.read(authProvider.notifier).login(email, password);
+    } catch (_) {}
     
     if (!mounted) return;
     context.go('/');

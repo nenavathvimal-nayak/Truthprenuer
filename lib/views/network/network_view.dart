@@ -157,7 +157,7 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
               color: AppPalette.orange,
               onRefresh: () async {
                 ref.invalidate(communityUsersProvider);
-                await Future.delayed(const Duration(milliseconds: 300));
+                await Future.delayed(const Duration(milliseconds: 50));
               },
               child: filtered.isEmpty
                   ? ListView(

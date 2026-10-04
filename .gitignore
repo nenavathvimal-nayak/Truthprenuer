@@ -61,3 +61,14 @@ key.properties
 *.p8
 *.p12
 *.mobileprovision
+
+# Python venv & bytecode
+**/venv/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node & Frontend Build Artifacts
+**/node_modules/
+**/dist/
+

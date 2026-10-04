@@ -383,7 +383,7 @@ class _RequestAuditModalState extends State<_RequestAuditModal> {
   void _sendRequest() async {
     setState(() => _isSending = true);
     HapticManager.shared.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 100));
     if (!mounted) return;
     setState(() {
       _isSending = false;

@@ -29,7 +29,7 @@ class _OTPVerificationViewState extends State<OTPVerificationView> {
     });
 
     HapticManager.shared.notificationSuccess();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 150));
     
     if (!mounted) return;
     

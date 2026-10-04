@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     location TEXT DEFAULT '',
     website TEXT DEFAULT '',
     is_verified BOOLEAN DEFAULT false,
+    is_suspended BOOLEAN DEFAULT false,
+    suspended_at TIMESTAMP WITH TIME ZONE,
+    suspension_reason TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -278,6 +281,28 @@ CREATE TABLE IF NOT EXISTS public.access_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.admin_audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id TEXT NOT NULL,
+    actor_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    actor_role TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id TEXT,
+    result TEXT NOT NULL DEFAULT 'SUCCESS',
+    ip_address TEXT,
+    user_agent TEXT,
+    request_id TEXT,
+    reason TEXT,
+    details JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_action ON public.admin_audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON public.admin_audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_target ON public.admin_audit_logs(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON public.admin_audit_logs(created_at DESC);
+
 -- ==============================================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==============================================================================
@@ -455,18 +480,50 @@ CREATE POLICY "Admins can view access logs" ON public.access_logs FOR SELECT USI
 );
 CREATE POLICY "Actors can insert own access logs" ON public.access_logs FOR INSERT WITH CHECK (auth.uid() = actor_id);
 
+-- 13. Admin Audit Logs (Immutable Security Audit Trail)
+ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can view audit logs" ON public.admin_audit_logs FOR SELECT USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('Admin', 'Super_Admin', 'Security'))
+);
+
+CREATE POLICY "Privileged service can insert audit logs" ON public.admin_audit_logs FOR INSERT WITH CHECK (
+    auth.role() = 'service_role' OR EXISTS (SELECT 1 FROM public.profiles WHERE profiles.id = auth.uid() AND profiles.role IN ('Admin', 'Super_Admin', 'Security'))
+);
+-- Note: NO UPDATE and NO DELETE policies exist. Admin audit logs are strictly Write-Once-Read-Many (WORM).
+
 -- ==============================================================================
 -- DATABASE TRIGGERS & PROCEDURES
 -- ==============================================================================
 
--- 1. Prevent role escalation
+-- 1. Prevent role escalation and unauthorized self-unsuspension
 CREATE OR REPLACE FUNCTION public.prevent_role_update()
 RETURNS TRIGGER AS $$
+DECLARE
+    is_privileged BOOLEAN;
 BEGIN
-  IF NEW.role IS DISTINCT FROM OLD.role THEN
-    NEW.role = OLD.role;
-  END IF;
-  RETURN NEW;
+    -- Check if executing actor is an admin/super_admin/security role
+    SELECT (role IN ('Admin', 'Super_Admin', 'Security')) INTO is_privileged 
+    FROM public.profiles 
+    WHERE id = auth.uid();
+
+    IF NOT COALESCE(is_privileged, false) THEN
+        -- Non-admins cannot alter their role
+        IF NEW.role IS DISTINCT FROM OLD.role THEN
+            NEW.role = OLD.role;
+        END IF;
+        -- Non-admins cannot lift their own suspension
+        IF NEW.is_suspended IS DISTINCT FROM OLD.is_suspended THEN
+            NEW.is_suspended = OLD.is_suspended;
+        END IF;
+        IF NEW.suspended_at IS DISTINCT FROM OLD.suspended_at THEN
+            NEW.suspended_at = OLD.suspended_at;
+        END IF;
+        IF NEW.suspension_reason IS DISTINCT FROM OLD.suspension_reason THEN
+            NEW.suspension_reason = OLD.suspension_reason;
+        END IF;
+    END IF;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

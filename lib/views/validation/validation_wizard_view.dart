@@ -132,14 +132,22 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
             },
             child: const Text("Discard"),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pop(context);
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Draft saved successfully!")),
               );
@@ -237,11 +245,11 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
       _publishingStatus = "Preparing validation...";
     });
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
     setState(() => _publishingStatus = "Publishing questions & audience filters...");
 
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
     setState(() => _publishingStatus = "Indexing on Truthprenuer marketplace...");
 

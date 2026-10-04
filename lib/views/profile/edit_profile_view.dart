@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
 import '../../components/avatar_picker_modal.dart';
@@ -94,8 +95,13 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
       });
       HapticManager.shared.notificationSuccess();
       
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (mounted) Navigator.pop(context);
+      Future.delayed(const Duration(milliseconds: 150), () {
+        if (!mounted) return;
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go('/profile');
+        }
       });
     }
   }
@@ -118,7 +124,13 @@ class _EditProfileViewState extends ConsumerState<EditProfileView> {
             decoration: BoxDecoration(color: colors.cardBackgroundLight, shape: BoxShape.circle),
             child: Icon(Icons.close, color: colors.textSecondary, size: 18),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(

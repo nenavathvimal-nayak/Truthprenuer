@@ -65,8 +65,8 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
     HapticManager.shared.impactMedium();
     setState(() => _isLoading = true);
 
-    // Simulate secure network mutation
-    await Future.delayed(const Duration(milliseconds: 1200));
+    // Simulate brief secure network mutation
+    await Future.delayed(const Duration(milliseconds: 100));
 
     if (!mounted) return;
     setState(() => _isLoading = false);

@@ -201,7 +201,13 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: colors.text, size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
         title: Text(
           "VALIDATION SPRINT",

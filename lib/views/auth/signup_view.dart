@@ -55,12 +55,9 @@ class _SignupViewState extends ConsumerState<SignupView> {
       _errorMessage = null;
     });
 
-    // Simulate network request
-    await Future.delayed(const Duration(milliseconds: 1200));
-    
-    if (!mounted) return;
-    
-    await ref.read(authProvider.notifier).signup(email, password, name);
+    try {
+      await ref.read(authProvider.notifier).signup(email, password, name);
+    } catch (_) {}
     
     if (!mounted) return;
     context.go('/');

@@ -1,72 +1,58 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import os
-from supabase import create_client, Client
-import google.generativeai as genai
+from app.core.config import settings
+from app.core.middleware import (
+    SecurityHeadersMiddleware,
+    RequestContextMiddleware,
+    global_exception_handler
+)
+from app.api.v1 import health, ai, admin
+
+# In production, disable interactive documentation to minimize reconnaissance surface
+docs_url = "/docs" if settings.ENVIRONMENT != "production" else None
+openapi_url = "/openapi.json" if settings.ENVIRONMENT != "production" else None
 
 app = FastAPI(
-    title="Truthprenuer API",
-    description="Backend services for Truthprenuer platform",
-    version="1.0.0"
+    title=settings.PROJECT_NAME,
+    description="Truthprenuer Enterprise Startup Launch MVP API",
+    version=settings.VERSION,
+    docs_url=docs_url,
+    redoc_url=None,
+    openapi_url=openapi_url
 )
 
-# CORS configuration
+# Global fail-closed exception handler
+app.add_exception_handler(Exception, global_exception_handler)
+
+# Custom Security Headers Middleware (CSP, HSTS, X-Frame-Options, X-Content-Type-Options)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# Request context and audit metrics middleware (X-Request-ID, duration)
+app.add_middleware(RequestContextMiddleware)
+
+# Strict CORS policy - never allows wildcard origins with credentials
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Restrict in production
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "Accept"],
+    max_age=600,
 )
 
-# Initialize clients (Lazy initialization for local dev without env vars)
-def get_supabase() -> Client:
-    url = os.environ.get("SUPABASE_URL", "http://localhost:54321")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "dummy")
-    return create_client(url, key)
+# Mount layered routers
+app.include_router(health.router)
+app.include_router(ai.router)
+app.include_router(admin.router)
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": "Truthprenuer API"}
-
-class ValidationPrompt(BaseModel):
-    problem: str
-    solution: str
-    industry: str
-    target_audience: str
-
-@app.post("/api/v1/ai/validate")
-async def generate_ai_validation(prompt: ValidationPrompt):
+@app.get("/", tags=["Root"])
+def root_info():
     """
-    Secure endpoint for AI Validation. 
-    The client calls this, and this server securely holds the Gemini API key.
+    Public entrypoint providing basic service heartbeat.
+    Exposes no internal architecture or database topology.
     """
-    gemini_key = os.environ.get("GEMINI_API_KEY")
-    if not gemini_key:
-        raise HTTPException(status_code=500, detail="AI service not configured")
-        
-    try:
-        genai.configure(api_key=gemini_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        system_prompt = f"""
-        You are an expert startup evaluator and venture capitalist.
-        Analyze this startup idea:
-        Problem: {prompt.problem}
-        Solution: {prompt.solution}
-        Industry: {prompt.industry}
-        Target Audience: {prompt.target_audience}
-        
-        Provide a brutal, honest assessment of viability, market risks, and critical assumptions.
-        """
-        
-        response = model.generate_content(system_prompt)
-        
-        return {
-            "status": "success",
-            "model": "gemini-1.5-flash",
-            "analysis": response.text
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {
+        "service": settings.PROJECT_NAME,
+        "version": settings.VERSION,
+        "status": "operational"
+    }

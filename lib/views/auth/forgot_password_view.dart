@@ -29,7 +29,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       _isLoading = true;
     });
 
-    await Future.delayed(const Duration(milliseconds: 1500));
+    await Future.delayed(const Duration(milliseconds: 100));
     
     if (!mounted) return;
     

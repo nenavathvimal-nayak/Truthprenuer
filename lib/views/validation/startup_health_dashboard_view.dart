@@ -958,7 +958,7 @@ class _HealthActionModalState extends State<_HealthActionModal> {
   void _runAction() async {
     setState(() => _isExecuting = true);
     HapticManager.shared.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 900));
+    await Future.delayed(const Duration(milliseconds: 100));
     if (!mounted) return;
     setState(() {
       _isExecuting = false;
@@ -1115,7 +1115,7 @@ class _ExportAuditModalState extends State<_ExportAuditModal> {
   void _generatePdf() async {
     setState(() => _isGenerating = true);
     HapticManager.shared.mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 100));
     if (!mounted) return;
     setState(() {
       _isGenerating = false;

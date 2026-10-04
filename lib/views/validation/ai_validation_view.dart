@@ -24,7 +24,7 @@ class _AIValidationViewState extends State<AIValidationView> {
     setState(() => _isReanalyzing = true);
     HapticManager.shared.mediumImpact();
     
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 250));
 
 
     if (!mounted) return;

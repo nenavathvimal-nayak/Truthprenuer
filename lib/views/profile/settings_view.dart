@@ -168,7 +168,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             : () async {
                                 setModalState(() => isExporting = true);
                                 HapticManager.shared.impactMedium();
-                                await Future.delayed(const Duration(milliseconds: 1000));
+                                await Future.delayed(const Duration(milliseconds: 100));
                                 if (!context.mounted) return;
                                 Navigator.pop(ctx);
                                 HapticManager.shared.success();
@@ -258,7 +258,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             decoration: BoxDecoration(color: colors.cardBackgroundLight, shape: BoxShape.circle),
             child: Icon(Icons.close, color: colors.textSecondary, size: 18),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
