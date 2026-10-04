@@ -21,6 +21,7 @@ class ForgotPasswordView extends StatefulWidget {
 
 class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _tokenController = TextEditingController();
   bool _isLoading = false;
   bool _isSent = false;
   String? _errorMessage;
@@ -34,6 +35,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   @override
   void dispose() {
     _emailController.dispose();
+    _tokenController.dispose();
     super.dispose();
   }
 
@@ -90,6 +92,77 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       setState(() {
         _isLoading = false;
         _errorMessage = "Unable to send reset link. Please verify your connection.";
+      });
+    }
+  }
+
+  void _handleVerifyToken() async {
+    final rawInput = _tokenController.text.trim();
+    if (rawInput.isEmpty) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = "Please enter or paste your reset link / token.";
+      });
+      return;
+    }
+
+    String token = rawInput;
+    // Extract token query parameter if full URL was pasted
+    if (rawInput.contains('token=')) {
+      try {
+        final uri = Uri.parse(rawInput);
+        final paramToken = uri.queryParameters['token'];
+        if (paramToken != null && paramToken.isNotEmpty) {
+          token = paramToken;
+        }
+      } catch (_) {
+        final match = RegExp(r'token=([^&]+)').firstMatch(rawInput);
+        if (match != null) {
+          token = match.group(1)!;
+        }
+      }
+    }
+
+    HapticManager.shared.impactMedium();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final client = safeSupabaseClient;
+      if (client != null) {
+        if (token.startsWith('pkce_') || token.length > 20) {
+          await client.auth.verifyOTP(
+            tokenHash: token,
+            type: OtpType.recovery,
+          );
+        } else {
+          final email = _emailController.text.trim();
+          await client.auth.verifyOTP(
+            email: email.isNotEmpty ? email : null,
+            token: token,
+            type: OtpType.recovery,
+          );
+        }
+      }
+
+      if (!mounted) return;
+      HapticManager.shared.success();
+      context.go('/change-password?recovery=true');
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Verification failed: ${e.toString()}";
       });
     }
   }
@@ -195,6 +268,35 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                           "Click the link in your email to reset your password.",
                           style: AppTypography.caption1.copyWith(color: colors.textSecondary),
                           textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Divider(color: colors.cardBackgroundLight),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          "Or paste the reset link / token from your email:",
+                          style: AppTypography.caption1.copyWith(color: colors.textSecondary),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        CustomTextField(
+                          placeholder: "Paste reset link or token here",
+                          controller: _tokenController,
+                          icon: Icons.key_outlined,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleVerifyToken,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: colors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Text("Verify Token & Set Password"),
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         TextButton(

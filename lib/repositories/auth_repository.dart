@@ -58,6 +58,26 @@ class AuthRepository {
     );
   }
 
+  Future<AuthResponse> verifyRecoveryToken({
+    String? email,
+    required String token,
+  }) async {
+    if (_client == null) throw Exception('Supabase not configured');
+    final cleanToken = token.trim();
+    if (cleanToken.startsWith('pkce_') || cleanToken.length > 20) {
+      return await _client.auth.verifyOTP(
+        tokenHash: cleanToken,
+        type: OtpType.recovery,
+      );
+    } else {
+      return await _client.auth.verifyOTP(
+        email: email?.trim(),
+        token: cleanToken,
+        type: OtpType.recovery,
+      );
+    }
+  }
+
   Future<void> resetPasswordForEmail(String email, {String? redirectTo}) async {
     if (_client == null) return;
     await _client.auth.resetPasswordForEmail(
