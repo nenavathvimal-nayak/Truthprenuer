@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import '../utils/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../models/startup_health_models.dart';
 import 'supabase_client.dart';
@@ -13,8 +14,9 @@ final aiRepositoryProvider = Provider<AIRepository>((ref) {
 
 class AIRepository {
   final SupabaseClient? _client;
-  // TODO: Use environment variable for backend URL in production
-  final String _backendUrl = const String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8000');
+  // Configured via build flag --dart-define=BACKEND_URL=...
+  // Never defaults to unencrypted localhost in release/production
+  final String _backendUrl = const String.fromEnvironment('BACKEND_URL', defaultValue: '');
 
   AIRepository([this._client]);
 
@@ -29,30 +31,37 @@ class AIRepository {
     String aiRawAnalysis = "Empirical validation synthesis for '${validation.title}': Problem severity confirmed around '${validation.problem}'. Proposed solution '${validation.solution}' shows emerging market validation signal across target persona '${validation.targetAudience}'.";
     String modelVersion = "evidence-synthesizer-v1";
 
-    try {
-      // 1. Try FastAPI backend for AI Analysis if available
-      final response = await http.post(
-        Uri.parse('$_backendUrl/api/v1/ai/validate'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'problem': validation.problem,
-          'solution': validation.solution,
-          'industry': validation.tags.join(", "),
-          'target_audience': validation.targetAudience,
-        }),
-      ).timeout(const Duration(seconds: 3));
+    if (_backendUrl.isNotEmpty) {
+      try {
+        final uri = Uri.parse('$_backendUrl/api/v1/ai/validate');
+        // High Security: Reject plaintext HTTP in production
+        if (!kDebugMode && uri.scheme == 'http' && !uri.host.contains('localhost')) {
+          throw Exception('Insecure HTTP connection rejected in production environment');
+        }
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['analysis'] != null && (data['analysis'] as String).isNotEmpty) {
-          aiRawAnalysis = data['analysis'];
+        final response = await http.post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'problem': validation.problem,
+            'solution': validation.solution,
+            'industry': validation.tags.join(", "),
+            'target_audience': validation.targetAudience,
+          }),
+        ).timeout(const Duration(seconds: 3));
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['analysis'] != null && (data['analysis'] as String).isNotEmpty) {
+            aiRawAnalysis = data['analysis'];
+          }
+          if (data['model'] != null) {
+            modelVersion = data['model'];
+          }
         }
-        if (data['model'] != null) {
-          modelVersion = data['model'];
-        }
+      } catch (e) {
+        AppLogger.warning('Backend AI service call skipped or unavailable: $e', 'AIRepository');
       }
-    } catch (e) {
-      AppLogger.warning('Backend unavailable, synthesizing evidence report: $e', 'AIRepository');
     }
 
     // 2. Synthesize complete 8-part observations based on evidence

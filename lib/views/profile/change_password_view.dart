@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
+import '../../repositories/supabase_client.dart';
 import '../../utils/haptic_manager.dart';
 
 class ChangePasswordView extends ConsumerStatefulWidget {
-  const ChangePasswordView({super.key});
+  final bool isRecovery;
+  const ChangePasswordView({super.key, this.isRecovery = false});
 
   @override
   ConsumerState<ChangePasswordView> createState() => _ChangePasswordViewState();
@@ -65,63 +69,111 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
     HapticManager.shared.impactMedium();
     setState(() => _isLoading = true);
 
-    // Simulate brief secure network mutation
-    await Future.delayed(const Duration(milliseconds: 100));
+    try {
+      final client = safeSupabaseClient;
+      if (client != null) {
+        // If not in recovery mode and user provided current password, verify it first
+        if (!widget.isRecovery && _currentPasswordController.text.isNotEmpty) {
+          final currentUser = client.auth.currentUser;
+          if (currentUser?.email != null) {
+            await client.auth.signInWithPassword(
+              email: currentUser!.email!,
+              password: _currentPasswordController.text,
+            );
+          }
+        }
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    HapticManager.shared.success();
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        final colors = Theme.of(context).appColors;
-        return AlertDialog(
-          backgroundColor: colors.cardBackground,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withAlpha(35),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check_rounded, color: Color(0xFF10B981), size: 32),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text("Password Updated", style: AppTypography.title2.copyWith(color: colors.text)),
-              const SizedBox(height: 6),
-              Text(
-                "Your account security credentials have been successfully updated.",
-                style: AppTypography.body.copyWith(color: colors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text("Done"),
-                ),
-              ),
-            ],
-          ),
+        // Apply new password to the active authenticated session
+        await client.auth.updateUser(
+          UserAttributes(password: _newPasswordController.text.trim()),
         );
-      },
-    );
+      } else {
+        await Future.delayed(const Duration(milliseconds: 250));
+      }
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      HapticManager.shared.success();
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) {
+          final colors = Theme.of(context).appColors;
+          return AlertDialog(
+            backgroundColor: colors.cardBackground,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981).withAlpha(35),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded, color: Color(0xFF10B981), size: 32),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text("Password Updated", style: AppTypography.title2.copyWith(color: colors.text)),
+                const SizedBox(height: 6),
+                Text(
+                  "Your account security credentials have been successfully updated.",
+                  style: AppTypography.body.copyWith(color: colors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      if (widget.isRecovery) {
+                        context.go('/');
+                      } else {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/');
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text("Continue"),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      HapticManager.shared.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      HapticManager.shared.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to update password: ${e.toString()}"),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -133,13 +185,24 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
       appBar: AppBar(
         backgroundColor: colors.background,
         elevation: 0,
-        title: Text("Change Password", style: AppTypography.appBarTitle.copyWith(color: colors.text)),
+        title: Text(
+          widget.isRecovery ? "Reset Password" : "Change Password",
+          style: AppTypography.appBarTitle.copyWith(color: colors.text),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.chevron_left, color: colors.text, size: 28),
           onPressed: () {
             HapticManager.shared.impactLight();
-            Navigator.pop(context);
+            if (widget.isRecovery) {
+              context.go('/auth');
+            } else {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            }
           },
         ),
       ),
@@ -151,29 +214,33 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Keep your account secure",
+                widget.isRecovery ? "Create New Password" : "Keep your account secure",
                 style: AppTypography.title2.copyWith(color: colors.text),
               ),
               const SizedBox(height: 6),
               Text(
-                "Use at least 8 characters including numbers and symbols to ensure maximum startup account security.",
+                widget.isRecovery
+                    ? "Enter and confirm your new password to restore account access."
+                    : "Use at least 8 characters including numbers and symbols to ensure maximum startup account security.",
                 style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Current Password
-              _buildPasswordField(
-                label: "Current Password",
-                controller: _currentPasswordController,
-                obscure: _obscureCurrent,
-                onToggleObscure: () => setState(() => _obscureCurrent = !_obscureCurrent),
-                validator: (val) {
-                  if (val == null || val.isEmpty) return "Please enter your current password";
-                  return null;
-                },
-                colors: colors,
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              // Current Password (only when changing password while logged in)
+              if (!widget.isRecovery) ...[
+                _buildPasswordField(
+                  label: "Current Password",
+                  controller: _currentPasswordController,
+                  obscure: _obscureCurrent,
+                  onToggleObscure: () => setState(() => _obscureCurrent = !_obscureCurrent),
+                  validator: (val) {
+                    if (val == null || val.isEmpty) return "Please enter your current password";
+                    return null;
+                  },
+                  colors: colors,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
 
               // New Password
               _buildPasswordField(

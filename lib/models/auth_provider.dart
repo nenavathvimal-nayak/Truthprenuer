@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../repositories/supabase_client.dart';
+import '../router/app_router.dart';
 
 enum AuthStatus {
   unknown,
@@ -58,6 +60,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     // Supabase Auth as the single source of truth when initialized
     _authSubscription = client.auth.onAuthStateChange.listen((data) {
       final session = data.session;
+      final event = data.event;
+
+      if (event == AuthChangeEvent.passwordRecovery) {
+        appRouter.go('/change-password?recovery=true');
+      }
+
       if (session != null) {
         state = AuthState(
             status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);

@@ -1,10 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../components/buttons.dart';
 import '../../components/custom_text_field.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
+import '../../main.dart';
+import '../../repositories/supabase_client.dart';
+import '../../utils/haptic_manager.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
@@ -17,6 +22,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   bool _isSent = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -25,18 +31,60 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   }
 
   void _handleSendLink() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,4}$').hasMatch(email)) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = "Please enter a valid email address.";
+      });
+      return;
+    }
+
+    HapticManager.shared.impactMedium();
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
-    await Future.delayed(const Duration(milliseconds: 100));
-    
-    if (!mounted) return;
-    
-    setState(() {
-      _isLoading = false;
-      _isSent = true;
-    });
+    try {
+      final client = safeSupabaseClient;
+      if (client != null) {
+        // High Security: Secure production origin for web redirects
+        final String origin = kIsWeb && Uri.base.hasAuthority && Uri.base.host.isNotEmpty
+            ? Uri.base.origin
+            : AppConfig.appPublicUrl;
+        final redirectUrl = '$origin/change-password?recovery=true';
+
+        await client.auth.resetPasswordForEmail(
+          email,
+          redirectTo: redirectUrl,
+        );
+      } else {
+        // Mock fallback for offline preview
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+
+      if (!mounted) return;
+      HapticManager.shared.success();
+      setState(() {
+        _isLoading = false;
+        _isSent = true;
+      });
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Unable to send reset link. Please verify your connection.";
+      });
+    }
   }
 
   @override
@@ -84,6 +132,31 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               
               const SizedBox(height: AppSpacing.xl),
               
+              if (_errorMessage != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: AppTypography.footnote.copyWith(color: Colors.redAccent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              
               if (_isSent)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
@@ -91,7 +164,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                     child: Column(
                       children: [
                         Icon(
-                          Icons.check_circle, // checkmark.circle.fill
+                          Icons.mark_email_read_outlined,
                           size: 64,
                           color: colors.primary,
                         ),
@@ -102,19 +175,43 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          "Check your email for the reset link.",
+                          "A recovery link was dispatched to:",
                           style: AppTypography.body.copyWith(color: colors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _emailController.text.trim(),
+                          style: AppTypography.headline.copyWith(color: colors.primary),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          "Click the link in your email to reset your password.",
+                          style: AppTypography.caption1.copyWith(color: colors.textSecondary),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isSent = false;
+                            });
+                          },
+                          child: Text(
+                            "Try another email",
+                            style: AppTypography.footnote.copyWith(color: colors.primary),
+                          ),
                         ),
                       ],
                     ),
                   ),
                 )
-              else
+              else ...[
                 CustomTextField(
                   placeholder: "Email Address",
                   controller: _emailController,
                   icon: Icons.mail_outline, // envelope
                 ),
+              ],
                 
               const Spacer(),
               

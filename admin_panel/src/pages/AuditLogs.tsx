@@ -23,18 +23,22 @@ export function AuditLogs() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-      const token = 'simulated-token'; // In production, use supabase.auth.getSession() access_token
-      const res = await fetch(`${apiUrl}/api/v1/admin/audit-logs?limit=50`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const apiUrl = import.meta.env.VITE_BACKEND_URL;
+      if (apiUrl) {
+        const token = 'simulated-token'; // In production, use supabase.auth.getSession() access_token
+        const res = await fetch(`${apiUrl}/api/v1/admin/audit-logs?limit=50`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setLogs(data);
+          setLoading(false);
+          return;
         }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data);
-      } else {
-        // Fallback default sample events if backend is offline
+      }
+      // Fallback default sample events if backend is unconfigured or offline
         setLogs([
           {
             event_id: 'evt-7f8a9102-bc34',

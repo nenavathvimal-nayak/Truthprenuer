@@ -42,7 +42,8 @@ final GoRouter appRouter = GoRouter(
       '/auth',
       '/signup',
       '/otp',
-      '/forgot-password'
+      '/forgot-password',
+      '/change-password'
     ].contains(state.matchedLocation);
 
     final client = safeSupabaseClient;
@@ -151,7 +152,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/change-password',
-      builder: (context, state) => const ChangePasswordView(),
+      builder: (context, state) {
+        final isRecovery = state.uri.queryParameters['recovery'] == 'true';
+        return ChangePasswordView(isRecovery: isRecovery);
+      },
     ),
     GoRoute(
       path: '/top-validators',

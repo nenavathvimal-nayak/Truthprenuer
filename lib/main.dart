@@ -7,12 +7,19 @@ import 'design_system/app_colors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'design_system/theme_mode_provider.dart';
 
+import 'package:flutter_web_plugins/url_strategy.dart';
+
 /// Configuration constants injected at build time via --dart-define-from-file.
 /// Usage: flutter run --dart-define-from-file=.env.json
 class AppConfig {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
   static const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
+  static const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: '');
+  static const appPublicUrl = String.fromEnvironment(
+    'APP_PUBLIC_URL',
+    defaultValue: 'https://truthprenuer.pages.dev',
+  );
 
   static bool get isSupabaseConfigured =>
       supabaseUrl.isNotEmpty &&
@@ -23,6 +30,7 @@ class AppConfig {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
 
   // Initialize Supabase only if real keys are provided at build time
   if (AppConfig.isSupabaseConfigured) {

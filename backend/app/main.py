@@ -33,7 +33,7 @@ app.add_middleware(RequestContextMiddleware)
 # Strict CORS policy - never allows wildcard origins with credentials
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.safe_allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID", "Accept"],
