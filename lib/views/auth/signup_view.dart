@@ -7,6 +7,7 @@ import '../../components/custom_text_field.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/auth_provider.dart';
 import '../../design_system/responsive_layout.dart';
 
@@ -33,7 +34,18 @@ class _SignupViewState extends ConsumerState<SignupView> {
 
   String? _errorMessage;
 
+  String _sanitizeRedirect(String? raw) {
+    if (raw == null || raw.isEmpty) return '/';
+    final decoded = Uri.decodeComponent(raw).trim();
+    if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+      return decoded;
+    }
+    return '/';
+  }
+
   void _handleSignUp() async {
+    if (_isLoading) return;
+
     final name = _fullNameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -58,10 +70,18 @@ class _SignupViewState extends ConsumerState<SignupView> {
 
     try {
       await ref.read(authProvider.notifier).signup(email, password, name);
-    } catch (_) {}
-    
-    if (!mounted) return;
-    context.go('/');
+      if (!mounted) return;
+      final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+      context.go(_sanitizeRedirect(rawRedirect));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is AuthException
+            ? e.message
+            : (ref.read(authProvider).errorMessage ?? 'Failed to create account. Please check your details and try again.');
+      });
+    }
   }
 
   @override
@@ -128,12 +148,15 @@ class _SignupViewState extends ConsumerState<SignupView> {
           placeholder: "Full Name",
           controller: _fullNameController,
           icon: Icons.person_outline,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: AppSpacing.md),
         CustomTextField(
           placeholder: "Email",
           controller: _emailController,
           icon: Icons.mail_outline,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: AppSpacing.md),
         CustomTextField(
@@ -141,6 +164,8 @@ class _SignupViewState extends ConsumerState<SignupView> {
           controller: _passwordController,
           icon: Icons.lock_outline,
           isSecure: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: _handleSignUp,
         ),
         const SizedBox(height: AppSpacing.xl),
         PrimaryButton(

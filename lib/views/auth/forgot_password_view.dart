@@ -142,18 +142,48 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     try {
       final client = safeSupabaseClient;
       if (client != null) {
-        if (token.startsWith('pkce_') || token.length > 20) {
-          await client.auth.verifyOTP(
-            tokenHash: token,
-            type: OtpType.recovery,
-          );
-        } else {
-          final email = _emailController.text.trim();
-          await client.auth.verifyOTP(
-            email: email.isNotEmpty ? email : null,
-            token: token,
-            type: OtpType.recovery,
-          );
+        bool verified = false;
+        if (rawInput.startsWith('http://') || rawInput.startsWith('https://')) {
+          try {
+            final uri = Uri.parse(rawInput);
+            final paramCode = uri.queryParameters['code'];
+            final paramTokenHash = uri.queryParameters['token_hash'];
+            if (paramCode != null && paramCode.isNotEmpty) {
+              await client.auth.exchangeCodeForSession(paramCode);
+              verified = true;
+            } else if (paramTokenHash != null && paramTokenHash.isNotEmpty) {
+              await client.auth.verifyOTP(
+                tokenHash: paramTokenHash,
+                type: OtpType.recovery,
+              );
+              verified = true;
+            }
+          } catch (_) {}
+        }
+
+        if (!verified) {
+          if (token.startsWith('pkce_')) {
+            try {
+              await client.auth.exchangeCodeForSession(token);
+            } catch (_) {
+              await client.auth.verifyOTP(
+                tokenHash: token,
+                type: OtpType.recovery,
+              );
+            }
+          } else if (token.length > 20) {
+            await client.auth.verifyOTP(
+              tokenHash: token,
+              type: OtpType.recovery,
+            );
+          } else {
+            final email = _emailController.text.trim();
+            await client.auth.verifyOTP(
+              email: email.isNotEmpty ? email : null,
+              token: token,
+              type: OtpType.recovery,
+            );
+          }
         }
       }
 

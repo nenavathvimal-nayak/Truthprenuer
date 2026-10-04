@@ -7,6 +7,7 @@ import '../../components/custom_text_field.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/auth_provider.dart';
 import '../../design_system/responsive_layout.dart';
 
@@ -31,7 +32,19 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
   String? _errorMessage;
 
+  String _sanitizeRedirect(String? raw) {
+    if (raw == null || raw.isEmpty) return '/';
+    final decoded = Uri.decodeComponent(raw).trim();
+    // Enforce internal path starting with single slash, prevent external / schema / protocol-relative
+    if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+      return decoded;
+    }
+    return '/';
+  }
+
   void _handleSignIn() async {
+    if (_isLoading) return;
+
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
@@ -51,10 +64,18 @@ class _LoginViewState extends ConsumerState<LoginView> {
 
     try {
       await ref.read(authProvider.notifier).login(email, password);
-    } catch (_) {}
-    
-    if (!mounted) return;
-    context.go('/');
+      if (!mounted) return;
+      final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+      context.go(_sanitizeRedirect(rawRedirect));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e is AuthException
+            ? e.message
+            : (ref.read(authProvider).errorMessage ?? 'Invalid email or password. Please try again.');
+      });
+    }
   }
 
   @override
@@ -106,6 +127,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
           placeholder: "Email",
           controller: _emailController,
           icon: Icons.mail_outline,
+          keyboardType: TextInputType.emailAddress,
+          textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: AppSpacing.md),
         CustomTextField(
@@ -113,6 +136,8 @@ class _LoginViewState extends ConsumerState<LoginView> {
           controller: _passwordController,
           icon: Icons.lock_outline,
           isSecure: true,
+          textInputAction: TextInputAction.done,
+          onSubmitted: _handleSignIn,
         ),
         const SizedBox(height: AppSpacing.sm),
         Align(

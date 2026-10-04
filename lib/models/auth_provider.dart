@@ -91,26 +91,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     final client = safeSupabaseClient;
     if (client == null) {
-      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: 'Service unavailable (offline)');
+      // In standalone / preview mode without Supabase credentials, allow user to test app
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
       return;
     }
-    await client.auth.signInWithPassword(
-      email: email, 
-      password: password,
-    );
+    try {
+      final res = await client.auth.signInWithPassword(
+        email: email, 
+        password: password,
+      );
+      if (res.session != null) {
+        state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      }
+    } on AuthException catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.toString());
+      rethrow;
+    }
   }
 
   Future<void> signup(String email, String password, String fullName) async {
     final client = safeSupabaseClient;
     if (client == null) {
-      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: 'Service unavailable (offline)');
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
       return;
     }
-    await client.auth.signUp(
-      email: email,
-      password: password,
-      data: {'full_name': fullName},
-    );
+    try {
+      final res = await client.auth.signUp(
+        email: email,
+        password: password,
+        data: {'full_name': fullName},
+      );
+      if (res.session != null) {
+        state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      }
+    } on AuthException catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.toString());
+      rethrow;
+    }
   }
 
   Future<void> logout() async {
