@@ -32,9 +32,37 @@ import '../models/models.dart';
 
 import '../repositories/supabase_client.dart';
 
+String? _extractAuthError(Uri uri) {
+  if (uri.queryParameters.containsKey('error_description')) {
+    return uri.queryParameters['error_description'];
+  }
+  if (uri.queryParameters.containsKey('error')) {
+    return uri.queryParameters['error'];
+  }
+  if (uri.fragment.isNotEmpty) {
+    try {
+      final fragmentParams = Uri.splitQueryString(uri.fragment);
+      if (fragmentParams.containsKey('error_description')) {
+        return fragmentParams['error_description'];
+      }
+      if (fragmentParams.containsKey('error')) {
+        return fragmentParams['error'];
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   redirect: (context, state) {
+    // Intercept auth errors in deep links (e.g. expired recovery tokens)
+    final authError = _extractAuthError(state.uri);
+    if (authError != null && state.matchedLocation != '/forgot-password') {
+      final cleanMsg = authError.replaceAll('+', ' ');
+      return '/forgot-password?error=${Uri.encodeComponent(cleanMsg)}';
+    }
+
     final isAuthRoute = [
       '/splash',
       '/onboarding',
@@ -86,7 +114,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/forgot-password',
-      builder: (context, state) => const ForgotPasswordView(),
+      builder: (context, state) {
+        final errorParam = state.uri.queryParameters['error'];
+        return ForgotPasswordView(initialError: errorParam);
+      },
     ),
     GoRoute(
       path: '/profile-setup',

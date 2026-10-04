@@ -12,7 +12,8 @@ import '../../repositories/supabase_client.dart';
 import '../../utils/haptic_manager.dart';
 
 class ForgotPasswordView extends StatefulWidget {
-  const ForgotPasswordView({super.key});
+  final String? initialError;
+  const ForgotPasswordView({super.key, this.initialError});
 
   @override
   State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
@@ -23,6 +24,12 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   bool _isLoading = false;
   bool _isSent = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _errorMessage = widget.initialError;
+  }
 
   @override
   void dispose() {
