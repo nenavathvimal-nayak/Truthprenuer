@@ -223,12 +223,47 @@ class _FounderHomeView extends ConsumerWidget {
               timeAgo: "2h ago",
             ),
             const SizedBox(height: 8),
-            const _SignalRow(
+            _SignalRow(
               icon: Icons.warning_amber_rounded,
               title: "Contradiction detected in onboarding",
               subtitle: "2 respondents flagged compliance requirements before signup.",
               timeAgo: "5h ago",
               isAlert: true,
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: colors.surface,
+                    title: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: colors.warning),
+                        const SizedBox(width: 8),
+                        Text("Contradiction Signal", style: TextStyle(color: colors.text)),
+                      ],
+                    ),
+                    content: Text(
+                      "A contradiction occurs when validator evidence conflicts directly with a core assumption.\n\n"
+                      "Why this matters:\n"
+                      "Founders often proceed with flawed premises without empirical disproof. This signal highlights where market reality diverges from your thesis so you can investigate before building.",
+                      style: AppTypography.body.copyWith(color: colors.textSecondary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text("Got It"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          context.push('/evidence-locker');
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: colors.primary),
+                        child: const Text("Inspect Evidence"),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: AppSpacing.sectionGap),
@@ -718,6 +753,7 @@ class _SignalRow extends StatelessWidget {
   final String subtitle;
   final String timeAgo;
   final bool isAlert;
+  final VoidCallback? onTap;
 
   const _SignalRow({
     required this.icon,
@@ -725,13 +761,14 @@ class _SignalRow extends StatelessWidget {
     required this.subtitle,
     required this.timeAgo,
     this.isAlert = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    return Container(
+    final rowContent = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.cardBackground,
@@ -786,9 +823,21 @@ class _SignalRow extends StatelessWidget {
               ],
             ),
           ),
+          if (onTap != null) ...[
+            const SizedBox(width: 8),
+            Icon(Icons.info_outline, size: 16, color: colors.textTertiary),
+          ],
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: rowContent,
+      );
+    }
+    return rowContent;
   }
 }
 

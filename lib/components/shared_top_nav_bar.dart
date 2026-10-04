@@ -35,7 +35,15 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
       child: Container(
         height: 56.0,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding),
-        color: colors.background,
+        decoration: BoxDecoration(
+          color: colors.background,
+          border: Border(
+            bottom: BorderSide(
+              color: colors.divider.withAlpha(50),
+              width: 0.5,
+            ),
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -47,6 +55,7 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
                   if (showBackButton)
                     _NavIconButton(
                       icon: Icons.arrow_back_ios_new_rounded,
+                      tooltip: 'Back',
                       onTap: () {
                         HapticManager.shared.impactLight();
                         if (onBack != null) {
@@ -119,6 +128,7 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
                 children: [
                   _NavIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
+                    tooltip: 'Messages',
                     badgeCount: ref.watch(conversationsProvider).where((c) => c.unreadCount > 0).length,
                     onTap: () {
                       HapticManager.shared.impactLight();
@@ -127,6 +137,7 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
                   ),
                   _NavIconButton(
                     icon: Icons.notifications_none_rounded,
+                    tooltip: 'Notifications',
                     badgeCount: ref.watch(notificationsProvider).where((n) => !n.isRead).length,
                     onTap: () {
                       HapticManager.shared.impactLight();
@@ -152,49 +163,56 @@ class _NavIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final int badgeCount;
+  final String? tooltip;
 
   const _NavIconButton({
     required this.icon,
     required this.onTap,
     this.badgeCount = 0,
+    this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final label = tooltip ?? (icon == Icons.arrow_back_ios_new_rounded ? 'Back' : 'Action button');
 
     return Semantics(
       button: true,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: SizedBox(
-            width: 40,
-            height: 40,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: colors.textSecondary,
-                ),
-                if (badgeCount > 0)
-                  Positioned(
-                    right: 9,
-                    top: 9,
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppPalette.orange,
-                        shape: BoxShape.circle,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: colors.textSecondary,
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      right: 9,
+                      top: 9,
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppPalette.orange,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

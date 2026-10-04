@@ -66,9 +66,28 @@ class _OnboardingViewState extends State<OnboardingView> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      body: Column(
-        children: [
-          const Spacer(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _completeOnboarding,
+                    child: Text(
+                      "Skip",
+                      style: AppTypography.subheadline.copyWith(
+                        color: colors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
           
           SizedBox(
             height: 350,
@@ -155,6 +174,7 @@ class _OnboardingViewState extends State<OnboardingView> {
           const SizedBox(height: AppSpacing.xl),
         ],
       ),
-    );
+    ),
+  );
   }
 }

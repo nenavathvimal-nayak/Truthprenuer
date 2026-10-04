@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../components/shared_top_nav_bar.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
@@ -245,14 +246,24 @@ class _PersonCardState extends State<_PersonCard> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/user-profile', extra: person);
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
           Row(
             children: [
               CircleAvatar(
@@ -351,6 +362,9 @@ class _PersonCardState extends State<_PersonCard> {
           ],
         ],
       ),
-    );
+    ),
+  ),
+),
+);
   }
 }
