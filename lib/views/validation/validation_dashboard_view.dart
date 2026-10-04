@@ -184,90 +184,192 @@ class _ActiveValidationsTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.sm),
-          itemCount: validations.length,
-          itemBuilder: (context, index) {
-            final v = validations[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: colors.cardBackground,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    HapticManager.shared.impactLight();
-                    context.push('/validation-detail/${v.id}', extra: v);
-                  },
-                  borderRadius: BorderRadius.circular(14),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppPalette.orange.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppPalette.orange,
-                                    fontWeight: FontWeight.w700,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 600;
+            if (isWide) {
+              return GridView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.sm),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  mainAxisExtent: 175,
+                ),
+                itemCount: validations.length,
+                itemBuilder: (context, index) {
+                  final v = validations[index];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: colors.cardBackground,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          HapticManager.shared.impactLight();
+                          context.push('/validation-detail/${v.id}', extra: v);
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: AppPalette.orange.withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTypography.labelSmall.copyWith(
+                                          color: AppPalette.orange,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
                                   ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "${v.responsesCount} Responses",
+                                    style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                v.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.subheadline.copyWith(
+                                  color: colors.text,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "${v.responsesCount} Responses",
-                              style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          v.title,
-                          style: AppTypography.subheadline.copyWith(
-                            color: colors.text,
-                            fontWeight: FontWeight.w700,
+                              const SizedBox(height: 5),
+                              Text(
+                                v.problem,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                              ),
+                              const Spacer(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Active • Testing Problem Fit",
+                                    style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
+                                  ),
+                                  Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          v.problem,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.footnote.copyWith(color: colors.textSecondary),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      ),
+                    ),
+                  );
+                },
+              );
+            }
+
+            return ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.sm),
+              itemCount: validations.length,
+              itemBuilder: (context, index) {
+                final v = validations[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        HapticManager.shared.impactLight();
+                        context.push('/validation-detail/${v.id}', extra: v);
+                      },
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Active • Testing Problem Fit",
-                              style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: AppPalette.orange.withValues(alpha: 0.10),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      v.tags.isNotEmpty ? v.tags.first.toUpperCase() : "SPRINT",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: AppPalette.orange,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "${v.responsesCount} Responses",
+                                  style: AppTypography.labelSmall.copyWith(color: colors.textTertiary),
+                                ),
+                              ],
                             ),
-                            Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
+                            const SizedBox(height: 12),
+                            Text(
+                              v.title,
+                              style: AppTypography.subheadline.copyWith(
+                                color: colors.text,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              v.problem,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                            ),
+                            const SizedBox(height: 14),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "Active • Testing Problem Fit",
+                                  style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
+                                ),
+                                Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             );
           },
         );

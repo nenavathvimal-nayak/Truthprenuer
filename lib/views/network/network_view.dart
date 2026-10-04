@@ -187,13 +187,35 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
                         ),
                       ],
                     )
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final person = filtered[index];
-                        return _PersonCard(person: person);
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 600;
+                        if (isWide) {
+                          return GridView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              mainAxisExtent: 165,
+                            ),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final person = filtered[index];
+                              return _PersonCard(person: person);
+                            },
+                          );
+                        }
+                        return ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                          itemCount: filtered.length,
+                          itemBuilder: (context, index) {
+                            final person = filtered[index];
+                            return _PersonCard(person: person);
+                          },
+                        );
                       },
                     ),
             ),

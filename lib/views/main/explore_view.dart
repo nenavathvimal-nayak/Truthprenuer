@@ -229,13 +229,35 @@ class _ValidationsFeed extends ConsumerWidget {
             );
           }
 
-          return ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
-            itemCount: filtered.length,
-            itemBuilder: (context, index) {
-              final v = filtered[index];
-              return _ValidationCard(validation: v);
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth >= 600;
+              if (isWide) {
+                return GridView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    mainAxisExtent: 220,
+                  ),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final v = filtered[index];
+                    return _ValidationCard(validation: v);
+                  },
+                );
+              }
+              return ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screenPadding, vertical: AppSpacing.xs),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final v = filtered[index];
+                  return _ValidationCard(validation: v);
+                },
+              );
             },
           );
         },
