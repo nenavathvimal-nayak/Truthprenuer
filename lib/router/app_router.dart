@@ -63,39 +63,37 @@ final GoRouter appRouter = GoRouter(
       return '/forgot-password?error=${Uri.encodeComponent(cleanMsg)}';
     }
 
-    final isAuthRoute = [
-      '/splash',
-      '/onboarding',
-      '/action',
-      '/auth',
-      '/signup',
-      '/otp',
-      '/forgot-password',
-      '/change-password'
+    final isPrivateRoute = [
+      '/validation-wizard',
+      '/chats',
+      '/chat-room',
+      '/settings',
+      '/notification-preferences',
+      '/edit-profile',
+      '/profile-setup',
+      '/team-management',
+      '/notifications',
     ].contains(state.matchedLocation);
 
     final client = safeSupabaseClient;
     // In standalone/offline preview mode, allow direct access to app
     final isAuthenticated = client == null || client.auth.currentUser != null;
 
-    if (!isAuthenticated) {
-      if (isAuthRoute) return null;
+    if (!isAuthenticated && isPrivateRoute) {
       // Preserve target deep link with parameters safely
       final targetUri = state.uri.toString();
       return '/auth?redirect=${Uri.encodeComponent(targetUri)}';
-    } else {
-      if (state.matchedLocation == '/auth' || state.matchedLocation == '/signup') {
-        final redirectParam = state.uri.queryParameters['redirect'];
-        if (redirectParam != null && redirectParam.isNotEmpty) {
-          final decoded = Uri.decodeComponent(redirectParam).trim();
-          if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
-            return decoded;
-          }
+    } else if (isAuthenticated && (state.matchedLocation == '/auth' || state.matchedLocation == '/signup')) {
+      final redirectParam = state.uri.queryParameters['redirect'];
+      if (redirectParam != null && redirectParam.isNotEmpty) {
+        final decoded = Uri.decodeComponent(redirectParam).trim();
+        if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+          return decoded;
         }
-        return '/';
       }
-      return null;
+      return '/';
     }
+    return null;
   },
   routes: [
     GoRoute(
@@ -227,6 +225,34 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardView(),
+    ),
+    GoRoute(
+      path: '/startup-validation',
+      builder: (context, state) => const MainTabView(initialIndex: 2),
+    ),
+    GoRoute(
+      path: '/ai-startup-validation',
+      builder: (context, state) => const AIValidationView(),
+    ),
+    GoRoute(
+      path: '/human-validation',
+      builder: (context, state) => const MainTabView(initialIndex: 2),
+    ),
+    GoRoute(
+      path: '/startup-analysis',
+      builder: (context, state) => const StartupHealthDashboardView(),
+    ),
+    GoRoute(
+      path: '/how-it-works',
+      builder: (context, state) => const OnboardingView(),
+    ),
+    GoRoute(
+      path: '/about',
+      builder: (context, state) => const OnboardingView(),
+    ),
+    GoRoute(
+      path: '/faq',
+      builder: (context, state) => const OnboardingView(),
     ),
     GoRoute(
       path: '/validation-detail/:id',

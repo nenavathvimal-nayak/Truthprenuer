@@ -1,11 +1,11 @@
 {
-    "name": "taeed_flutter",
-    "short_name": "taeed_flutter",
+    "name": "Truthprenuer — Validate Startup Ideas with Humans + AI",
+    "short_name": "Truthprenuer",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0A0A0A",
+    "theme_color": "#F97316",
+    "description": "Empirical startup validation engine combining human feedback, AI pattern synthesis, and startup health tracking.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

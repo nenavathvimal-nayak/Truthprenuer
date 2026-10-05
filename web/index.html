@@ -1,62 +1,388 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  
+  <title>Truthprenuer — Validate Startup Ideas with Humans + AI</title>
+  
+  <meta name="description" content="Truthprenuer helps founders, innovators, and builders test startup ideas through real human feedback and AI-powered analysis before spending excessive time and capital building.">
+  <meta name="keywords" content="startup validation, validate startup ideas, AI startup validation, human validation, startup feedback, startup analysis, startup health signals, founder networking">
+  <meta name="author" content="Truthprenuer">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <link rel="canonical" href="https://truthprenuer.pages.dev/">
+
+  <!-- Open Graph / Facebook / LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Truthprenuer">
+  <meta property="og:title" content="Truthprenuer — Validate Startup Ideas with Humans + AI">
+  <meta property="og:description" content="Validate startup ideas with real human feedback, AI-powered evidence synthesis, startup health tracking, and founder-validator networking.">
+  <meta property="og:url" content="https://truthprenuer.pages.dev/">
+  <meta property="og:image" content="https://truthprenuer.pages.dev/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="Truthprenuer Startup Validation Platform">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Truthprenuer — Validate Startup Ideas with Humans + AI">
+  <meta name="twitter:description" content="Human Validation + AI Validation + Startup Health Signals + Founder Networking.">
+  <meta name="twitter:image" content="https://truthprenuer.pages.dev/icons/Icon-512.png">
+
+  <!-- Security & Connectivity Headers -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.gstatic.com; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-inline' blob: https://www.gstatic.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://*.gstatic.com; img-src 'self' https://images.unsplash.com https://*.supabase.co data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="TRUTHPRENUER — The evidence-based startup validation engine, founder network, and truth intelligence platform.">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- iOS & Mobile Web App Meta -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="TRUTHPRENUER">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Truthprenuer">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
+  <!-- Favicon & Manifest -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>TRUTHPRENUER — Startup Validation & Truth-Engine</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Schema.org JSON-LD Graph for Traditional & AI Search Retrieval -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://truthprenuer.pages.dev/#organization",
+        "name": "Truthprenuer",
+        "url": "https://truthprenuer.pages.dev/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://truthprenuer.pages.dev/icons/Icon-192.png",
+          "width": 192,
+          "height": 192
+        },
+        "description": "Truthprenuer is a startup validation platform that combines real human feedback with AI-powered analysis to help people evaluate startup ideas, identify patterns, understand risks and opportunities, and connect with relevant mentors, investors, and builders.",
+        "sameAs": [
+          "https://github.com/nenavathvimal-nayak/Truthprenuer"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://truthprenuer.pages.dev/#website",
+        "url": "https://truthprenuer.pages.dev/",
+        "name": "Truthprenuer",
+        "publisher": {
+          "@id": "https://truthprenuer.pages.dev/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://truthprenuer.pages.dev/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://truthprenuer.pages.dev/#application",
+        "name": "Truthprenuer",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, iOS, Android",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Evidence-based startup validation engine combining structured human feedback, AI pattern synthesis, and startup health tracking."
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://truthprenuer.pages.dev/#webpage",
+        "url": "https://truthprenuer.pages.dev/",
+        "name": "Truthprenuer — Validate Startup Ideas with Humans + AI",
+        "isPartOf": {
+          "@id": "https://truthprenuer.pages.dev/#website"
+        },
+        "about": {
+          "@id": "https://truthprenuer.pages.dev/#organization"
+        },
+        "description": "Validate startup ideas with real human feedback, AI-powered evidence synthesis, startup health tracking, and founder-validator networking."
+      }
+    ]
+  }
+  </script>
+
   <style>
-    /* Clean modern web presentation */
-    body {
+    /* Global Base Presentation */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0A0A0A;
+      color: #E2E8F0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none; /* Prevent pull-to-refresh bounce */
-      background-color: #0A0A0A; /* Match dark theme background */
+      overscroll-behavior-y: none;
     }
     input, textarea {
       -webkit-user-select: auto;
       user-select: auto;
     }
+
+    /* Prerender Shell: Semantic layout visible to search engines and AI crawlers before Flutter hydration */
+    #prerender-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px;
+      line-height: 1.6;
+    }
+    #prerender-shell header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #1E293B;
+    }
+    #prerender-shell .brand-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #F97316;
+      text-decoration: none;
+    }
+    #prerender-shell nav a {
+      color: #94A3B8;
+      text-decoration: none;
+      margin-left: 18px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    #prerender-shell nav a:hover {
+      color: #F97316;
+    }
+    #prerender-shell .hero {
+      padding: 48px 0 32px;
+      text-align: left;
+    }
+    #prerender-shell h1 {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.2;
+      color: #FFFFFF;
+      margin: 0 0 16px 0;
+    }
+    #prerender-shell .subtitle {
+      font-size: 18px;
+      color: #94A3B8;
+      max-width: 780px;
+      margin: 0 0 24px 0;
+    }
+    #prerender-shell .cta-btn {
+      display: inline-block;
+      background-color: #F97316;
+      color: #FFFFFF;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    #prerender-shell .section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #1E293B;
+    }
+    #prerender-shell h2 {
+      font-size: 26px;
+      color: #FFFFFF;
+      margin-bottom: 12px;
+    }
+    #prerender-shell h3 {
+      font-size: 18px;
+      color: #F8FAFC;
+      margin-top: 20px;
+      margin-bottom: 6px;
+    }
+    #prerender-shell table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      text-align: left;
+    }
+    #prerender-shell th, #prerender-shell td {
+      padding: 12px 16px;
+      border: 1px solid #1E293B;
+    }
+    #prerender-shell th {
+      background-color: #111827;
+      color: #F97316;
+    }
+    #prerender-shell footer {
+      margin-top: 64px;
+      padding-top: 32px;
+      border-top: 1px solid #1E293B;
+      color: #64748B;
+      font-size: 13px;
+    }
+    #prerender-shell footer a {
+      color: #64748B;
+      text-decoration: none;
+      margin-right: 14px;
+    }
+    #prerender-shell footer a:hover {
+      color: #94A3B8;
+    }
+
+    /* Once Flutter engine initializes, it sits seamlessly over prerender */
+    flt-glass-pane, flutter-view {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <!-- Semantic Prerender Content Accessible to Web Crawlers & AI Answer Engines -->
+  <div id="prerender-shell">
+    <header>
+      <a href="/" class="brand-logo" aria-label="Truthprenuer Home">TRUTHPRENUER</a>
+      <nav aria-label="Main Navigation">
+        <a href="/">Home</a>
+        <a href="/explore">Explore Validations</a>
+        <a href="/startup-validation">Startup Validation</a>
+        <a href="/ai-startup-validation">AI Validation</a>
+        <a href="/human-validation">Human Validation</a>
+        <a href="/startup-analysis">Startup Analysis</a>
+        <a href="/startup-health">Startup Health</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/top-validators">Top Validators</a>
+        <a href="/auth" class="cta-btn" style="padding: 6px 14px; margin-left: 20px;">Sign In</a>
+      </nav>
+    </header>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+    <main>
+      <section class="hero">
+        <h1>Validate Your Startup Idea with Humans + AI</h1>
+        <p class="subtitle">
+          Truthprenuer helps founders, innovators, and builders test ideas through real human feedback and AI-powered analysis before spending excessive time and resources building.
+        </p>
+        <a href="/signup" class="cta-btn">Start Validation Sprint</a>
+      </section>
+
+      <section class="section" id="definition">
+        <h2>What is Truthprenuer?</h2>
+        <p>
+          <strong>Truthprenuer is an empirical startup validation platform</strong> that bridges qualitative human feedback with quantitative artificial intelligence. Rather than relying on guesswork or generic chatbots, founders publish structured validation sprints. Real domain experts, prospective customers, and fellow builders contribute feedback, while our AI intelligence engine extracts hidden patterns, scores evidence strength, and diagnoses startup health signals.
+        </p>
+      </section>
+
+      <section class="section" id="capabilities">
+        <h2>Core Capabilities</h2>
+        
+        <h3>1. Human Validation</h3>
+        <p>
+          Collect verified feedback from experienced founders, mentors, domain professionals, and prospective buyers. Evaluate willingness-to-pay, real-world friction, and alternative solutions currently in use.
+        </p>
+
+        <h3>2. AI Evidence Synthesis</h3>
+        <p>
+          Our machine learning pipeline synthesizes qualitative interview notes, survey responses, and customer feedback into structured, evidence-backed reports. It automatically highlights supporting indicators, contradictory evidence, and key blind spots.
+        </p>
+
+        <h3>3. Startup Analysis & Health Diagnostics</h3>
+        <p>
+          Track validation progress through empirical health metrics: Problem-Solution Fit score, Validation Response Velocity, Confidence Score, and Evidence Quality Index.
+        </p>
+
+        <h3>4. Founder & Validator Networking</h3>
+        <p>
+          Connect with industry peers, startup mentors, angel investors, and verified validators who have evaluated hundreds of products in your market.
+        </p>
+      </section>
+
+      <section class="section" id="comparison">
+        <h2>Human Validation vs AI Validation</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Evaluation Dimension</th>
+              <th>Human Validation Alone</th>
+              <th>AI Validation Alone</th>
+              <th>Truthprenuer (Humans + AI)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Real Purchase Intent</strong></td>
+              <td>High (real buyer reactions)</td>
+              <td>Low (simulated models)</td>
+              <td><strong>Maximized</strong>: Empirical buyer feedback analyzed for genuine commitment signals</td>
+            </tr>
+            <tr>
+              <td><strong>Pattern Recognition</strong></td>
+              <td>Limited by individual memory</td>
+              <td>High across training data</td>
+              <td><strong>Instant</strong>: AI synthesizes trends across all respondent feedback</td>
+            </tr>
+            <tr>
+              <td><strong>Unbiased Perspective</strong></td>
+              <td>Subject to social courtesy bias</td>
+              <td>Neutral algorithmic reasoning</td>
+              <td><strong>Objective</strong>: Structured survey prompts mitigate courtesy bias</td>
+            </tr>
+            <tr>
+              <td><strong>Actionable Synthesis</strong></td>
+              <td>Manual spreadsheet sorting</td>
+              <td>Fast but lacks domain grounding</td>
+              <td><strong>Automated 8-Part Diagnostic Report</strong> grounded in real responses</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section" id="faq">
+        <h2>Frequently Asked Questions</h2>
+        
+        <h3>How does Truthprenuer validate a startup idea?</h3>
+        <p>
+          Founders formulate a clear problem hypothesis, solution description, and target audience, then submit structured questions. The community provides qualitative feedback and votes, while our AI pipeline continuously aggregates evidence, categorizes responses, and measures validation confidence.
+        </p>
+
+        <h3>Why validate before building?</h3>
+        <p>
+          Building without validation is the primary reason startups fail. Validating beforehand saves months of engineering effort and tens of thousands of dollars by confirming market demand, pricing viability, and critical pain points early.
+        </p>
+
+        <h3>Is Truthprenuer just an AI startup idea generator?</h3>
+        <p>
+          No. Truthprenuer is an evidence-based validation platform that evaluates real hypotheses with real people. It does not replace customer discovery with synthetic hallucinations; it accelerates and clarifies genuine customer discovery.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2026 Truthprenuer. All rights reserved. The evidence-based startup validation platform.</p>
+      <p>
+        <a href="/startup-validation">Startup Validation</a>
+        <a href="/ai-startup-validation">AI Validation</a>
+        <a href="/human-validation">Human Validation</a>
+        <a href="/startup-analysis">Startup Analysis</a>
+        <a href="/startup-health">Startup Health</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/top-validators">Leaderboard</a>
+        <a href="/explore">Explore</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Flutter Web Application Bootstrap Loader -->
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
