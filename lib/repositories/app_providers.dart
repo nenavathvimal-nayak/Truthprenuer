@@ -475,6 +475,193 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
   }
 }
 
+// -------------------------------------------------------------
+// Connection Request State Machine & In-Flight Lock
+// -------------------------------------------------------------
+
+enum ConnectionStatus {
+  none,
+  requested,
+  received,
+  connected,
+}
+
+class ConnectionsNotifier extends StateNotifier<Map<String, ConnectionStatus>> {
+  final Set<String> _inFlight = {};
+
+  ConnectionsNotifier()
+      : super({
+          // Seed initial pending request from Elena (matches Elena's notification)
+          "user_elena": ConnectionStatus.received,
+        });
+
+  ConnectionStatus getStatus(String userId) {
+    return state[userId] ?? ConnectionStatus.none;
+  }
+
+  bool isInFlight(String userId) => _inFlight.contains(userId);
+
+  Future<void> sendOrToggleRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+
+    final current = getStatus(userId);
+    try {
+      if (current == ConnectionStatus.none) {
+        state = {...state, userId: ConnectionStatus.requested};
+      } else if (current == ConnectionStatus.requested) {
+        // Withdraw request
+        final updated = Map<String, ConnectionStatus>.from(state);
+        updated.remove(userId);
+        state = updated;
+      } else if (current == ConnectionStatus.received) {
+        // Mutual request resolved cleanly to connected (prevents deadlock)
+        state = {...state, userId: ConnectionStatus.connected};
+      }
+    } finally {
+      // Debounce window to lock against rapid tap oscillation
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  Future<void> acceptRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+    try {
+      state = {...state, userId: ConnectionStatus.connected};
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  Future<void> declineRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+    try {
+      final updated = Map<String, ConnectionStatus>.from(state);
+      updated.remove(userId);
+      state = updated;
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  void reset() {
+    state = {
+      "user_elena": ConnectionStatus.received,
+    };
+  }
+
+  void clearAll() {
+    state = {};
+  }
+}
+
+final connectionsProvider = StateNotifierProvider<ConnectionsNotifier, Map<String, ConnectionStatus>>((ref) {
+  return ConnectionsNotifier();
+});
+
+class ValidationUpvoteState {
+  final bool isUpvoted;
+  final int count;
+
+  const ValidationUpvoteState({
+    required this.isUpvoted,
+    required this.count,
+  });
+
+  ValidationUpvoteState copyWith({bool? isUpvoted, int? count}) {
+    return ValidationUpvoteState(
+      isUpvoted: isUpvoted ?? this.isUpvoted,
+      count: count ?? this.count,
+    );
+  }
+}
+
+class UpvotesNotifier extends StateNotifier<Map<String, ValidationUpvoteState>> {
+  final ValidationRepository _repository;
+  final Set<String> _inFlight = {};
+
+  UpvotesNotifier(this._repository) : super({});
+
+  ValidationUpvoteState getStatus(String validationId, {int defaultCount = 0, bool defaultIsUpvoted = false}) {
+    return state[validationId] ?? ValidationUpvoteState(
+      isUpvoted: defaultIsUpvoted,
+      count: defaultCount,
+    );
+  }
+
+  /// Optimistically updates upvote count and toggles state.
+  /// Locks during in-flight debounce to prevent duplicate rapid clicks or oscillations.
+  /// Automatically rolls back on server or network error.
+  Future<bool> toggleUpvote(String validationId, {int defaultCount = 0, bool defaultIsUpvoted = false}) async {
+    if (_inFlight.contains(validationId)) {
+      return false;
+    }
+    _inFlight.add(validationId);
+
+    final current = getStatus(validationId, defaultCount: defaultCount, defaultIsUpvoted: defaultIsUpvoted);
+    final nextIsUpvoted = !current.isUpvoted;
+    final nextCount = nextIsUpvoted ? current.count + 1 : (current.count > 0 ? current.count - 1 : 0);
+
+    // 1. Optimistic Update
+    state = {
+      ...state,
+      validationId: ValidationUpvoteState(isUpvoted: nextIsUpvoted, count: nextCount),
+    };
+
+    try {
+      final success = await _repository.toggleUpvote(validationId, upvote: nextIsUpvoted);
+      if (!success) {
+        // Rollback on rejection
+        state = {
+          ...state,
+          validationId: current,
+        };
+        return false;
+      }
+      return true;
+    } catch (_) {
+      // Rollback on failure
+      state = {
+        ...state,
+        validationId: current,
+      };
+      return false;
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(validationId);
+    }
+  }
+
+  void reset() {
+    state = {};
+  }
+
+  void clearAll() {
+    state = {};
+  }
+}
+
+final upvotesProvider = StateNotifierProvider<UpvotesNotifier, Map<String, ValidationUpvoteState>>((ref) {
+  final repo = ref.watch(validationRepositoryProvider);
+  return UpvotesNotifier(repo);
+});
+
+/// Resets all user-scoped providers to completely prevent account-switch data leakage
+void resetAllUserScopedProviders(Ref ref) {
+  ref.invalidate(currentUserProvider);
+  ref.invalidate(validationsProvider);
+  ref.invalidate(evidenceListProvider);
+  ref.invalidate(notificationsProvider);
+  ref.invalidate(conversationsProvider);
+  ref.invalidate(connectionsProvider);
+  ref.invalidate(upvotesProvider);
+}
+
 // Aliases for legacy views compatibility
 final topValidatorsProvider = Provider<List<User>>((ref) => ref.watch(communityUsersProvider));
 final chatsProvider = Provider<List<Conversation>>((ref) => ref.watch(conversationsProvider));
