@@ -21,45 +21,6 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
   String _selectedRole = "All";
   final List<String> _roles = ["All", "Founder", "Investor", "Professional", "Creator"];
 
-  final List<User> _allUsers = [
-    User(
-      id: "u_1",
-      name: "Siddharth Verma",
-      username: "siddharth",
-      bio: "Serial founder. Building dev-tools for cloud cost validation.",
-      role: "Founder",
-      skills: ["Cloud Architecture", "DevOps", "B2B SaaS"],
-      isVerified: true,
-    ),
-    User(
-      id: "u_2",
-      name: "Ananya Deshmukh",
-      username: "ananya",
-      bio: "Principal at Matrix Ventures. Focus on early FinTech & Developer APIs.",
-      role: "Investor",
-      skills: ["FinTech", "Due Diligence", "Growth"],
-      isVerified: true,
-    ),
-    User(
-      id: "u_3",
-      name: "Rohan Kulkarni",
-      username: "rohank",
-      bio: "Staff Product Manager. Provided feedback to 24 early-stage startups.",
-      role: "Professional",
-      skills: ["Product Strategy", "Pricing", "User Research"],
-      isVerified: true,
-    ),
-    User(
-      id: "u_4",
-      name: "Elena Rostova",
-      username: "elena",
-      bio: "Writing about AI agent architectures and validation frameworks.",
-      role: "Creator",
-      skills: ["AI Engineering", "Technical Writing", "Community"],
-      isVerified: false,
-    ),
-  ];
-
   @override
   void dispose() {
     _searchCtrl.dispose();
@@ -69,9 +30,10 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
+    final allUsers = ref.watch(communityUsersProvider);
     final query = _searchCtrl.text.trim().toLowerCase();
 
-    var filtered = _allUsers;
+    var filtered = allUsers;
     if (_selectedRole != "All") {
       filtered = filtered.where((u) => u.role.toLowerCase() == _selectedRole.toLowerCase()).toList();
     }
@@ -157,6 +119,7 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
             child: RefreshIndicator(
               color: AppPalette.orange,
               onRefresh: () async {
+                ref.invalidate(realCommunityUsersProvider);
                 ref.invalidate(communityUsersProvider);
                 await Future.delayed(const Duration(milliseconds: 50));
               },

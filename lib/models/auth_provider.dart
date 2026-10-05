@@ -57,6 +57,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return;
     }
 
+    // Check existing session immediately on startup
+    final initialSession = client.auth.currentSession;
+    if (initialSession != null) {
+      state = AuthState(
+        status: AuthStatus.authenticated,
+        isFirstLaunch: !hasOnboarded,
+      );
+    } else {
+      state = AuthState(
+        status: AuthStatus.unauthenticated,
+        isFirstLaunch: !hasOnboarded,
+      );
+    }
+
     // Supabase Auth as the single source of truth when initialized
     _authSubscription = client.auth.onAuthStateChange.listen((data) {
       final session = data.session;
@@ -91,7 +105,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     final client = safeSupabaseClient;
     if (client == null) {
-      // In standalone / preview mode without Supabase credentials, allow user to test app
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
       return;
     }
@@ -112,11 +125,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signup(String email, String password, String fullName) async {
+  /// Signs up with Supabase. Returns true if session was created immediately,
+  /// or false if an email confirmation link was sent.
+  Future<bool> signup(String email, String password, String fullName) async {
     final client = safeSupabaseClient;
     if (client == null) {
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
-      return;
+      return true;
     }
     try {
       final res = await client.auth.signUp(
@@ -126,7 +141,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       if (res.session != null) {
         state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+        return true;
       }
+      return false;
     } on AuthException catch (e) {
       state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
       rethrow;
@@ -134,6 +151,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.toString());
       rethrow;
     }
+  }
+
+  Future<void> verifyOTP(String email, String token) async {
+    final client = safeSupabaseClient;
+    if (client == null) return;
+    try {
+      final res = await client.auth.verifyOTP(
+        email: email.trim(),
+        token: token.trim(),
+        type: OtpType.signup,
+      );
+      if (res.session != null) {
+        state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      }
+    } on AuthException catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
+      rethrow;
+    }
+  }
+
+  Future<void> resendConfirmationEmail(String email) async {
+    final client = safeSupabaseClient;
+    if (client == null) return;
+    await client.auth.resend(type: OtpType.signup, email: email);
   }
 
   Future<void> logout() async {

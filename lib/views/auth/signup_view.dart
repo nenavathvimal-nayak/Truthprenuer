@@ -69,10 +69,15 @@ class _SignupViewState extends ConsumerState<SignupView> {
     });
 
     try {
-      await ref.read(authProvider.notifier).signup(email, password, name);
+      final isImmediateSession = await ref.read(authProvider.notifier).signup(email, password, name);
       if (!mounted) return;
-      final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
-      context.go(_sanitizeRedirect(rawRedirect));
+      if (isImmediateSession) {
+        final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+        context.go(_sanitizeRedirect(rawRedirect));
+      } else {
+        setState(() => _isLoading = false);
+        _showEmailSentDialog(email);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -82,6 +87,62 @@ class _SignupViewState extends ConsumerState<SignupView> {
             : (ref.read(authProvider).errorMessage ?? 'Failed to create account. Please check your details and try again.');
       });
     }
+  }
+
+  void _showEmailSentDialog(String email) {
+    final colors = Theme.of(context).appColors;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.cardBackground,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.mark_email_read_outlined, color: colors.primary, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Verify Your Email",
+                style: AppTypography.title3.copyWith(color: colors.text),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Account created successfully! We sent a confirmation link to:",
+              style: AppTypography.body.copyWith(color: colors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              email,
+              style: AppTypography.headline.copyWith(color: colors.primary),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Please check your inbox (and spam folder) and click the link to activate your account, then sign in.",
+              style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.go('/auth');
+            },
+            child: Text(
+              "Go to Sign In",
+              style: TextStyle(color: colors.primary, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

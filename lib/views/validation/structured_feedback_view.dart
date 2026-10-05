@@ -7,6 +7,7 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
+import '../../repositories/supabase_client.dart';
 
 class StructuredFeedbackView extends ConsumerStatefulWidget {
   final ValidationRequest validation;
@@ -74,12 +75,14 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
       _isSubmitting = true;
     });
 
+    final authUser = safeSupabaseClient?.auth.currentUser;
     final currentUser = ref.read(currentUserProvider).value;
+    final validatorId = authUser?.id ?? currentUser?.id ?? "anonymous_validator";
 
     final newFeedback = StructuredFeedback(
       id: const Uuid().v4(),
       validationId: widget.validation.id,
-      validatorId: currentUser?.id ?? "founder_dev_1",
+      validatorId: validatorId,
       problemFrequency: _problemFrequency,
       currentSolution: _currentSolutionCtrl.text,
       willingToPay: _willingToPay,

@@ -27,20 +27,24 @@ final currentUserProvider = FutureProvider<User?>((ref) async {
   if (user != null) {
     final profile = await profileRepo.getProfile(user.id);
     if (profile != null) return profile;
+
+    final metadata = user.userMetadata ?? {};
+    final displayName = metadata['full_name'] as String? ?? (user.email?.split('@').first ?? 'Founder');
+    final username = metadata['username'] as String? ?? 'user_${user.id.substring(0, 8)}';
+    return User(
+      id: user.id,
+      name: displayName,
+      username: username,
+      bio: '',
+      role: 'Founder',
+      userRole: UserRole.founder,
+      skills: [],
+      location: '',
+      isVerified: false,
+    );
   }
 
-  // Authoritative default local user for preview / unauthenticated demo
-  return User(
-    id: "founder_dev_1",
-    name: "Alex Vimal",
-    username: "alexvimal",
-    bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
-    role: "Founder",
-    userRole: UserRole.founder,
-    skills: ["Product Strategy", "B2B SaaS", "User Research", "Market Validation"],
-    location: "Bangalore, IN",
-    isVerified: true,
-  );
+  return null;
 });
 
 // Authoritative Validations Stream
@@ -203,63 +207,75 @@ class EvidenceNotifier extends StateNotifier<List<EvidenceItem>> {
   }
 }
 
-// Authoritative Community Users for Discovery & Network
-final communityUsersProvider = Provider<List<User>>((ref) {
-  return [
-    User(
-      id: "user_elena",
-      name: "Elena Rostova",
-      username: "erostova",
-      bio: "Partner at Apex Ventures. Former operator building developer platforms.",
-      role: "Investor",
-      userRole: UserRole.investor,
-      skills: ["Venture Capital", "B2B SaaS", "Developer Tools", "GTM Strategy"],
-      location: "San Francisco, CA",
-      isVerified: true,
-      validationsCompleted: 41,
-      helpfulnessScore: 4.9,
-    ),
-    User(
-      id: "user_marcus",
-      name: "Marcus Vance",
-      username: "marcusv",
-      bio: "12+ yrs evaluating distributed cloud architecture & security compliance.",
-      role: "Professional",
-      userRole: UserRole.professional,
-      skills: ["SOC2 Compliance", "Cloud Security", "Enterprise DevOps"],
-      location: "New York, NY",
-      isVerified: true,
-      validationsCompleted: 38,
-      helpfulnessScore: 4.8,
-    ),
-    User(
-      id: "user_sarah",
-      name: "Sarah Chen",
-      username: "schen_growth",
-      bio: "Growth & Retention Lead. Helped 4 startups scale from \$0 to \$1M ARR.",
-      role: "Professional",
-      userRole: UserRole.professional,
-      skills: ["Customer Acquisition", "Pricing Strategy", "Product-Led Growth"],
-      location: "Singapore",
-      isVerified: true,
-      validationsCompleted: 32,
-      helpfulnessScore: 4.7,
-    ),
-    User(
-      id: "user_dev",
-      name: "Dev Patel",
-      username: "dev_fintech",
-      bio: "Building payments rails and embedded banking integrations.",
-      role: "Founder",
-      userRole: UserRole.founder,
-      skills: ["FinTech", "Payments", "API Design", "Banking"],
-      location: "London, UK",
-      isVerified: true,
-      validationsCompleted: 29,
-      helpfulnessScore: 4.6,
-    ),
-  ];
+// Authoritative Community Users from Supabase (Real Users)
+final realCommunityUsersProvider = FutureProvider<List<User>>((ref) async {
+  final repo = ref.watch(profileRepositoryProvider);
+  final realUsers = await repo.searchProfiles(query: '');
+  return realUsers;
 });
+
+final communityUsersProvider = Provider<List<User>>((ref) {
+  final asyncUsers = ref.watch(realCommunityUsersProvider);
+  return asyncUsers.maybeWhen(
+    data: (users) => users.isNotEmpty ? users : _defaultSeedUsers,
+    orElse: () => _defaultSeedUsers,
+  );
+});
+
+final _defaultSeedUsers = [
+  User(
+    id: "user_elena",
+    name: "Elena Rostova",
+    username: "erostova",
+    bio: "Partner at Apex Ventures. Former operator building developer platforms.",
+    role: "Investor",
+    userRole: UserRole.investor,
+    skills: ["Venture Capital", "B2B SaaS", "Developer Tools", "GTM Strategy"],
+    location: "San Francisco, CA",
+    isVerified: true,
+    validationsCompleted: 41,
+    helpfulnessScore: 4.9,
+  ),
+  User(
+    id: "user_marcus",
+    name: "Marcus Vance",
+    username: "marcusv",
+    bio: "12+ yrs evaluating distributed cloud architecture & security compliance.",
+    role: "Professional",
+    userRole: UserRole.professional,
+    skills: ["SOC2 Compliance", "Cloud Security", "Enterprise DevOps"],
+    location: "New York, NY",
+    isVerified: true,
+    validationsCompleted: 38,
+    helpfulnessScore: 4.8,
+  ),
+  User(
+    id: "user_sarah",
+    name: "Sarah Chen",
+    username: "schen_growth",
+    bio: "Growth & Retention Lead. Helped 4 startups scale from \$0 to \$1M ARR.",
+    role: "Professional",
+    userRole: UserRole.professional,
+    skills: ["Customer Acquisition", "Pricing Strategy", "Product-Led Growth"],
+    location: "Singapore",
+    isVerified: true,
+    validationsCompleted: 32,
+    helpfulnessScore: 4.7,
+  ),
+  User(
+    id: "user_dev",
+    name: "Dev Patel",
+    username: "dev_fintech",
+    bio: "Building payments rails and embedded banking integrations.",
+    role: "Founder",
+    userRole: UserRole.founder,
+    skills: ["FinTech", "Payments", "API Design", "Banking"],
+    location: "London, UK",
+    isVerified: true,
+    validationsCompleted: 29,
+    helpfulnessScore: 4.6,
+  ),
+];
 
 // Notifications State Notifier
 final notificationsProvider = StateNotifierProvider<NotificationsNotifier, List<AppNotification>>((ref) {

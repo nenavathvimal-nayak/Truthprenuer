@@ -90,7 +90,7 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
 
     HapticManager.shared.impactLight();
 
-    final myId = ref.read(currentUserProvider).value?.id ?? "founder_dev_1";
+    final myId = safeSupabaseClient?.auth.currentUser?.id ?? ref.read(currentUserProvider).value?.id ?? "";
 
     ref.read(chatMessagesProvider(widget.conversation.id).notifier).sendMessage(
           text: text,
@@ -312,7 +312,7 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final messages = ref.watch(chatMessagesProvider(widget.conversation.id));
-    final myId = ref.watch(currentUserProvider).value?.id ?? "founder_dev_1";
+    final myId = safeSupabaseClient?.auth.currentUser?.id ?? ref.watch(currentUserProvider).value?.id ?? "";
 
     return Scaffold(
       backgroundColor: colors.background,

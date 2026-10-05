@@ -108,16 +108,42 @@ class _LoginViewState extends ConsumerState<LoginView> {
               color: colors.destructive.withAlpha(20),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.error_outline, color: colors.destructive, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _errorMessage!,
-                    style: AppTypography.footnote.copyWith(color: colors.destructive),
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.error_outline, color: colors.destructive, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: AppTypography.footnote.copyWith(color: colors.destructive),
+                      ),
+                    ),
+                  ],
                 ),
+                if (_errorMessage!.toLowerCase().contains('email not confirmed')) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () async {
+                      final email = _emailController.text.trim();
+                      if (email.isNotEmpty) {
+                        final messenger = ScaffoldMessenger.of(context);
+                        await ref.read(authProvider.notifier).resendConfirmationEmail(email);
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text('Verification link resent to your email!')),
+                        );
+                      }
+                    },
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
+                    child: Text(
+                      'Resend verification link',
+                      style: TextStyle(color: colors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

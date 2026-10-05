@@ -31,13 +31,57 @@ class ProfileView extends ConsumerWidget {
         },
         child: userAsync.when(
           data: (user) {
-            final displayUser = user ?? User(
-              id: "dev_user",
-              name: "Alex Vimal",
-              username: "alexvimal",
-              bio: "Building AI-driven B2B operating systems. Ex-FinTech product lead.",
-              role: currentRole.label,
-            );
+            if (user == null) {
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(AppSpacing.screenPadding),
+                children: [
+                  const SizedBox(height: AppSpacing.xxl),
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      decoration: BoxDecoration(
+                        color: colors.cardBackground,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.account_circle_outlined, size: 64, color: colors.primary),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            "Welcome to Truthprenuer",
+                            style: AppTypography.title2.copyWith(color: colors.text),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            "Sign in to manage your startup profile, validation sprints, and community connections.",
+                            style: AppTypography.body.copyWith(color: colors.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => context.go('/auth'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text("Sign In / Sign Up", style: TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            final displayUser = user;
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),

@@ -12,8 +12,14 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 /// Configuration constants injected at build time via --dart-define-from-file.
 /// Usage: flutter run --dart-define-from-file=.env.json
 class AppConfig {
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://ledjnqvcyzqledcibjpd.supabase.co',
+  );
+  static const supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZGpucXZjeXpxbGVkY2lianBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMDIyNjUsImV4cCI6MjEwNjY3ODI2NX0.42aIIeQexSnm-dRnUE7vICv882jwl5tw70wyL3OSbhw',
+  );
   static const geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
   static const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: '');
   static const appPublicUrl = String.fromEnvironment(

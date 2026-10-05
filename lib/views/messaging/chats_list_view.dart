@@ -7,6 +7,7 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
+import '../../repositories/supabase_client.dart';
 import '../../utils/haptic_manager.dart';
 
 enum ChatFilter { active, archived }
@@ -39,8 +40,8 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
   void _showNewMessageBottomSheet() {
     HapticManager.shared.impactLight();
     final colors = Theme.of(context).appColors;
-    final myId = ref.read(currentUserProvider).value?.id ?? "founder_dev_1";
-    final allUsers = ref.read(communityUsersProvider).where((u) => u.id != myId).toList();
+    final myId = safeSupabaseClient?.auth.currentUser?.id ?? ref.read(currentUserProvider).value?.id ?? "";
+    final allUsers = ref.read(communityUsersProvider).where((u) => myId.isEmpty || u.id != myId).toList();
 
     showModalBottomSheet(
       context: context,
@@ -271,7 +272,7 @@ class _ChatsListViewState extends ConsumerState<ChatsListView> {
     final colors = Theme.of(context).appColors;
     final conversations = ref.watch(conversationsProvider);
     final users = ref.watch(communityUsersProvider);
-    final myId = ref.watch(currentUserProvider).value?.id ?? "founder_dev_1";
+    final myId = safeSupabaseClient?.auth.currentUser?.id ?? ref.watch(currentUserProvider).value?.id ?? "";
 
     User getOtherUser(Conversation conv) {
       final otherId = conv.participantIds.firstWhere((id) => id != myId, orElse: () => "");

@@ -408,7 +408,7 @@ class _DesktopLeftSidebar extends ConsumerWidget {
     final currentRole = ref.watch(roleProvider);
     final userAsync = ref.watch(currentUserProvider);
     final user = userAsync.valueOrNull;
-    final userName = user?.name ?? "Alex Vimal";
+    final userName = user?.name ?? (user != null ? "Founder" : "Truthprenuer");
 
     return Container(
       color: colors.cardBackground,
