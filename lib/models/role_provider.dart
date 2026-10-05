@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../repositories/supabase_client.dart';
 import 'models.dart';
 
 class RoleNotifier extends StateNotifier<UserRole> {
@@ -29,6 +30,23 @@ class RoleNotifier extends StateNotifier<UserRole> {
       await prefs.setString(_key, role.name);
     } catch (_) {
       // Fallback gracefully in testing environments
+    }
+
+    final client = safeSupabaseClient;
+    final currentUserId = client?.auth.currentUser?.id;
+    if (currentUserId != null) {
+      try {
+        await client?.from('profiles').update({
+          'role': role.label,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('id', currentUserId);
+      } catch (_) {}
+    }
+  }
+
+  void syncRoleFromProfile(UserRole role) {
+    if (state != role) {
+      state = role;
     }
   }
 

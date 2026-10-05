@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../components/brand_logo.dart';
 import '../../components/buttons.dart';
 import '../../components/custom_text_field.dart';
 import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../models/auth_provider.dart';
 import '../../design_system/responsive_layout.dart';
+import '../../models/auth_provider.dart';
+import '../../utils/haptic_manager.dart';
 
 class LoginView extends ConsumerStatefulWidget {
   const LoginView({super.key});
@@ -22,6 +23,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage;
+  bool _isEmailNotConfirmed = false;
+  bool _isInvalidCredentials = false;
 
   @override
   void dispose() {
@@ -29,8 +33,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
     _passwordController.dispose();
     super.dispose();
   }
-
-  String? _errorMessage;
 
   String _sanitizeRedirect(String? raw) {
     if (raw == null || raw.isEmpty) return '/';
@@ -48,32 +50,73 @@ class _LoginViewState extends ConsumerState<LoginView> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (email.isEmpty || !email.contains('@')) {
-      setState(() => _errorMessage = 'Enter a valid email address');
+    final emailRegex = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,}$');
+    if (email.isEmpty || !emailRegex.hasMatch(email)) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+        _isEmailNotConfirmed = false;
+        _isInvalidCredentials = false;
+      });
       return;
     }
     if (password.length < 6) {
-      setState(() => _errorMessage = 'Password must be at least 6 characters');
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Password must be at least 6 characters';
+        _isEmailNotConfirmed = false;
+        _isInvalidCredentials = false;
+      });
       return;
     }
 
+    HapticManager.shared.impactMedium();
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _isEmailNotConfirmed = false;
+      _isInvalidCredentials = false;
     });
 
     try {
       await ref.read(authProvider.notifier).login(email, password);
       if (!mounted) return;
+      HapticManager.shared.notificationSuccess();
       final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
       context.go(_sanitizeRedirect(rawRedirect));
     } catch (e) {
       if (!mounted) return;
+      HapticManager.shared.error();
+
+      String errorText = 'Invalid email or password. Please try again.';
+      bool unconfirmed = false;
+      bool badCreds = false;
+
+      if (e is AuthException) {
+        final lowerMsg = e.message.toLowerCase();
+        if (lowerMsg.contains('email not confirmed')) {
+          errorText = 'Your email has not been verified yet. Check your inbox or enter your verification code.';
+          unconfirmed = true;
+        } else if (lowerMsg.contains('invalid login credentials') || lowerMsg.contains('invalid credentials')) {
+          errorText = 'Invalid email or password. Please check your credentials and try again.';
+          badCreds = true;
+        } else if (lowerMsg.contains('rate limit') || lowerMsg.contains('over_email_send_rate_limit')) {
+          errorText = 'Too many attempts. Please wait a minute and try again.';
+        } else {
+          errorText = e.message;
+        }
+      } else {
+        final provError = ref.read(authProvider).errorMessage;
+        if (provError != null && provError.isNotEmpty) {
+          errorText = provError;
+        }
+      }
+
       setState(() {
         _isLoading = false;
-        _errorMessage = e is AuthException
-            ? e.message
-            : (ref.read(authProvider).errorMessage ?? 'Invalid email or password. Please try again.');
+        _errorMessage = errorText;
+        _isEmailNotConfirmed = unconfirmed;
+        _isInvalidCredentials = badCreds;
       });
     }
   }
@@ -123,23 +166,60 @@ class _LoginViewState extends ConsumerState<LoginView> {
                     ),
                   ],
                 ),
-                if (_errorMessage!.toLowerCase().contains('email not confirmed')) ...[
+                if (_isEmailNotConfirmed) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    children: [
+                      TextButton(
+                        onPressed: () async {
+                          final email = _emailController.text.trim();
+                          if (email.isNotEmpty) {
+                            final messenger = ScaffoldMessenger.of(context);
+                            try {
+                              await ref.read(authProvider.notifier).resendConfirmationEmail(email);
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text('Verification link resent to $email'),
+                                  backgroundColor: colors.primary,
+                                ),
+                              );
+                            } catch (_) {
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                const SnackBar(content: Text('Please wait a moment before resending.')),
+                              );
+                            }
+                          }
+                        },
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
+                        child: Text(
+                          'Resend verification email',
+                          style: TextStyle(color: colors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          final email = _emailController.text.trim();
+                          context.push('/otp?email=${Uri.encodeComponent(email)}');
+                        },
+                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
+                        child: Text(
+                          'Enter 6-digit code',
+                          style: TextStyle(color: colors.text, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else if (_isInvalidCredentials) ...[
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: () async {
-                      final email = _emailController.text.trim();
-                      if (email.isNotEmpty) {
-                        final messenger = ScaffoldMessenger.of(context);
-                        await ref.read(authProvider.notifier).resendConfirmationEmail(email);
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          const SnackBar(content: Text('Verification link resent to your email!')),
-                        );
-                      }
-                    },
+                    onPressed: () => context.push('/forgot-password'),
                     style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(50, 30)),
                     child: Text(
-                      'Resend verification link',
+                      'Forgot your password? Reset it here',
                       style: TextStyle(color: colors.primary, fontSize: 13, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -150,7 +230,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
         ],
         const SizedBox(height: AppSpacing.xl),
         CustomTextField(
-          placeholder: "Email",
+          placeholder: "Email Address",
           controller: _emailController,
           icon: Icons.mail_outline,
           keyboardType: TextInputType.emailAddress,
@@ -189,8 +269,9 @@ class _LoginViewState extends ConsumerState<LoginView> {
       ],
     );
 
-    final bottomAction = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final bottomAction = Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           "Don't have an account? ",
@@ -200,7 +281,12 @@ class _LoginViewState extends ConsumerState<LoginView> {
         ),
         GestureDetector(
           onTap: () {
-            context.push('/signup');
+            final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+            if (rawRedirect != null && rawRedirect.isNotEmpty) {
+              context.push('/signup?redirect=${Uri.encodeComponent(rawRedirect)}');
+            } else {
+              context.push('/signup');
+            }
           },
           child: Text(
             "Sign Up",

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
+import '../models/role_provider.dart';
 import '../models/startup_health_models.dart';
 import 'auth_repository.dart';
 import 'profile_repository.dart';
@@ -26,7 +27,11 @@ final currentUserProvider = FutureProvider<User?>((ref) async {
   final user = authRepo.currentUser;
   if (user != null) {
     final profile = await profileRepo.getProfile(user.id);
-    if (profile != null) return profile;
+    if (profile != null) {
+      // Automatically align active workspace role with authenticated profile role
+      ref.read(roleProvider.notifier).syncRoleFromProfile(profile.userRole);
+      return profile;
+    }
 
     final metadata = user.userMetadata ?? {};
     final displayName = metadata['full_name'] as String? ?? (user.email?.split('@').first ?? 'Founder');

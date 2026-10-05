@@ -7,6 +7,10 @@ import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../utils/haptic_manager.dart';
+import '../../models/models.dart';
+import '../../models/role_provider.dart';
+import '../../repositories/app_providers.dart';
+import '../../repositories/supabase_client.dart';
 
 class ProfileSetupWizardView extends ConsumerStatefulWidget {
   const ProfileSetupWizardView({super.key});
@@ -47,13 +51,53 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
     setState(() {
       _isFinishing = true;
     });
-    
+
     HapticManager.shared.notificationSuccess();
 
-    await Future.delayed(const Duration(milliseconds: 100));
-    
+    try {
+      final client = safeSupabaseClient;
+      final currentAuthUser = client?.auth.currentUser;
+
+      final selectedRole = UserRole.values.firstWhere(
+        (r) => r.label.toLowerCase() == _founderType.toLowerCase() || r.name.toLowerCase() == _founderType.toLowerCase(),
+        orElse: () => UserRole.founder,
+      );
+
+      // 1. Switch active role in roleProvider (which also persists to DB)
+      await ref.read(roleProvider.notifier).switchRole(selectedRole);
+
+      // 2. Persist full profile to Supabase public.profiles if user is authenticated
+      if (currentAuthUser != null) {
+        final username = _usernameController.text.trim().isNotEmpty
+            ? _usernameController.text.trim()
+            : (currentAuthUser.email?.split('@').first ?? 'builder');
+
+        final displayName = (currentAuthUser.userMetadata?['full_name'] as String?)?.trim().isNotEmpty == true
+            ? currentAuthUser.userMetadata!['full_name'] as String
+            : username;
+
+        final updatedUser = User(
+          id: currentAuthUser.id,
+          name: displayName,
+          username: username,
+          role: selectedRole.label,
+          userRole: selectedRole,
+          skills: _selectedSkills.toList(),
+          location: _locationController.text.trim(),
+          bio: _selectedInterests.isNotEmpty ? "Interests: ${_selectedInterests.join(', ')}" : '',
+        );
+
+        await ref.read(profileRepositoryProvider).saveProfile(updatedUser);
+      }
+
+      // 3. Invalidate currentUserProvider so state updates everywhere
+      ref.invalidate(currentUserProvider);
+    } catch (_) {
+      // Continue gracefully even if network was slow
+    }
+
     if (!mounted) return;
-    
+
     setState(() {
       _isFinishing = false;
       _currentStep = 5;
@@ -65,10 +109,10 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
       curve: Curves.easeInOut,
     );
 
-    await Future.delayed(const Duration(milliseconds: 200));
-    
+    await Future.delayed(const Duration(milliseconds: 400));
+
     if (!mounted) return;
-    
+
     context.go('/');
   }
 

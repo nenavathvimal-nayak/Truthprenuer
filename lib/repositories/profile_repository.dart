@@ -61,15 +61,28 @@ class ProfileRepository {
     final client = _client;
     if (client == null) return;
 
-    await client.from('profiles').update({
+    await client.from('profiles').upsert({
+      'id': user.id,
       'full_name': user.name,
       'username': user.username,
       'bio': user.bio,
+      'role': user.userRole.label,
       'skills': user.skills,
       'location': user.location,
       'website': user.website,
       'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', user.id);
+    });
+  }
+
+  Future<void> updateUserRole(String userId, UserRole role) async {
+    final client = _client;
+    if (client == null) return;
+    try {
+      await client.from('profiles').update({
+        'role': role.label,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', userId);
+    } catch (_) {}
   }
 
   Future<void> saveProfile(User user) async {

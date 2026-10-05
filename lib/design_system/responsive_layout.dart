@@ -301,10 +301,10 @@ class AdaptiveAuthLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final isWide = !context.isMobile;
+    final isWide = MediaQuery.of(context).size.width >= 840;
 
     if (!isWide) {
-      // Mobile: 1 Section
+      // Mobile & Compact: 1 Section
       return Scaffold(
         backgroundColor: colors.background,
         body: SafeArea(
@@ -325,7 +325,7 @@ class AdaptiveAuthLayout extends StatelessWidget {
       );
     }
 
-    // Foldable, Tablet & Desktop: 2 Sections Split
+    // Tablet & Desktop: 2 Sections Split
     return Scaffold(
       backgroundColor: colors.background,
       body: Row(
@@ -343,11 +343,13 @@ class AdaptiveAuthLayout extends StatelessWidget {
                   ),
                 ),
               ),
-              padding: const EdgeInsets.all(AppSpacing.xxxl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+              padding: const EdgeInsets.all(AppSpacing.xxl),
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                   Row(
                     children: [
                       Image.asset(
@@ -411,6 +413,8 @@ class AdaptiveAuthLayout extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
 
           // Section 2: Form Container
           Expanded(

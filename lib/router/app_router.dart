@@ -76,22 +76,24 @@ final GoRouter appRouter = GoRouter(
     ].contains(state.matchedLocation);
 
     final client = safeSupabaseClient;
-    // In standalone/offline preview mode, allow direct access to app
-    final isAuthenticated = client == null || client.auth.currentUser != null;
+    final isClientConfigured = client != null;
+    final hasUser = client?.auth.currentUser != null;
 
-    if (!isAuthenticated && isPrivateRoute) {
-      // Preserve target deep link with parameters safely
-      final targetUri = state.uri.toString();
-      return '/auth?redirect=${Uri.encodeComponent(targetUri)}';
-    } else if (isAuthenticated && (state.matchedLocation == '/auth' || state.matchedLocation == '/signup')) {
-      final redirectParam = state.uri.queryParameters['redirect'];
-      if (redirectParam != null && redirectParam.isNotEmpty) {
-        final decoded = Uri.decodeComponent(redirectParam).trim();
-        if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
-          return decoded;
+    if (isClientConfigured) {
+      if (!hasUser && isPrivateRoute) {
+        // Preserve target deep link with parameters safely
+        final targetUri = state.uri.toString();
+        return '/auth?redirect=${Uri.encodeComponent(targetUri)}';
+      } else if (hasUser && (state.matchedLocation == '/auth' || state.matchedLocation == '/signup' || state.matchedLocation == '/otp')) {
+        final redirectParam = state.uri.queryParameters['redirect'];
+        if (redirectParam != null && redirectParam.isNotEmpty) {
+          final decoded = Uri.decodeComponent(redirectParam).trim();
+          if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+            return decoded;
+          }
         }
+        return '/';
       }
-      return '/';
     }
     return null;
   },
@@ -118,7 +120,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/otp',
-      builder: (context, state) => const OTPVerificationView(),
+      builder: (context, state) {
+        final emailParam = state.uri.queryParameters['email'];
+        return OTPVerificationView(initialEmail: emailParam);
+      },
     ),
     GoRoute(
       path: '/forgot-password',

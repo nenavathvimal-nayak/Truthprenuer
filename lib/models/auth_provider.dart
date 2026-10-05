@@ -87,6 +87,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState(
             status: AuthStatus.unauthenticated, isFirstLaunch: !hasOnboarded);
       } else {
+        refreshUserSession();
         state = AuthState(
             status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
       }
@@ -97,6 +98,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void dispose() {
     _authSubscription?.cancel();
     super.dispose();
+  }
+
+  /// Refreshes all user-scoped data providers when user signs in or session is established
+  void refreshUserSession() {
+    final ref = _ref;
+    if (ref != null) {
+      ref.invalidate(currentUserProvider);
+      ref.invalidate(validationsProvider);
+      ref.invalidate(evidenceListProvider);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(conversationsProvider);
+      ref.invalidate(connectionsProvider);
+    }
   }
 
   /// Explicitly flushes all user-scoped riverpod providers to prevent state contamination
@@ -117,15 +131,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final client = safeSupabaseClient;
     if (client == null) {
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      refreshUserSession();
       return;
     }
     try {
       final res = await client.auth.signInWithPassword(
-        email: email, 
+        email: email.trim(), 
         password: password,
       );
       if (res.session != null) {
         state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+        refreshUserSession();
       }
     } on AuthException catch (e) {
       state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
@@ -142,16 +158,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final client = safeSupabaseClient;
     if (client == null) {
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      refreshUserSession();
       return true;
     }
     try {
       final res = await client.auth.signUp(
-        email: email,
+        email: email.trim(),
         password: password,
-        data: {'full_name': fullName},
+        data: {'full_name': fullName.trim()},
       );
       if (res.session != null) {
         state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+        refreshUserSession();
         return true;
       }
       return false;
@@ -164,9 +182,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> verifyOTP(String email, String token) async {
+  Future<bool> verifyOTP(String email, String token) async {
     final client = safeSupabaseClient;
-    if (client == null) return;
+    if (client == null) {
+      state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+      refreshUserSession();
+      return true;
+    }
     try {
       final res = await client.auth.verifyOTP(
         email: email.trim(),
@@ -175,9 +197,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       if (res.session != null) {
         state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+        refreshUserSession();
+        return true;
       }
+      return false;
     } on AuthException catch (e) {
       state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.toString());
       rethrow;
     }
   }
@@ -185,7 +213,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> resendConfirmationEmail(String email) async {
     final client = safeSupabaseClient;
     if (client == null) return;
-    await client.auth.resend(type: OtpType.signup, email: email);
+    try {
+      await client.auth.resend(type: OtpType.signup, email: email.trim());
+    } on AuthException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
+      rethrow;
+    }
   }
 
   Future<void> logout() async {

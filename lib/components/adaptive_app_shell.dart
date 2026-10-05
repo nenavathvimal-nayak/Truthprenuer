@@ -589,57 +589,111 @@ class _DesktopLeftSidebar extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Profile Snapshot Card & Role Switcher
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colors.cardBackgroundLight),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppPalette.orange.withValues(alpha: 0.15),
-                    child: Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : "T",
-                      style: AppTypography.headline.copyWith(color: AppPalette.orange),
+            if (user == null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colors.cardBackgroundLight),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: colors.primary.withAlpha(30),
+                      child: Icon(Icons.person_outline, color: colors.primary, size: 20),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.subheadline.copyWith(
-                            color: colors.text,
-                            fontWeight: FontWeight.w700,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Guest Explorer",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.subheadline.copyWith(
+                              color: colors.text,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          currentRole.name.toUpperCase(),
-                          style: AppTypography.caption2.copyWith(
-                            color: AppPalette.orange,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
+                          const SizedBox(height: 2),
+                          Text(
+                            "Click to Sign In",
+                            style: AppTypography.caption2.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.swap_horiz_rounded, size: 18, color: colors.textTertiary),
-                    tooltip: "Switch Role",
-                    onPressed: () => RoleSwitcherModal.show(context),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () => context.push('/auth'),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        backgroundColor: colors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text("Sign In", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colors.cardBackgroundLight),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppPalette.orange.withValues(alpha: 0.15),
+                      child: Text(
+                        userName.isNotEmpty ? userName[0].toUpperCase() : "T",
+                        style: AppTypography.headline.copyWith(color: AppPalette.orange),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.subheadline.copyWith(
+                              color: colors.text,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            currentRole.name.toUpperCase(),
+                            style: AppTypography.caption2.copyWith(
+                              color: AppPalette.orange,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.swap_horiz_rounded, size: 18, color: colors.textTertiary),
+                      tooltip: "Switch Role",
+                      onPressed: () => RoleSwitcherModal.show(context),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
             const SizedBox(height: 20),
 
