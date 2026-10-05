@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
@@ -21,6 +22,21 @@ class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
   final List<String> _filters = ["All", "Supports", "Contradicts", "Mixed", "Inconclusive"];
 
   void _openAddEvidenceSheet(BuildContext context, AppThemeColors colors) {
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) {
+      HapticManager.shared.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please sign in to log evidence to your startup locker."),
+          action: SnackBarAction(
+            label: "Sign In",
+            onPressed: () => context.push('/auth'),
+          ),
+        ),
+      );
+      return;
+    }
+
     HapticManager.shared.mediumImpact();
     showModalBottomSheet(
       context: context,

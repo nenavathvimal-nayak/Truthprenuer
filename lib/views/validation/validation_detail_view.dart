@@ -80,16 +80,30 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
   }
 
   Future<void> _recordDecision(ValidationRequest val, String decision) async {
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser == null) {
+      HapticManager.shared.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please sign in to record strategic decisions."),
+          action: SnackBarAction(
+            label: "Sign In",
+            onPressed: () => context.push('/auth'),
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSavingDecision = true);
     HapticManager.shared.impactMedium();
 
-    final currentUser = ref.read(currentUserProvider).value;
     final repo = ref.read(decisionRepositoryProvider);
 
     final dec = Decision(
       id: const Uuid().v4(),
       validationId: val.id,
-      authorId: currentUser?.id ?? val.authorId,
+      authorId: currentUser.id,
       type: _mapDecisionType(decision),
       rationale: _decisionRationaleCtrl.text.trim().isNotEmpty
           ? _decisionRationaleCtrl.text.trim()

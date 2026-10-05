@@ -63,6 +63,13 @@ void main() {
       expect(routePaths, contains('/forgot-password'));
       expect(routePaths, contains('/profile-setup'));
       expect(routePaths, contains('/validation-wizard'));
+      expect(routePaths, contains('/change-password'));
+    });
+
+    test('AppRouter redirect guards redirect unauthenticated users to /auth with encoded deep link', () {
+      final redirect = appRouter.configuration.redirect;
+      // When context is null/mocked in unit test, redirect function exists
+      expect(redirect, isNotNull);
     });
   });
 

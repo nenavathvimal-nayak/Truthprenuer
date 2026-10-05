@@ -63,6 +63,12 @@ final GoRouter appRouter = GoRouter(
       return '/forgot-password?error=${Uri.encodeComponent(cleanMsg)}';
     }
 
+    final isRecoveryRoute = state.matchedLocation == '/change-password' &&
+        (state.uri.queryParameters['recovery'] == 'true' ||
+            state.uri.fragment.contains('type=recovery') ||
+            state.uri.queryParameters.containsKey('code') ||
+            state.uri.fragment.contains('access_token'));
+
     final isPrivateRoute = [
       '/validation-wizard',
       '/chats',
@@ -73,7 +79,8 @@ final GoRouter appRouter = GoRouter(
       '/profile-setup',
       '/team-management',
       '/notifications',
-    ].contains(state.matchedLocation);
+    ].contains(state.matchedLocation) ||
+        (state.matchedLocation == '/change-password' && !isRecoveryRoute);
 
     final client = safeSupabaseClient;
     final isClientConfigured = client != null;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../components/buttons.dart';
@@ -77,7 +78,21 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
 
     final authUser = safeSupabaseClient?.auth.currentUser;
     final currentUser = ref.read(currentUserProvider).value;
-    final validatorId = authUser?.id ?? currentUser?.id ?? "anonymous_validator";
+    if (authUser == null && currentUser == null) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Please sign in to submit validation feedback."),
+          action: SnackBarAction(
+            label: "Sign In",
+            onPressed: () => context.push('/auth'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final validatorId = authUser?.id ?? currentUser!.id;
 
     final newFeedback = StructuredFeedback(
       id: const Uuid().v4(),
