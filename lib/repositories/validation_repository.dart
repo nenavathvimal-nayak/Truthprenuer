@@ -210,36 +210,6 @@ class ValidationRepository {
         .timeout(const Duration(seconds: 3));
   }
 
-  Future<bool> toggleUpvote(String validationId, {required bool upvote}) async {
-    final client = _client;
-    if (client == null) {
-      // Mock / offline fallback succeeds gracefully
-      return true;
-    }
-    try {
-      final currentData = await client
-          .from('validations')
-          .select('upvotes')
-          .eq('id', validationId)
-          .maybeSingle()
-          .timeout(const Duration(seconds: 3));
-
-      final int currentCount = (currentData?['upvotes'] as int?) ?? 0;
-      final int newCount = upvote ? (currentCount + 1) : ((currentCount > 0) ? currentCount - 1 : 0);
-
-      await client
-          .from('validations')
-          .update({'upvotes': newCount})
-          .eq('id', validationId)
-          .timeout(const Duration(seconds: 3));
-
-      return true;
-    } catch (e) {
-      AppLogger.error('Failed to toggle upvote on validation $validationId', e, null, 'ValidationRepository');
-      return false;
-    }
-  }
-
   ValidationRequest _mapToValidationRequest(Map<String, dynamic> data) {
     final profile = data['profiles'] as Map<String, dynamic>?;
     final stageStr = data['validation_stage'] ?? 'idea';

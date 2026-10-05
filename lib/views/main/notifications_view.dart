@@ -195,17 +195,6 @@ class _NotificationsViewState extends ConsumerState<NotificationsView> {
                             ref.read(notificationsProvider.notifier).markNotificationRead(notif.id);
                           }
                           HapticManager.shared.impactLight();
-                          if (notif.type == AppNotificationType.message) {
-                            context.push('/chats');
-                          } else if (notif.type == AppNotificationType.feedback ||
-                              notif.type == AppNotificationType.upvote ||
-                              notif.type == AppNotificationType.comment) {
-                            context.push('/validation-detail/val_auto_inventory');
-                          } else if (notif.type == AppNotificationType.connection ||
-                              notif.type == AppNotificationType.follow ||
-                              notif.type == AppNotificationType.match) {
-                            context.push('/network');
-                          }
                         },
                       );
                     },

@@ -180,21 +180,6 @@ class _ActiveValidationsTab extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
                       ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          HapticManager.shared.impactLight();
-                          context.push('/validation-wizard');
-                        },
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text("New Validation"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppPalette.orange,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -286,15 +271,10 @@ class _ActiveValidationsTab extends ConsumerWidget {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      "Active • Testing Problem Fit",
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
-                                    ),
+                                  Text(
+                                    "Active • Testing Problem Fit",
+                                    style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
                                   ),
-                                  const SizedBox(width: 4),
                                   Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
                                 ],
                               ),
@@ -380,15 +360,10 @@ class _ActiveValidationsTab extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    "Active • Testing Problem Fit",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
-                                  ),
+                                Text(
+                                  "Active • Testing Problem Fit",
+                                  style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 11),
                                 ),
-                                const SizedBox(width: 4),
                                 Icon(Icons.chevron_right_rounded, size: 16, color: colors.textTertiary),
                               ],
                             ),
@@ -442,21 +417,6 @@ class _DraftsTab extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    HapticManager.shared.impactLight();
-                    context.push('/validation-wizard');
-                  },
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  label: const Text("Start New Draft"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppPalette.orange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                ),
               ],
             ),
           ),
@@ -492,21 +452,6 @@ class _CompletedTab extends StatelessWidget {
                   "Completed validation cycles with resolved founder decisions will appear here.",
                   textAlign: TextAlign.center,
                   style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    HapticManager.shared.impactLight();
-                    context.push('/validation-wizard');
-                  },
-                  icon: const Icon(Icons.rocket_launch_outlined, size: 18),
-                  label: const Text("Launch a Sprint"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppPalette.orange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
                 ),
               ],
             ),

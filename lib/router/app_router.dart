@@ -191,10 +191,6 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/startup-settings',
-      builder: (context, state) => const StartupSettingsView(),
-    ),
-    GoRoute(
       path: '/team-management',
       builder: (context, state) => const TeamManagementView(),
     ),
@@ -231,26 +227,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardView(),
-    ),
-    GoRoute(
-      path: '/startup-validation',
-      builder: (context, state) => const MainTabView(initialIndex: 2),
-    ),
-    GoRoute(
-      path: '/ai-startup-validation',
-      builder: (context, state) => const AIValidationView(),
-    ),
-    GoRoute(
-      path: '/human-validation',
-      builder: (context, state) => const MainTabView(initialIndex: 2),
-    ),
-    GoRoute(
-      path: '/startup-analysis',
-      builder: (context, state) => const StartupHealthDashboardView(),
-    ),
-    GoRoute(
-      path: '/how-it-works',
-      builder: (context, state) => const OnboardingView(),
     ),
     GoRoute(
       path: '/validation-detail/:id',

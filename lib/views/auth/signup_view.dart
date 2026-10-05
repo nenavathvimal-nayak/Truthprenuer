@@ -178,15 +178,11 @@ class _SignupViewState extends ConsumerState<SignupView> {
 
     final bottomAction = Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(
-          child: Text(
-            "Already have an account? ",
-            style: AppTypography.callout.copyWith(
-              color: colors.textSecondary,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Text(
+          "Already have an account? ",
+          style: AppTypography.callout.copyWith(
+            color: colors.textSecondary,
           ),
         ),
         GestureDetector(

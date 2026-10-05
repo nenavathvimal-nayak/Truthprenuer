@@ -246,57 +246,37 @@ class _LeaderboardCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
+              AvatarView(name: user.name, imageURL: user.avatarURL, size: 44),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      HapticManager.shared.impactLight();
-                      context.push('/user-profile', extra: user);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-                      child: Row(
-                        children: [
-                          AvatarView(name: user.name, imageURL: user.avatarURL, size: 44),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        user.name,
-                                        style: AppTypography.headline.copyWith(color: colors.text, fontSize: 14),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (user.isVerified) ...[
-                                      const SizedBox(width: 4),
-                                      Icon(Icons.verified, size: 14, color: colors.primary),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  user.role,
-                                  style: AppTypography.caption.copyWith(color: colors.textSecondary),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            user.name,
+                            style: AppTypography.headline.copyWith(color: colors.text, fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        if (user.isVerified) ...[
+                          const SizedBox(width: 4),
+                          Icon(Icons.verified, size: 14, color: colors.primary),
                         ],
-                      ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user.role,
+                      style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 6),
               // Trust Score Pill
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

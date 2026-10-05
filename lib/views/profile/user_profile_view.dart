@@ -7,7 +7,6 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../repositories/app_providers.dart';
-import '../../utils/haptic_manager.dart';
 
 class UserProfileView extends ConsumerWidget {
   final User user;
@@ -114,8 +113,6 @@ class UserProfileView extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      _UserProfileActions(user: user),
                     ],
                   ),
                 ),
@@ -160,34 +157,6 @@ class UserProfileView extends ConsumerWidget {
                       ),
                     );
                   }),
-                ] else ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.assignment_outlined, size: 36, color: colors.textTertiary),
-                          const SizedBox(height: 8),
-                          Text(
-                            "No active validations yet",
-                            style: AppTypography.subheadline.copyWith(color: colors.text, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "This user has not posted public validation hypotheses.",
-                            textAlign: TextAlign.center,
-                            style: AppTypography.caption.copyWith(color: colors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
                 const SizedBox(height: 80),
               ],
@@ -229,148 +198,6 @@ class ProfileStat extends StatelessWidget {
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-class _UserProfileActions extends ConsumerStatefulWidget {
-  final User user;
-
-  const _UserProfileActions({required this.user});
-
-  @override
-  ConsumerState<_UserProfileActions> createState() => _UserProfileActionsState();
-}
-
-class _UserProfileActionsState extends ConsumerState<_UserProfileActions> {
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).appColors;
-    final user = widget.user;
-    final connStatus = ref.watch(connectionsProvider)[user.id] ?? ConnectionStatus.none;
-    final isRequested = connStatus == ConnectionStatus.requested;
-    final isConnected = connStatus == ConnectionStatus.connected;
-    final isReceived = connStatus == ConnectionStatus.received;
-
-    String buttonLabel = "Connect";
-    if (isConnected) {
-      buttonLabel = "Connected";
-    } else if (isRequested) {
-      buttonLabel = "Requested";
-    } else if (isReceived) {
-      buttonLabel = "Accept";
-    }
-
-    return Row(
-      children: [
-        // Connect Button
-        Expanded(
-          child: Semantics(
-            liveRegion: true,
-            button: true,
-            label: "$buttonLabel with ${user.name}",
-            child: Material(
-              color: (isRequested || isConnected) ? colors.surface : AppPalette.orange,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(10),
-                onTap: () {
-                  HapticManager.shared.impactMedium();
-                  final notifier = ref.read(connectionsProvider.notifier);
-                  if (isReceived) {
-                    notifier.acceptRequest(user.id);
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Connected with ${user.name}!",
-                          style: AppTypography.subheadline.copyWith(color: Colors.white),
-                        ),
-                        backgroundColor: colors.cardBackground,
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  } else {
-                    notifier.sendOrToggleRequest(user.id);
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          !isRequested
-                              ? "Connection request sent to ${user.name}"
-                              : "Connection request withdrawn",
-                          style: AppTypography.subheadline.copyWith(color: Colors.white),
-                        ),
-                        backgroundColor: colors.cardBackground,
-                        behavior: SnackBarBehavior.floating,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        (isRequested || isConnected) ? Icons.check_circle_outline_rounded : Icons.person_add_rounded,
-                        size: 18,
-                        color: (isRequested || isConnected) ? colors.evidenceGreen : Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        buttonLabel,
-                        style: AppTypography.subheadline.copyWith(
-                          color: (isRequested || isConnected) ? colors.text : Colors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Message Button
-        Expanded(
-          child: Material(
-            color: colors.cardBackground,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () {
-                HapticManager.shared.impactLight();
-                context.push('/chats');
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 18,
-                      color: colors.text,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Message",
-                      style: AppTypography.subheadline.copyWith(
-                        color: colors.text,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ),
       ],
     );

@@ -265,44 +265,37 @@ class ProfileView extends ConsumerWidget {
                   }
                   return Column(
                     children: validations.take(2).map((v) {
-                      return Material(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        child: InkWell(
-                          onTap: () {
-                            HapticManager.shared.impactLight();
-                            context.push('/validation-detail/${v.id}', extra: v);
-                          },
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: colors.cardBackground,
                           borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.verified, size: 20, color: AppPalette.orange),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        v.title,
-                                        style: AppTypography.subheadline.copyWith(
-                                          color: colors.text,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        "${v.responsesCount} verified responses collected",
-                                        style: AppTypography.caption.copyWith(color: colors.textTertiary),
-                                      ),
-                                    ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.verified, size: 20, color: AppPalette.orange),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    v.title,
+                                    style: AppTypography.subheadline.copyWith(
+                                      color: colors.text,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
-                                Icon(Icons.chevron_right_rounded, size: 18, color: colors.textTertiary),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "${v.responsesCount} verified responses collected",
+                                    style: AppTypography.caption.copyWith(color: colors.textTertiary),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       );
                     }).toList(),

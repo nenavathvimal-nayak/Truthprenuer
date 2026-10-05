@@ -23,10 +23,8 @@ class ActionSelectionView extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
+        child: Column(
+          children: [
             const SizedBox(height: AppSpacing.xxl),
             
             Text(
@@ -143,7 +141,7 @@ class ActionSelectionView extends StatelessWidget {
               ),
             ),
             
-            const SizedBox(height: AppSpacing.xl),
+            const Spacer(),
             
             // Bottom Buttons
             Padding(
@@ -193,7 +191,6 @@ class ActionSelectionView extends StatelessWidget {
           ],
         ),
       ),
-    ),
-  );
+    );
   }
 }

@@ -81,7 +81,6 @@ class ValidationSummaryCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildMetric(context, "Upvotes", "${validation.upvotes} ▲", Icons.thumb_up_alt_outlined),
                 _buildMetric(context, "Evidence", "12", Icons.analytics_outlined),
                 _buildMetric(context, "Responses", "48", Icons.forum_outlined),
                 _buildMetric(context, "Confidence", "75%", Icons.check_circle_outline),
