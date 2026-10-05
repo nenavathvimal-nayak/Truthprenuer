@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../design_system/app_colors.dart';
@@ -67,6 +68,35 @@ class _EvidenceLockerViewState extends ConsumerState<EvidenceLockerView> {
               padding: const EdgeInsets.only(left: AppSpacing.lg, right: AppSpacing.lg, top: AppSpacing.md),
               child: Row(
                 children: [
+                  Builder(
+                    builder: (btnContext) {
+                      bool canPop = false;
+                      try {
+                        canPop = btnContext.canPop();
+                      } catch (_) {
+                        canPop = Navigator.canPop(btnContext);
+                      }
+                      if (!canPop) return const SizedBox.shrink();
+                      return Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.sm),
+                        child: IconButton(
+                          icon: Icon(Icons.chevron_left_rounded, color: colors.text, size: 28),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () {
+                            HapticManager.shared.impactLight();
+                            if (Navigator.canPop(btnContext)) {
+                              Navigator.pop(btnContext);
+                            } else {
+                              try {
+                                btnContext.pop();
+                              } catch (_) {}
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

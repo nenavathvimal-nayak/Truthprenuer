@@ -240,7 +240,7 @@ class _ValidationsFeed extends ConsumerWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    mainAxisExtent: 220,
+                    mainAxisExtent: 250,
                   ),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
@@ -334,6 +334,8 @@ class _ValidationCard extends StatelessWidget {
 
                 Text(
                   validation.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.subheadline.copyWith(
                     color: colors.text,
                     fontWeight: FontWeight.w700,
@@ -388,8 +390,6 @@ class _PeopleFeed extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).appColors;
-
     final dummyPeople = [
       User(
         id: "p_1",
@@ -427,20 +427,55 @@ class _PeopleFeed extends ConsumerWidget {
         itemCount: filtered.length,
         itemBuilder: (context, index) {
           final person = filtered[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
+          return _PersonItemCard(person: person);
+        },
+      ),
+    );
+  }
+}
+
+class _PersonItemCard extends ConsumerWidget {
+  final User person;
+
+  const _PersonItemCard({required this.person});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).appColors;
+    final connStatus = ref.watch(connectionsProvider)[person.id] ?? ConnectionStatus.none;
+    final isRequested = connStatus == ConnectionStatus.requested;
+    final isConnected = connStatus == ConnectionStatus.connected;
+    final isReceived = connStatus == ConnectionStatus.received;
+
+    String buttonLabel = "Connect";
+    if (isConnected) {
+      buttonLabel = "Connected";
+    } else if (isRequested) {
+      buttonLabel = "Requested";
+    } else if (isReceived) {
+      buttonLabel = "Accept";
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/user-profile', extra: person);
+          },
+          child: Padding(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colors.cardBackground,
-              borderRadius: BorderRadius.circular(12),
-            ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
                   child: Text(
-                    person.name[0],
+                    person.name.isNotEmpty ? person.name[0] : '?',
                     style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                 ),
@@ -486,29 +521,82 @@ class _PeopleFeed extends ConsumerWidget {
                     ],
                   ),
                 ),
-              Material(
-                color: AppPalette.orange,
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: () => HapticManager.shared.impactLight(),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    child: Text(
-                      "Connect",
-                      style: AppTypography.caption.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 8),
+                Semantics(
+                  liveRegion: true,
+                  button: true,
+                  label: "$buttonLabel with ${person.name}",
+                  child: Material(
+                    color: (isRequested || isConnected) ? colors.surface : AppPalette.orange,
+                    borderRadius: BorderRadius.circular(8),
+                    child: InkWell(
+                      onTap: () {
+                        HapticManager.shared.impactMedium();
+                        final notifier = ref.read(connectionsProvider.notifier);
+                        if (isReceived) {
+                          notifier.acceptRequest(person.id);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                "Connected with ${person.name}!",
+                                style: AppTypography.subheadline.copyWith(color: Colors.white),
+                              ),
+                              backgroundColor: colors.cardBackground,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          notifier.sendOrToggleRequest(person.id);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                !isRequested
+                                    ? "Connection request sent to ${person.name}"
+                                    : "Connection request withdrawn",
+                                style: AppTypography.subheadline.copyWith(color: Colors.white),
+                              ),
+                              backgroundColor: colors.cardBackground,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isRequested || isConnected) ...[
+                              Icon(
+                                isConnected ? Icons.check_circle_rounded : Icons.check,
+                                size: 14,
+                                color: colors.evidenceGreen,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Text(
+                              buttonLabel,
+                              style: AppTypography.caption.copyWith(
+                                color: (isRequested || isConnected) ? colors.textSecondary : Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
-    ),
-  );
+        ),
+      ),
+    );
   }
 }

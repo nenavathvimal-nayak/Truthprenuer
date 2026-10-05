@@ -301,10 +301,11 @@ class AdaptiveAuthLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
-    final isWide = !context.isMobile;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth >= 860;
 
     if (!isWide) {
-      // Mobile: 1 Section
+      // Mobile & Compact: 1 Clean Single-Column Form
       return Scaffold(
         backgroundColor: colors.background,
         body: SafeArea(
@@ -325,7 +326,7 @@ class AdaptiveAuthLayout extends StatelessWidget {
       );
     }
 
-    // Foldable, Tablet & Desktop: 2 Sections Split
+    // Wide Tablet & Desktop: 2 Sections Split
     return Scaffold(
       backgroundColor: colors.background,
       body: Row(
@@ -344,70 +345,76 @@ class AdaptiveAuthLayout extends StatelessWidget {
                 ),
               ),
               padding: const EdgeInsets.all(AppSpacing.xxxl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/logos/truthprenuer_mark_transparent.png',
-                        height: 48,
-                        width: 48,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(width: 12),
-                      RichText(
-                        text: TextSpan(
-                          text: "TRUTH",
-                          style: AppTypography.title1.copyWith(
-                            color: colors.text,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.0,
+                      Row(
+                        children: [
+                          Image.asset(
+                            'assets/logos/truthprenuer_mark_transparent.png',
+                            height: 48,
+                            width: 48,
+                            fit: BoxFit.contain,
                           ),
-                          children: const [
-                            TextSpan(
-                              text: "PRENUER",
-                              style: TextStyle(
-                                color: AppPalette.orange,
-                                fontWeight: FontWeight.w900,
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: RichText(
+                              text: TextSpan(
+                                text: "TRUTH",
+                                style: AppTypography.title1.copyWith(
+                                  color: colors.text,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: "PRENUER",
+                                    style: TextStyle(
+                                      color: AppPalette.orange,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xxl),
+                      Text(
+                        heroTitle,
+                        style: AppTypography.hero.copyWith(
+                          color: colors.text,
+                          height: 1.15,
+                          fontWeight: FontWeight.w900,
                         ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        heroSubtitle,
+                        style: AppTypography.body.copyWith(
+                          color: colors.textSecondary,
+                          fontSize: 17,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xl),
+                      // Feature pills
+                      const Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          _AuthFeaturePill(icon: Icons.verified_user_outlined, label: "Cryptographic Evidence"),
+                          _AuthFeaturePill(icon: Icons.psychology_outlined, label: "AI Signal Synthesis"),
+                          _AuthFeaturePill(icon: Icons.shield_outlined, label: "Zero-Knowledge Privacy"),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  Text(
-                    heroTitle,
-                    style: AppTypography.hero.copyWith(
-                      color: colors.text,
-                      height: 1.15,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Text(
-                    heroSubtitle,
-                    style: AppTypography.body.copyWith(
-                      color: colors.textSecondary,
-                      fontSize: 17,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  // Feature pills
-                  const Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _AuthFeaturePill(icon: Icons.verified_user_outlined, label: "Cryptographic Evidence"),
-                      _AuthFeaturePill(icon: Icons.psychology_outlined, label: "AI Signal Synthesis"),
-                      _AuthFeaturePill(icon: Icons.shield_outlined, label: "Zero-Knowledge Privacy"),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -462,11 +469,14 @@ class _AuthFeaturePill extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: AppPalette.orange),
           const SizedBox(width: 8),
-          Text(
-            label,
-            style: AppTypography.caption1.copyWith(
-              color: colors.text,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              label,
+              style: AppTypography.caption1.copyWith(
+                color: colors.text,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

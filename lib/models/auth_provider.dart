@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../repositories/supabase_client.dart';
 import '../router/app_router.dart';
+import '../repositories/app_providers.dart';
 
 enum AuthStatus {
   unknown,
@@ -34,9 +35,10 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
+  final Ref? _ref;
   StreamSubscription? _authSubscription;
 
-  AuthNotifier() : super(const AuthState()) {
+  AuthNotifier([this._ref]) : super(const AuthState()) {
     _init();
   }
 
@@ -66,12 +68,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         appRouter.go('/change-password?recovery=true');
       }
 
-      if (session != null) {
-        state = AuthState(
-            status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
-      } else {
+      if (event == AuthChangeEvent.signedOut || session == null) {
+        resetUserSession();
         state = AuthState(
             status: AuthStatus.unauthenticated, isFirstLaunch: !hasOnboarded);
+      } else {
+        // Active session restored or authenticated
+        state = AuthState(
+            status: AuthStatus.authenticated, isFirstLaunch: !hasOnboarded);
       }
     });
   }
@@ -80,6 +84,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void dispose() {
     _authSubscription?.cancel();
     super.dispose();
+  }
+
+  /// Explicitly flushes all user-scoped riverpod providers to prevent state contamination
+  void resetUserSession() {
+    final ref = _ref;
+    if (ref != null) {
+      resetAllUserScopedProviders(ref);
+    }
   }
 
   Future<void> completeOnboarding() async {
@@ -139,10 +151,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     final client = safeSupabaseClient;
     await client?.auth.signOut();
+    resetUserSession();
     state = state.copyWith(status: AuthStatus.unauthenticated);
   }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  return AuthNotifier(ref);
 });

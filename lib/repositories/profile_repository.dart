@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import '../models/models.dart';
 import 'supabase_client.dart';
 
+import '../utils/username_validator.dart';
+
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(safeSupabaseClient);
 });
@@ -13,6 +15,53 @@ class ProfileRepository {
   final SupabaseClient? _client;
 
   ProfileRepository([this._client]);
+
+  /// Checks whether a username is available across the database or seeded registry.
+  Future<bool> checkUsernameAvailable(String username, {String? excludeUserId}) async {
+    final clean = UsernameValidator.sanitize(username);
+    final validation = UsernameValidator.validate(clean);
+    if (!validation.isValid) return false;
+
+    final client = _client;
+    if (client != null) {
+      try {
+        var query = client.from('profiles').select('id').eq('username', clean);
+        if (excludeUserId != null) {
+          query = query.neq('id', excludeUserId);
+        }
+        final res = await query.limit(1).timeout(const Duration(seconds: 2));
+        if (res.isNotEmpty) {
+          return false; // Already taken
+        }
+        return true;
+      } catch (_) {
+        // Fallback to offline registry check
+      }
+    }
+
+    // Offline / Mock fallback registry
+    const takenUsernames = {
+      'alexvimal',
+      'erostova',
+      'marcusv',
+      'schen_growth',
+      'dev_fintech',
+      'siddharth',
+      'ananya',
+      'rohank',
+      'elena',
+      'devina',
+    };
+
+    if (takenUsernames.contains(clean)) {
+      if (excludeUserId != null && clean == 'alexvimal' && excludeUserId == 'founder_dev_1') {
+        return true;
+      }
+      return false;
+    }
+
+    return true;
+  }
 
   Future<User?> getProfile(String userId) async {
     final client = _client;

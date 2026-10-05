@@ -127,6 +127,14 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _NavIconButton(
+                    icon: Icons.search_rounded,
+                    tooltip: 'Search',
+                    onTap: () {
+                      HapticManager.shared.impactLight();
+                      context.push('/search');
+                    },
+                  ),
+                  _NavIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     tooltip: 'Messages',
                     badgeCount: ref.watch(conversationsProvider).where((c) => c.unreadCount > 0).length,
@@ -176,10 +184,12 @@ class _NavIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
     final label = tooltip ?? (icon == Icons.arrow_back_ios_new_rounded ? 'Back' : 'Action button');
+    final semanticLabel = badgeCount > 0 ? '$label, $badgeCount unread items' : label;
 
     return Semantics(
       button: true,
-      label: label,
+      label: semanticLabel,
+      liveRegion: badgeCount > 0,
       child: Tooltip(
         message: label,
         child: Material(

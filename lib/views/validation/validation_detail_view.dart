@@ -194,6 +194,12 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
       return true;
     }).toList();
 
+    final upvotesMap = ref.watch(upvotesProvider);
+    final upvoteState = upvotesMap[val.id] ?? ValidationUpvoteState(
+      isUpvoted: val.isUpvoted,
+      count: val.upvotes,
+    );
+
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -218,6 +224,46 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
           ),
         ),
         actions: [
+          Semantics(
+            key: const ValueKey('validation_endorse_btn'),
+            container: true,
+            button: true,
+            liveRegion: true,
+            label: "${upvoteState.isUpvoted ? 'Remove endorsement from' : 'Endorse'} validation sprint, ${upvoteState.count} endorsements",
+            child: Tooltip(
+              message: upvoteState.isUpvoted ? "Remove endorsement" : "Endorse validation sprint",
+              child: TextButton.icon(
+                onPressed: () async {
+                  HapticManager.shared.impactLight();
+                  final success = await ref.read(upvotesProvider.notifier).toggleUpvote(
+                    val.id,
+                    defaultCount: val.upvotes,
+                    defaultIsUpvoted: val.isUpvoted,
+                  );
+                  if (!success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text("Failed to update endorsement. Restored previous count."),
+                        backgroundColor: colors.error,
+                      ),
+                    );
+                  }
+                },
+                icon: Icon(
+                  upvoteState.isUpvoted ? Icons.thumb_up_rounded : Icons.thumb_up_alt_outlined,
+                  size: 16,
+                  color: upvoteState.isUpvoted ? colors.evidenceGreen : colors.textSecondary,
+                ),
+                label: Text(
+                  "${upvoteState.count}",
+                  style: AppTypography.caption.copyWith(
+                    color: upvoteState.isUpvoted ? colors.evidenceGreen : colors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: _isBookmarked ? "Remove bookmark" : "Bookmark validation",
             icon: Semantics(

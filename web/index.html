@@ -1,62 +1,331 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.gstatic.com; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-inline' blob: https://www.gstatic.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://*.gstatic.com; img-src 'self' https://images.unsplash.com https://*.supabase.co data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self';">
+  <!-- Security & Character Encoding -->
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.gstatic.com; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-inline' blob: https://www.gstatic.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com https://*.gstatic.com; img-src 'self' https://images.unsplash.com https://*.supabase.co https://truthprenuer.pages.dev data: blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="TRUTHPRENUER — The evidence-based startup validation engine, founder network, and truth intelligence platform.">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Core Site Identity & Canonical -->
+  <title>Truthprenuer — Validate Startup Ideas with Humans + AI</title>
+  <meta name="description" content="Validate startup ideas with real human feedback and AI-powered analysis. Truthprenuer helps founders, builders, and investors test market demand, analyze risks, and connect before building.">
+  <meta name="keywords" content="startup validation platform, validate startup idea, human validation, AI startup validation, startup analysis, startup health score, founder networking">
+  <meta name="author" content="Truthprenuer">
+  <link rel="canonical" href="https://truthprenuer.pages.dev/">
+
+  <!-- Search Engine Directives -->
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+  <meta name="bingbot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Truthprenuer">
+  <meta property="og:url" content="https://truthprenuer.pages.dev/">
+  <meta property="og:title" content="Truthprenuer — Validate Startup Ideas with Humans + AI">
+  <meta property="og:description" content="Validate startup ideas with real human feedback and AI-powered analysis. Test market demand, diagnose risks, and connect with founders and investors.">
+  <meta property="og:image" content="https://truthprenuer.pages.dev/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="Truthprenuer — Startup Validation Platform">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://truthprenuer.pages.dev/">
+  <meta name="twitter:title" content="Truthprenuer — Validate Startup Ideas with Humans + AI">
+  <meta name="twitter:description" content="Validate startup ideas with real human feedback and AI-powered analysis before spending time and money building.">
+  <meta name="twitter:image" content="https://truthprenuer.pages.dev/icons/Icon-512.png">
+  <meta name="twitter:image:alt" content="Truthprenuer Startup Validation Platform">
+
+  <!-- Mobile Web & PWA -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="TRUTHPRENUER">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Truthprenuer">
+  <meta name="theme-color" content="#F44A22">
+  <meta name="msapplication-TileColor" content="#0A0A0A">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>TRUTHPRENUER — Startup Validation & Truth-Engine</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="manifest" href="manifest.json">
 
+  <!-- Structured Data: Schema.org Knowledge Graph -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://truthprenuer.pages.dev/#organization",
+        "name": "Truthprenuer",
+        "url": "https://truthprenuer.pages.dev/",
+        "logo": "https://truthprenuer.pages.dev/icons/Icon-512.png",
+        "description": "Truthprenuer is an evidence-based startup validation platform combining real human feedback with AI-powered analysis to help founders, innovators, and builders evaluate startup ideas, diagnose risks, and connect with collaborators.",
+        "sameAs": [
+          "https://github.com/nenavathvimal-nayak/Truthprenuer"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://truthprenuer.pages.dev/#website",
+        "url": "https://truthprenuer.pages.dev/",
+        "name": "Truthprenuer",
+        "description": "Validate Startup Ideas with Humans + AI",
+        "publisher": {
+          "@id": "https://truthprenuer.pages.dev/#organization"
+        },
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://truthprenuer.pages.dev/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://truthprenuer.pages.dev/#app",
+        "name": "Truthprenuer Platform",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web, iOS, Android",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Real Human Validation Feedback",
+          "AI-Powered Startup Problem & Solution Analysis",
+          "Empirical Startup Health and Risk Scoring",
+          "Evidence Locker & Decision Synthesis",
+          "Founder, Validator, and Investor Networking"
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://truthprenuer.pages.dev/#webpage",
+        "url": "https://truthprenuer.pages.dev/",
+        "name": "Truthprenuer — Validate Startup Ideas with Humans + AI",
+        "isPartOf": {
+          "@id": "https://truthprenuer.pages.dev/#website"
+        },
+        "about": {
+          "@id": "https://truthprenuer.pages.dev/#app"
+        },
+        "description": "Validate startup ideas with real human feedback and AI-powered analysis. Test market demand, diagnose risks, and connect with founders and investors before building."
+      }
+    ]
+  }
+  </script>
+
   <style>
-    /* Clean modern web presentation */
-    body {
+    /* Clean dark-mode presentation matching Truthprenuer design system */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0A0A0A;
+      color: #FEF8E8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      overscroll-behavior-y: none; /* Prevent pull-to-refresh bounce */
-      background-color: #0A0A0A; /* Match dark theme background */
+      overscroll-behavior-y: none;
     }
     input, textarea {
       -webkit-user-select: auto;
       user-select: auto;
     }
+
+    /* Prerendered Semantic HTML Shell for Search Engines & Assistive Bots */
+    #seo-prerender {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 24px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .flt-canvas-container, flutter-view {
+      position: relative;
+      z-index: 10;
+    }
+    .seo-header {
+      border-bottom: 1px solid #222;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .seo-brand {
+      font-size: 20px;
+      font-weight: 800;
+      color: #F44A22;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .seo-nav {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .seo-nav a {
+      color: #A8AAAC;
+      text-decoration: none;
+      font-size: 13px;
+      pointer-events: auto;
+    }
+    .seo-nav a:hover {
+      color: #F44A22;
+    }
+    .seo-hero h1 {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #FEF8E8;
+      margin: 16px 0;
+    }
+    .seo-hero p {
+      font-size: 17px;
+      line-height: 1.6;
+      color: #E4E2E3;
+      max-width: 720px;
+    }
+    .seo-section {
+      margin-top: 32px;
+    }
+    .seo-section h2 {
+      font-size: 22px;
+      color: #F44A22;
+      margin-bottom: 12px;
+    }
+    .seo-section p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #A8AAAC;
+    }
+    .seo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .seo-card {
+      background: #161616;
+      border: 1px solid #282828;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .seo-card h3 {
+      font-size: 16px;
+      color: #FEF8E8;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+    .seo-card p {
+      font-size: 14px;
+      color: #A8AAAC;
+      margin: 0;
+    }
+    .seo-footer {
+      margin-top: 48px;
+      border-top: 1px solid #222;
+      padding-top: 20px;
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+  <!-- Prerendered Semantic HTML Shell: Accessible to Search Engine Crawlers & LLMs -->
+  <div id="seo-prerender">
+    <header class="seo-header">
+      <div class="seo-brand">Truthprenuer</div>
+      <nav class="seo-nav" aria-label="Primary SEO Navigation">
+        <a href="/">Home</a>
+        <a href="/startup-validation">Startup Validation</a>
+        <a href="/ai-startup-validation">AI Startup Validation</a>
+        <a href="/human-validation">Human Validation</a>
+        <a href="/startup-analysis">Startup Analysis</a>
+        <a href="/startup-health">Startup Health Dashboard</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/top-validators">Leaderboard</a>
+        <a href="/explore">Explore Sprints</a>
+        <a href="/network">Founder Network</a>
+      </nav>
+    </header>
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+    <main>
+      <section class="seo-hero">
+        <h1>Validate Your Startup Idea with Humans + AI</h1>
+        <p>
+          Truthprenuer helps founders, innovators, and builders test ideas through real human feedback and AI-powered analysis before spending excessive time and resources building products without demand.
+        </p>
+      </section>
+
+      <section class="seo-section">
+        <h2>What is Truthprenuer?</h2>
+        <p>
+          Truthprenuer is an evidence-based startup validation platform that combines qualitative human critique with automated artificial intelligence analysis. We help entrepreneurs evaluate market feasibility, identify hidden risks and opportunities, measure empirical validation signals, and connect with active validators, mentors, and investors.
+        </p>
+      </section>
+
+      <section class="seo-section">
+        <h2>Human Validation + AI Validation Architecture</h2>
+        <div class="seo-grid">
+          <article class="seo-card">
+            <h3>1. Human Validation</h3>
+            <p>Gather candid critique, customer willingness-to-pay insights, and domain-specific evidence from real operators, prospective buyers, and experienced builders.</p>
+          </article>
+          <article class="seo-card">
+            <h3>2. AI-Powered Analysis</h3>
+            <p>Instantly stress-test your value proposition, competitive landscape, TAM/SAM market sizing, and fatal vulnerability patterns using empirical synthesis.</p>
+          </article>
+          <article class="seo-card">
+            <h3>3. Startup Health Scoring</h3>
+            <p>Track multidimensional health scores across Problem-Solution Fit, Market Viability, Team Readiness, and Empirical Evidence confidence.</p>
+          </article>
+          <article class="seo-card">
+            <h3>4. Ecosystem Networking</h3>
+            <p>Connect with vetted co-founders, validators, and capital partners who value empirical traction over unvalidated pitch decks.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="seo-section">
+        <h2>Frequently Asked Questions</h2>
+        <article>
+          <h3>How does Truthprenuer validate a startup idea?</h3>
+          <p>Truthprenuer initiates structured validation sprints. Founders formulate their core problem, proposed solution, target audience, and critical hypotheses. The platform gathers empirical responses from relevant community validators while running AI multi-model analysis to produce an audit of market risks, customer pushback, and recommended pivots.</p>
+        </article>
+        <article>
+          <h3>Why is validating before building essential?</h3>
+          <p>Over 70% of venture failures occur due to building products for which no market demand exists. Validating hypotheses early saves months of engineering effort, preserves capital, and provides data-backed conviction.</p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="seo-footer">
+      <p>&copy; 2026 Truthprenuer. All rights reserved. The Evidence-Based Startup Validation &amp; Intelligence Engine.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Smoothly fade out prerender container once Flutter renders its first canvas frame
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('seo-prerender');
+      if (el) {
+        el.style.display = 'none';
+      }
+    });
+  </script>
+
+  <!-- Flutter Web Application Bootstrap -->
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

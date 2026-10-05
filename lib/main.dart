@@ -57,7 +57,7 @@ class TruthprenuerApp extends ConsumerWidget {
     final lightColors = AppThemeColors.light;
 
     return MaterialApp.router(
-      title: 'TRUTHPRENUER',
+      title: 'Truthprenuer — Validate Startup Ideas with Humans + AI',
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
       themeMode: themeMode,

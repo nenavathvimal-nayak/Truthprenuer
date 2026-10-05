@@ -150,56 +150,74 @@ final evidenceListProvider = StateNotifierProvider<EvidenceNotifier, List<Eviden
   return EvidenceNotifier(ref.watch(evidenceRepositoryProvider));
 });
 
+final List<EvidenceItem> _defaultEvidenceItems = [
+  EvidenceItem(
+    id: "ev_1",
+    validationId: "val_auto_inventory",
+    type: EvidenceItemType.interview,
+    title: "Daily Spoilage Friction Confirmed",
+    summary: "3 Restaurant owners in Bangalore confirmed spending 90 mins every night counting stock.",
+    confidenceScore: 88,
+    keyInsight: "Direct operational pain confirmed; willingness to pay \$49/mo tier established.",
+    classification: EvidenceClassification.supports,
+    tags: ["Supports", "Interview"],
+    createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+  ),
+  EvidenceItem(
+    id: "ev_2",
+    validationId: "val_auto_inventory",
+    type: EvidenceItemType.survey,
+    title: "WhatsApp Alerts Preferred Over Native App",
+    summary: "12 of 14 respondents stated they will ignore another mobile app but check WhatsApp alerts instantly.",
+    confidenceScore: 92,
+    keyInsight: "Shift from standalone mobile dashboard to conversational WhatsApp notifications.",
+    classification: EvidenceClassification.supports,
+    tags: ["Supports", "Channel Fit"],
+    createdAt: DateTime.now().subtract(const Duration(days: 1)),
+  ),
+  EvidenceItem(
+    id: "ev_3",
+    validationId: "val_auto_inventory",
+    type: EvidenceItemType.data,
+    title: "Hardware Barcode Scanner Resistance",
+    summary: "Chefs refused to use handheld barcode guns during peak dinner rush.",
+    confidenceScore: 78,
+    keyInsight: "Eliminate barcode scanner assumption; focus exclusively on invoice OCR.",
+    classification: EvidenceClassification.contradicts,
+    tags: ["Contradicts", "Friction"],
+    createdAt: DateTime.now().subtract(const Duration(days: 2)),
+  ),
+];
+
 class EvidenceNotifier extends StateNotifier<List<EvidenceItem>> {
   final EvidenceRepository _repository;
 
-  EvidenceNotifier(this._repository) : super([
-    EvidenceItem(
-      id: "ev_1",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.interview,
-      title: "Daily Spoilage Friction Confirmed",
-      summary: "3 Restaurant owners in Bangalore confirmed spending 90 mins every night counting stock.",
-      confidenceScore: 88,
-      keyInsight: "Direct operational pain confirmed; willingness to pay \$49/mo tier established.",
-      classification: EvidenceClassification.supports,
-      tags: ["Supports", "Interview"],
-      createdAt: DateTime.now().subtract(const Duration(hours: 4)),
-    ),
-    EvidenceItem(
-      id: "ev_2",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.survey,
-      title: "WhatsApp Alerts Preferred Over Native App",
-      summary: "12 of 14 respondents stated they will ignore another mobile app but check WhatsApp alerts instantly.",
-      confidenceScore: 92,
-      keyInsight: "Shift from standalone mobile dashboard to conversational WhatsApp notifications.",
-      classification: EvidenceClassification.supports,
-      tags: ["Supports", "Channel Fit"],
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    EvidenceItem(
-      id: "ev_3",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.data,
-      title: "Hardware Barcode Scanner Resistance",
-      summary: "Chefs refused to use handheld barcode guns during peak dinner rush.",
-      confidenceScore: 78,
-      keyInsight: "Eliminate barcode scanner assumption; focus exclusively on invoice OCR.",
-      classification: EvidenceClassification.contradicts,
-      tags: ["Contradicts", "Friction"],
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-  ]);
+  EvidenceNotifier(this._repository) : super(List.from(_defaultEvidenceItems));
 
   void addEvidence(EvidenceItem item) {
     state = [item, ...state];
     _repository.addEvidence(item).catchError((_) {});
   }
 
-  void deleteEvidence(String id) {
+  Future<bool> deleteEvidence(String id) async {
+    final previousState = state;
     state = state.where((e) => e.id != id).toList();
-    _repository.deleteEvidence(id).catchError((_) {});
+    try {
+      await _repository.deleteEvidence(id);
+      return true;
+    } catch (_) {
+      // Optimistic rollback on failure to prevent ghost deletions
+      state = previousState;
+      return false;
+    }
+  }
+
+  void reset() {
+    state = List.from(_defaultEvidenceItems);
+  }
+
+  void clearAll() {
+    state = [];
   }
 }
 
@@ -266,39 +284,41 @@ final notificationsProvider = StateNotifierProvider<NotificationsNotifier, List<
   return NotificationsNotifier();
 });
 
+List<AppNotification> _defaultNotificationsList() => [
+  AppNotification(
+    id: "notif_1",
+    type: AppNotificationType.feedback,
+    actorId: "user_marcus",
+    actorName: "Marcus Vance",
+    message: "submitted structured feedback on your Automated Restaurant Inventory sprint.",
+    time: DateTime.now().subtract(const Duration(minutes: 45)),
+    isRead: false,
+    actionId: "val_auto_inventory",
+  ),
+  AppNotification(
+    id: "notif_2",
+    type: AppNotificationType.milestone,
+    actorId: "system",
+    actorName: "TRUTHPRENUER",
+    message: "Automated Restaurant Inventory reached 15+ responses. AI Evidence Synthesis is ready.",
+    time: DateTime.now().subtract(const Duration(hours: 3)),
+    isRead: false,
+    actionId: "val_auto_inventory",
+  ),
+  AppNotification(
+    id: "notif_3",
+    type: AppNotificationType.connection,
+    actorId: "user_elena",
+    actorName: "Elena Rostova",
+    message: "sent you a connection request to discuss your validation sprint.",
+    time: DateTime.now().subtract(const Duration(days: 1)),
+    isRead: true,
+    actionId: "user_elena",
+  ),
+];
+
 class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
-  NotificationsNotifier() : super([
-    AppNotification(
-      id: "notif_1",
-      type: AppNotificationType.feedback,
-      actorId: "user_marcus",
-      actorName: "Marcus Vance",
-      message: "submitted structured feedback on your Automated Restaurant Inventory sprint.",
-      time: DateTime.now().subtract(const Duration(minutes: 45)),
-      isRead: false,
-      actionId: "val_auto_inventory",
-    ),
-    AppNotification(
-      id: "notif_2",
-      type: AppNotificationType.milestone,
-      actorId: "system",
-      actorName: "TRUTHPRENUER",
-      message: "Automated Restaurant Inventory reached 15+ responses. AI Evidence Synthesis is ready.",
-      time: DateTime.now().subtract(const Duration(hours: 3)),
-      isRead: false,
-      actionId: "val_auto_inventory",
-    ),
-    AppNotification(
-      id: "notif_3",
-      type: AppNotificationType.connection,
-      actorId: "user_elena",
-      actorName: "Elena Rostova",
-      message: "sent you a connection request to discuss your validation sprint.",
-      time: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-      actionId: "user_elena",
-    ),
-  ]);
+  NotificationsNotifier() : super(_defaultNotificationsList());
 
   void markAllNotificationsRead() {
     state = state.map((n) {
@@ -313,6 +333,14 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
       return n;
     }).toList();
   }
+
+  void reset() {
+    state = _defaultNotificationsList();
+  }
+
+  void clearAll() {
+    state = [];
+  }
 }
 
 // Conversations State Notifier
@@ -320,25 +348,27 @@ final conversationsProvider = StateNotifierProvider<ConversationsNotifier, List<
   return ConversationsNotifier();
 });
 
+List<Conversation> _defaultConversationsList() => [
+  Conversation(
+    id: "conv_elena",
+    participantIds: ["founder_dev_1", "user_elena"],
+    lastMessage: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
+    lastMessageTime: DateTime.now().subtract(const Duration(minutes: 18)),
+    unreadCount: 1,
+    isPinned: true,
+  ),
+  Conversation(
+    id: "conv_marcus",
+    participantIds: ["founder_dev_1", "user_marcus"],
+    lastMessage: "I left detailed feedback on the SOC2 question regarding AWS audit scope.",
+    lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
+    unreadCount: 0,
+    isPinned: false,
+  ),
+];
+
 class ConversationsNotifier extends StateNotifier<List<Conversation>> {
-  ConversationsNotifier() : super([
-    Conversation(
-      id: "conv_elena",
-      participantIds: ["founder_dev_1", "user_elena"],
-      lastMessage: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
-      lastMessageTime: DateTime.now().subtract(const Duration(minutes: 18)),
-      unreadCount: 1,
-      isPinned: true,
-    ),
-    Conversation(
-      id: "conv_marcus",
-      participantIds: ["founder_dev_1", "user_marcus"],
-      lastMessage: "I left detailed feedback on the SOC2 question regarding AWS audit scope.",
-      lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
-      unreadCount: 0,
-      isPinned: false,
-    ),
-  ]);
+  ConversationsNotifier() : super(_defaultConversationsList());
 
   Conversation getOrCreateConversation(String targetUserId) {
     final existing = state.where((c) => c.participantIds.contains(targetUserId)).firstOrNull;
@@ -384,6 +414,14 @@ class ConversationsNotifier extends StateNotifier<List<Conversation>> {
       return c;
     }).toList();
   }
+
+  void reset() {
+    state = _defaultConversationsList();
+  }
+
+  void clearAll() {
+    state = [];
+  }
 }
 
 // In-Memory Chat Messages State Notifier
@@ -391,35 +429,37 @@ final chatMessagesProvider = StateNotifierProvider.family<ChatMessagesNotifier, 
   return ChatMessagesNotifier(conversationId);
 });
 
+List<ChatMessage> _defaultMessagesList(String conversationId) => [
+  ChatMessage(
+    id: "msg_init_1",
+    conversationId: conversationId,
+    senderId: "user_elena",
+    text: "Hi Alex! Reviewed your latest invoice OCR validation. How are you addressing handwriting variance on vendor sheets?",
+    sentAt: DateTime.now().subtract(const Duration(hours: 1)),
+    isRead: true,
+  ),
+  ChatMessage(
+    id: "msg_init_2",
+    conversationId: conversationId,
+    senderId: "founder_dev_1",
+    text: "Hey Elena! We're pairing Google Document AI with a fine-tuned layout model. 94% accuracy on handwritten totals in our 12-kitchen sample.",
+    sentAt: DateTime.now().subtract(const Duration(minutes: 30)),
+    isRead: true,
+  ),
+  ChatMessage(
+    id: "msg_init_3",
+    conversationId: conversationId,
+    senderId: "user_elena",
+    text: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
+    sentAt: DateTime.now().subtract(const Duration(minutes: 18)),
+    isRead: false,
+  ),
+];
+
 class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
   final String conversationId;
 
-  ChatMessagesNotifier(this.conversationId) : super([
-    ChatMessage(
-      id: "msg_init_1",
-      conversationId: conversationId,
-      senderId: "user_elena",
-      text: "Hi Alex! Reviewed your latest invoice OCR validation. How are you addressing handwriting variance on vendor sheets?",
-      sentAt: DateTime.now().subtract(const Duration(hours: 1)),
-      isRead: true,
-    ),
-    ChatMessage(
-      id: "msg_init_2",
-      conversationId: conversationId,
-      senderId: "founder_dev_1",
-      text: "Hey Elena! We're pairing Google Document AI with a fine-tuned layout model. 94% accuracy on handwritten totals in our 12-kitchen sample.",
-      sentAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      isRead: true,
-    ),
-    ChatMessage(
-      id: "msg_init_3",
-      conversationId: conversationId,
-      senderId: "user_elena",
-      text: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
-      sentAt: DateTime.now().subtract(const Duration(minutes: 18)),
-      isRead: false,
-    ),
-  ]);
+  ChatMessagesNotifier(this.conversationId) : super(_defaultMessagesList(conversationId));
 
   void sendMessage({
     required String text,
@@ -457,6 +497,201 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
   void deleteMessage(String messageId) {
     state = state.where((m) => m.id != messageId).toList();
   }
+
+  void reset() {
+    state = _defaultMessagesList(conversationId);
+  }
+
+  void clearAll() {
+    state = [];
+  }
+}
+
+// -------------------------------------------------------------
+// Connection Request State Machine & In-Flight Lock
+// -------------------------------------------------------------
+
+enum ConnectionStatus {
+  none,
+  requested,
+  received,
+  connected,
+}
+
+class ConnectionsNotifier extends StateNotifier<Map<String, ConnectionStatus>> {
+  final Set<String> _inFlight = {};
+
+  ConnectionsNotifier()
+      : super({
+          // Seed initial pending request from Elena (matches Elena's notification)
+          "user_elena": ConnectionStatus.received,
+        });
+
+  ConnectionStatus getStatus(String userId) {
+    return state[userId] ?? ConnectionStatus.none;
+  }
+
+  bool isInFlight(String userId) => _inFlight.contains(userId);
+
+  Future<void> sendOrToggleRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+
+    final current = getStatus(userId);
+    try {
+      if (current == ConnectionStatus.none) {
+        state = {...state, userId: ConnectionStatus.requested};
+      } else if (current == ConnectionStatus.requested) {
+        // Withdraw request
+        final updated = Map<String, ConnectionStatus>.from(state);
+        updated.remove(userId);
+        state = updated;
+      } else if (current == ConnectionStatus.received) {
+        // Mutual request resolved cleanly to connected (prevents deadlock)
+        state = {...state, userId: ConnectionStatus.connected};
+      }
+    } finally {
+      // Debounce window to lock against rapid tap oscillation
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  Future<void> acceptRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+    try {
+      state = {...state, userId: ConnectionStatus.connected};
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  Future<void> declineRequest(String userId) async {
+    if (_inFlight.contains(userId)) return;
+    _inFlight.add(userId);
+    try {
+      final updated = Map<String, ConnectionStatus>.from(state);
+      updated.remove(userId);
+      state = updated;
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(userId);
+    }
+  }
+
+  void reset() {
+    state = {
+      "user_elena": ConnectionStatus.received,
+    };
+  }
+
+  void clearAll() {
+    state = {};
+  }
+}
+
+final connectionsProvider = StateNotifierProvider<ConnectionsNotifier, Map<String, ConnectionStatus>>((ref) {
+  return ConnectionsNotifier();
+});
+
+class ValidationUpvoteState {
+  final bool isUpvoted;
+  final int count;
+
+  const ValidationUpvoteState({
+    required this.isUpvoted,
+    required this.count,
+  });
+
+  ValidationUpvoteState copyWith({bool? isUpvoted, int? count}) {
+    return ValidationUpvoteState(
+      isUpvoted: isUpvoted ?? this.isUpvoted,
+      count: count ?? this.count,
+    );
+  }
+}
+
+class UpvotesNotifier extends StateNotifier<Map<String, ValidationUpvoteState>> {
+  final ValidationRepository _repository;
+  final Set<String> _inFlight = {};
+
+  UpvotesNotifier(this._repository) : super({});
+
+  ValidationUpvoteState getStatus(String validationId, {int defaultCount = 0, bool defaultIsUpvoted = false}) {
+    return state[validationId] ?? ValidationUpvoteState(
+      isUpvoted: defaultIsUpvoted,
+      count: defaultCount,
+    );
+  }
+
+  /// Optimistically updates upvote count and toggles state.
+  /// Locks during in-flight debounce to prevent duplicate rapid clicks or oscillations.
+  /// Automatically rolls back on server or network error.
+  Future<bool> toggleUpvote(String validationId, {int defaultCount = 0, bool defaultIsUpvoted = false}) async {
+    if (_inFlight.contains(validationId)) {
+      return false;
+    }
+    _inFlight.add(validationId);
+
+    final current = getStatus(validationId, defaultCount: defaultCount, defaultIsUpvoted: defaultIsUpvoted);
+    final nextIsUpvoted = !current.isUpvoted;
+    final nextCount = nextIsUpvoted ? current.count + 1 : (current.count > 0 ? current.count - 1 : 0);
+
+    // 1. Optimistic Update
+    state = {
+      ...state,
+      validationId: ValidationUpvoteState(isUpvoted: nextIsUpvoted, count: nextCount),
+    };
+
+    try {
+      final success = await _repository.toggleUpvote(validationId, upvote: nextIsUpvoted);
+      if (!success) {
+        // Rollback on rejection
+        state = {
+          ...state,
+          validationId: current,
+        };
+        return false;
+      }
+      return true;
+    } catch (_) {
+      // Rollback on failure
+      state = {
+        ...state,
+        validationId: current,
+      };
+      return false;
+    } finally {
+      await Future.delayed(const Duration(milliseconds: 250));
+      _inFlight.remove(validationId);
+    }
+  }
+
+  void reset() {
+    state = {};
+  }
+
+  void clearAll() {
+    state = {};
+  }
+}
+
+final upvotesProvider = StateNotifierProvider<UpvotesNotifier, Map<String, ValidationUpvoteState>>((ref) {
+  final repo = ref.watch(validationRepositoryProvider);
+  return UpvotesNotifier(repo);
+});
+
+/// Resets all user-scoped providers to completely prevent account-switch data leakage
+void resetAllUserScopedProviders(Ref ref) {
+  ref.invalidate(currentUserProvider);
+  ref.invalidate(validationsProvider);
+  ref.invalidate(evidenceListProvider);
+  ref.invalidate(notificationsProvider);
+  ref.invalidate(conversationsProvider);
+  ref.invalidate(connectionsProvider);
+  ref.invalidate(upvotesProvider);
 }
 
 // Aliases for legacy views compatibility

@@ -7,6 +7,8 @@ import '../../design_system/app_colors.dart';
 import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../utils/haptic_manager.dart';
+import '../../utils/username_validator.dart';
+import '../../repositories/app_providers.dart';
 
 class ProfileSetupWizardView extends ConsumerStatefulWidget {
   const ProfileSetupWizardView({super.key});
@@ -47,6 +49,26 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
     setState(() {
       _isFinishing = true;
     });
+
+    final chosenUsername = UsernameValidator.sanitize(_usernameController.text);
+    if (chosenUsername.isNotEmpty) {
+      try {
+        final profileRepo = ref.read(profileRepositoryProvider);
+        final user = ref.read(currentUserProvider).value;
+        if (user != null) {
+          final updated = user.copyWith(
+            username: chosenUsername,
+            role: _founderType.isNotEmpty ? _founderType : user.role,
+            skills: _selectedSkills.toList(),
+            location: _locationController.text.trim().isNotEmpty
+                ? _locationController.text.trim()
+                : user.location,
+          );
+          await profileRepo.updateProfile(updated);
+          ref.invalidate(currentUserProvider);
+        }
+      } catch (_) {}
+    }
     
     HapticManager.shared.notificationSuccess();
 
@@ -267,10 +289,82 @@ class _ProfileSetupWizardViewState extends ConsumerState<ProfileSetupWizardView>
   }
 }
 
-class _UsernameStepView extends StatelessWidget {
+class _UsernameStepView extends ConsumerStatefulWidget {
   final TextEditingController controller;
 
   const _UsernameStepView({required this.controller});
+
+  @override
+  ConsumerState<_UsernameStepView> createState() => _UsernameStepViewState();
+}
+
+class _UsernameStepViewState extends ConsumerState<_UsernameStepView> {
+  bool _isChecking = false;
+  bool? _isAvailable;
+  String? _statusMessage;
+  DateTime _lastInputTime = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+    if (widget.controller.text.isNotEmpty) {
+      _checkAvailability(widget.controller.text);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final text = widget.controller.text.trim();
+    if (text.isEmpty) {
+      setState(() {
+        _isChecking = false;
+        _isAvailable = null;
+        _statusMessage = null;
+      });
+      return;
+    }
+
+    final clean = UsernameValidator.sanitize(text);
+    final validation = UsernameValidator.validate(clean);
+    if (!validation.isValid) {
+      setState(() {
+        _isChecking = false;
+        _isAvailable = false;
+        _statusMessage = validation.error;
+      });
+      return;
+    }
+
+    final now = DateTime.now();
+    _lastInputTime = now;
+    setState(() {
+      _isChecking = true;
+      _statusMessage = "Checking availability...";
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (_lastInputTime != now || !mounted) return;
+      final available = await ref.read(profileRepositoryProvider).checkUsernameAvailable(clean);
+      if (!mounted || _lastInputTime != now) return;
+      setState(() {
+        _isChecking = false;
+        _isAvailable = available;
+        _statusMessage = available
+            ? "@$clean is available"
+            : "@$clean is already claimed";
+      });
+    });
+  }
+
+  void _checkAvailability(String text) {
+    _onTextChanged();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -287,15 +381,52 @@ class _UsernameStepView extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            "This is how other builders will find you.",
+            "This is how other builders and validators will identify you.",
             style: AppTypography.body.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xl),
           CustomTextField(
             placeholder: "@founder",
-            controller: controller,
-            icon: Icons.alternate_email, // at symbol
+            controller: widget.controller,
+            icon: Icons.alternate_email,
           ),
+          const SizedBox(height: AppSpacing.sm),
+          // Live validation feedback
+          if (_statusMessage != null)
+            Row(
+              children: [
+                if (_isChecking)
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
+                    ),
+                  )
+                else if (_isAvailable == true)
+                  Icon(Icons.check_circle_rounded, size: 16, color: colors.evidenceGreen)
+                else
+                  Icon(Icons.cancel_rounded, size: 16, color: colors.destructive),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _statusMessage!,
+                    style: AppTypography.caption.copyWith(
+                      color: _isChecking
+                          ? colors.textSecondary
+                          : (_isAvailable == true ? colors.evidenceGreen : colors.destructive),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              "3–20 characters, letters, numbers, and underscores only.",
+              style: AppTypography.caption.copyWith(color: colors.textTertiary),
+            ),
         ],
       ),
     );

@@ -128,25 +128,98 @@ class _StartupSettingsViewState extends State<StartupSettingsView> {
           _buildToggleRow("Listed in Investor Feed", _listedInInvestorFeed, (v) => setState(() => _listedInInvestorFeed = v), colors),
           
           _buildSectionHeader("Team", colors),
-          ListTile(
-            title: Text("Manage Team Members", style: AppTypography.body.copyWith(color: colors.text)),
-            trailing: Icon(Icons.chevron_right, color: colors.textTertiary),
-            tileColor: colors.cardBackground,
-            onTap: () {
-              context.push('/team-management');
-            },
+          Material(
+            color: colors.cardBackground,
+            child: ListTile(
+              title: Text("Manage Team Members", style: AppTypography.body.copyWith(color: colors.text)),
+              trailing: Icon(Icons.chevron_right, color: colors.textTertiary),
+              onTap: () {
+                context.push('/team-management');
+              },
+            ),
           ),
           
           _buildSectionHeader("Danger Zone", colors),
-          ListTile(
-            title: Text("Archive Startup", style: AppTypography.body.copyWith(color: colors.textSecondary)),
-            tileColor: colors.cardBackground,
-            onTap: () {},
+          Material(
+            color: colors.cardBackground,
+            child: ListTile(
+              title: Text("Archive Startup", style: AppTypography.body.copyWith(color: colors.textSecondary)),
+              trailing: Icon(Icons.archive_outlined, color: colors.textSecondary, size: 20),
+              onTap: () {
+                HapticManager.shared.impactMedium();
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: colors.cardBackground,
+                    title: Text("Archive Startup?", style: AppTypography.headline.copyWith(color: colors.text)),
+                    content: Text(
+                      "Archiving hides your startup from public explore feeds while preserving your validation dossiers and evidence history.",
+                      style: AppTypography.body.copyWith(color: colors.textSecondary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text("Cancel", style: TextStyle(color: colors.textSecondary)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          HapticManager.shared.notificationSuccess();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Startup archived successfully.")),
+                          );
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: colors.warning),
+                        child: const Text("Archive"),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-          ListTile(
-            title: Text("Delete Startup Profile", style: AppTypography.body.copyWith(color: colors.primary)),
-            tileColor: colors.cardBackground,
-            onTap: () {},
+          Material(
+            color: colors.cardBackground,
+            child: ListTile(
+              title: Text("Delete Startup Profile", style: AppTypography.body.copyWith(color: Colors.redAccent)),
+              trailing: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent, size: 20),
+              onTap: () {
+                HapticManager.shared.impactHeavy();
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: colors.cardBackground,
+                    title: Text("Delete Startup Profile?", style: AppTypography.headline.copyWith(color: Colors.redAccent)),
+                    content: Text(
+                      "This action is irreversible. All linked validation sprints, team assignments, and empirical datasets will be permanently purged.",
+                      style: AppTypography.body.copyWith(color: colors.textSecondary),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text("Cancel", style: TextStyle(color: colors.textSecondary)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          HapticManager.shared.notificationWarning();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Startup profile deleted."),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                        child: const Text("Delete Permanently"),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           
           const SizedBox(height: 50),
@@ -196,7 +269,7 @@ class _StartupSettingsViewState extends State<StartupSettingsView> {
   }
 
   Widget _buildPickerRow(String label, String value, VoidCallback onTap, AppThemeColors colors) {
-    return Container(
+    return Material(
       color: colors.cardBackground,
       child: Column(
         children: [
@@ -219,7 +292,7 @@ class _StartupSettingsViewState extends State<StartupSettingsView> {
   }
 
   Widget _buildToggleRow(String label, bool value, ValueChanged<bool> onChanged, AppThemeColors colors) {
-    return Container(
+    return Material(
       color: colors.cardBackground,
       child: Column(
         children: [

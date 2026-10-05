@@ -216,11 +216,15 @@ class _FounderHomeView extends ConsumerWidget {
             // LATEST SIGNAL
             const _SectionHeader(title: "LATEST SIGNAL"),
             const SizedBox(height: 12),
-            const _SignalRow(
+            _SignalRow(
               icon: Icons.trending_up_rounded,
               title: "3 new enterprise validator responses",
               subtitle: "Willingness to pay validated at \$49/seat/mo tier.",
               timeAgo: "2h ago",
+              onTap: () {
+                HapticManager.shared.impactLight();
+                context.push('/evidence-locker');
+              },
             ),
             const SizedBox(height: 8),
             _SignalRow(
@@ -287,11 +291,15 @@ class _FounderHomeView extends ConsumerWidget {
             // NEXT EXPERIMENT
             const _SectionHeader(title: "NEXT EXPERIMENT"),
             const SizedBox(height: 12),
-            const _ActionRow(
+            _ActionRow(
               icon: Icons.science_outlined,
               iconColor: AppPalette.orange,
               title: "Test 5 Enterprise Compliance Objections",
               subtitle: "Run 15-min interview questions on SOC2 readiness.",
+              onTap: () {
+                HapticManager.shared.impactLight();
+                context.push('/validation-wizard');
+              },
             ),
             const SizedBox(height: 40),
           ],
@@ -443,11 +451,15 @@ class _InvestorHomeView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sectionGap),
         const _SectionHeader(title: "WATCHLIST SIGNALS"),
         const SizedBox(height: 12),
-        const _SignalRow(
+        _SignalRow(
           icon: Icons.check_circle_outline_rounded,
           title: "SaaS Workflow Tool",
           subtitle: "Completed 20 structured interviews. 85% problem validation rate.",
           timeAgo: "Today",
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/validation-detail/val_auto_inventory');
+          },
         ),
       ],
     );
@@ -556,11 +568,15 @@ class _ProfessionalHomeView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sectionGap),
         const _SectionHeader(title: "YOUR IMPACT & KARMA"),
         const SizedBox(height: 12),
-        const _SignalRow(
+        _SignalRow(
           icon: Icons.star_border_rounded,
           title: "Top Contributor in FinTech",
           subtitle: "Your feedback helped 3 founders pivot away from bad assumptions.",
           timeAgo: "This month",
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/leaderboard');
+          },
         ),
       ],
     );
@@ -602,18 +618,26 @@ class _CreatorHomeView extends StatelessWidget {
 
         const _SectionHeader(title: "TRENDING VALIDATION THEMES"),
         const SizedBox(height: 12),
-        const _SignalRow(
+        _SignalRow(
           icon: Icons.hub_outlined,
           title: "AI Workflows vs Legacy SaaS",
           subtitle: "14 founders testing human-in-the-loop interfaces this week.",
           timeAgo: "Active",
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/explore');
+          },
         ),
         const SizedBox(height: 8),
-        const _SignalRow(
+        _SignalRow(
           icon: Icons.monetization_on_outlined,
           title: "Micro-SaaS Pricing Benchmarks",
           subtitle: "New signals show reluctance toward seat-based pricing.",
           timeAgo: "Active",
+          onTap: () {
+            HapticManager.shared.impactLight();
+            context.push('/explore');
+          },
         ),
       ],
     );

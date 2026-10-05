@@ -199,7 +199,7 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
                               crossAxisCount: 2,
                               mainAxisSpacing: 10,
                               crossAxisSpacing: 10,
-                              mainAxisExtent: 165,
+                              mainAxisExtent: 220,
                             ),
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
@@ -227,22 +227,27 @@ class _NetworkViewState extends ConsumerState<NetworkView> {
   }
 }
 
-class _PersonCard extends StatefulWidget {
+class _PersonCard extends ConsumerWidget {
   final User person;
 
   const _PersonCard({required this.person});
 
   @override
-  State<_PersonCard> createState() => _PersonCardState();
-}
-
-class _PersonCardState extends State<_PersonCard> {
-  bool _isConnected = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
-    final person = widget.person;
+    final connStatus = ref.watch(connectionsProvider)[person.id] ?? ConnectionStatus.none;
+    final isRequested = connStatus == ConnectionStatus.requested;
+    final isConnected = connStatus == ConnectionStatus.connected;
+    final isReceived = connStatus == ConnectionStatus.received;
+
+    String buttonLabel = "Connect";
+    if (isConnected) {
+      buttonLabel = "Connected";
+    } else if (isRequested) {
+      buttonLabel = "Requested";
+    } else if (isReceived) {
+      buttonLabel = "Accept";
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -264,107 +269,123 @@ class _PersonCardState extends State<_PersonCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
-                child: Text(
-                  person.name[0],
-                  style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            person.name,
-                            style: AppTypography.subheadline.copyWith(
-                              color: colors.text,
-                              fontWeight: FontWeight.w700,
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: AppPalette.orange.withValues(alpha: 0.10),
+                      child: Text(
+                        person.name.isNotEmpty ? person.name[0] : '?',
+                        style: const TextStyle(color: AppPalette.orange, fontWeight: FontWeight.w700, fontSize: 15),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  person.name,
+                                  style: AppTypography.subheadline.copyWith(
+                                    color: colors.text,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              if (person.isVerified) ...[
+                                const SizedBox(width: 4),
+                                const Icon(Icons.verified, size: 14, color: AppPalette.orange),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            person.role,
+                            style: AppTypography.caption.copyWith(color: colors.textTertiary, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Connect button with semantic liveRegion
+                    Semantics(
+                      liveRegion: true,
+                      button: true,
+                      label: "$buttonLabel with ${person.name}",
+                      child: Material(
+                        color: (isRequested || isConnected) ? Colors.transparent : AppPalette.orange,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          onTap: () {
+                            HapticManager.shared.impactLight();
+                            ref.read(connectionsProvider.notifier).sendOrToggleRequest(person.id);
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            decoration: (isRequested || isConnected)
+                                ? BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: colors.textTertiary.withValues(alpha: 0.4)),
+                                  )
+                                : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isConnected) ...[
+                                  Icon(Icons.check_rounded, size: 13, color: colors.evidenceGreen),
+                                  const SizedBox(width: 4),
+                                ],
+                                Text(
+                                  buttonLabel,
+                                  style: AppTypography.caption.copyWith(
+                                    color: (isRequested || isConnected) ? colors.textTertiary : Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                        if (person.isVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(Icons.verified, size: 14, color: AppPalette.orange),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      person.role,
-                      style: AppTypography.caption.copyWith(color: colors.textTertiary, fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              // Connect button — filled or outlined based on state
-              Material(
-                color: _isConnected ? Colors.transparent : AppPalette.orange,
-                borderRadius: BorderRadius.circular(8),
-                child: InkWell(
-                  onTap: () {
-                    HapticManager.shared.impactLight();
-                    setState(() => _isConnected = !_isConnected);
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                    decoration: _isConnected
-                        ? BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: colors.textTertiary.withValues(alpha: 0.4)),
-                          )
-                        : null,
-                    child: Text(
-                      _isConnected ? "Requested" : "Connect",
-                      style: AppTypography.caption.copyWith(
-                        color: _isConnected ? colors.textTertiary : Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 10),
+                Text(
+                  person.bio,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.footnote.copyWith(color: colors.textSecondary, height: 1.35),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            person.bio,
-            style: AppTypography.footnote.copyWith(color: colors.textSecondary, height: 1.35),
-          ),
-          if (person.skills.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: person.skills.take(3).map((skill) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: colors.surface,
-                    borderRadius: BorderRadius.circular(5),
+                if (person.skills.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: person.skills.take(3).map((skill) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          skill,
+                          style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 10),
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  child: Text(
-                    skill,
-                    style: AppTypography.caption.copyWith(color: colors.textTertiary, fontSize: 10),
-                  ),
-                );
-              }).toList(),
+                ],
+              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
-    ),
-  ),
-),
-);
+    );
   }
 }

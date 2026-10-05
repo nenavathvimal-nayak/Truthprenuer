@@ -9,6 +9,8 @@ import '../repositories/app_providers.dart';
 import '../utils/haptic_manager.dart';
 import 'role_switcher_modal.dart';
 
+import '../repositories/network_connectivity_provider.dart';
+
 /// Master Adaptive Shell that automatically detects device types:
 /// - MOBILE (< 600px): 1 Section with bottom navigation
 /// - FOLDABLE & TAB (600px - 1139px): 2 to 3 Sections with Nav Rail + Workspace + Optional Intel Panel
@@ -35,9 +37,16 @@ class AdaptiveAppShell extends ConsumerWidget {
     if (deviceType == DeviceType.mobile) {
       return Scaffold(
         backgroundColor: colors.background,
-        body: IndexedStack(
-          index: safeIndex,
-          children: children,
+        body: Column(
+          children: [
+            const _OfflineSyncBanner(),
+            Expanded(
+              child: IndexedStack(
+                index: safeIndex,
+                children: children,
+              ),
+            ),
+          ],
         ),
         bottomNavigationBar: _MobileBottomBar(
           selectedIndex: safeIndex,
@@ -52,31 +61,38 @@ class AdaptiveAppShell extends ConsumerWidget {
 
       return Scaffold(
         backgroundColor: colors.background,
-        body: Row(
+        body: Column(
           children: [
-            // Section 1: Navigation Rail
-            _AdaptiveNavRail(
-              selectedIndex: safeIndex,
-              onTap: onTabSelected,
-            ),
-            VerticalDivider(width: 1, thickness: 1, color: colors.border),
-
-            // Section 2: Center Primary Workspace
+            const _OfflineSyncBanner(),
             Expanded(
-              child: IndexedStack(
-                index: safeIndex,
-                children: children,
+              child: Row(
+                children: [
+                  // Section 1: Navigation Rail
+                  _AdaptiveNavRail(
+                    selectedIndex: safeIndex,
+                    onTap: onTabSelected,
+                  ),
+                  VerticalDivider(width: 1, thickness: 1, color: colors.border),
+
+                  // Section 2: Center Primary Workspace
+                  Expanded(
+                    child: IndexedStack(
+                      index: safeIndex,
+                      children: children,
+                    ),
+                  ),
+
+                  // Section 3: Right Contextual Intelligence Panel (if width >= 960)
+                  if (showThirdSection) ...[
+                    VerticalDivider(width: 1, thickness: 1, color: colors.border),
+                    const SizedBox(
+                      width: 300,
+                      child: _AdaptiveRightIntelligencePanel(),
+                    ),
+                  ],
+                ],
               ),
             ),
-
-            // Section 3: Right Contextual Intelligence Panel (if width >= 960)
-            if (showThirdSection) ...[
-              VerticalDivider(width: 1, thickness: 1, color: colors.border),
-              const SizedBox(
-                width: 300,
-                child: _AdaptiveRightIntelligencePanel(),
-              ),
-            ],
           ],
         ),
       );
@@ -85,37 +101,142 @@ class AdaptiveAppShell extends ConsumerWidget {
     // 3. DESKTOP: 3 Dedicated Permanent Sections
     return Scaffold(
       backgroundColor: colors.background,
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Column(
         children: [
-          // Section 1: Left Navigation Console & Founder Hub (260px)
-          const SizedBox(
-            width: 260,
-            child: _DesktopLeftSidebar(),
-          ),
-          VerticalDivider(width: 1, thickness: 1, color: colors.border),
-
-          // Section 2: Center Primary Workspace (Expanded, centered with optimal reading constraint)
+          const _OfflineSyncBanner(),
           Expanded(
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 860),
-                child: IndexedStack(
-                  index: safeIndex,
-                  children: children,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Section 1: Left Navigation Console & Founder Hub (260px)
+                const SizedBox(
+                  width: 260,
+                  child: _DesktopLeftSidebar(),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: colors.border),
+
+                // Section 2: Center Primary Workspace (Expanded, centered with optimal reading constraint)
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 860),
+                      child: IndexedStack(
+                        index: safeIndex,
+                        children: children,
+                      ),
+                    ),
+                  ),
+                ),
+                VerticalDivider(width: 1, thickness: 1, color: colors.border),
+
+                // Section 3: Right Intelligence Console & Live Signals (340px)
+                const SizedBox(
+                  width: 340,
+                  child: _AdaptiveRightIntelligencePanel(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Dynamic, accessible offline and resynchronization banner
+class _OfflineSyncBanner extends ConsumerWidget {
+  const _OfflineSyncBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final netState = ref.watch(networkConnectivityProvider);
+    final colors = Theme.of(context).appColors;
+
+    if (netState.isOnline) {
+      return const SizedBox.shrink();
+    }
+
+    if (netState.isSyncing) {
+      return Semantics(
+        liveRegion: true,
+        label: "Reconnecting and synchronizing state",
+        child: Container(
+          width: double.infinity,
+          color: colors.primary.withValues(alpha: 0.15),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: colors.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "Reconnecting and synchronizing state...",
+                style: AppTypography.caption.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Offline state
+    return Semantics(
+      liveRegion: true,
+      label: "Offline mode. Showing cached empirical data.",
+      child: Container(
+        key: const ValueKey('offline_banner'),
+        width: double.infinity,
+        color: colors.surfaceElevated,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              Icons.wifi_off_rounded,
+              size: 16,
+              color: colors.warning,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "Offline. Showing cached empirical data.",
+                style: AppTypography.caption.copyWith(
+                  color: colors.warning,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ),
-          VerticalDivider(width: 1, thickness: 1, color: colors.border),
-
-          // Section 3: Right Intelligence Console & Live Signals (340px)
-          const SizedBox(
-            width: 340,
-            child: _AdaptiveRightIntelligencePanel(),
-          ),
-        ],
+            InkWell(
+              key: const ValueKey('offline_retry_btn'),
+              onTap: () {
+                HapticManager.shared.impactLight();
+                ref.read(networkConnectivityProvider.notifier).checkConnectivity();
+              },
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text(
+                  "Retry",
+                  style: AppTypography.caption.copyWith(
+                    color: colors.warning,
+                    fontWeight: FontWeight.w800,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -370,6 +370,16 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               title: "Account & Security",
               children: [
                 _SettingsNavRow(
+                  icon: Icons.business_center_outlined,
+                  iconColor: colors.primary,
+                  title: "Startup & Team Settings",
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    context.push('/startup-settings');
+                  },
+                ),
+                Container(height: 1, color: colors.divider, margin: const EdgeInsets.only(left: 52)),
+                _SettingsNavRow(
                   icon: Icons.key_rounded,
                   iconColor: colors.info,
                   title: "Change Password",
@@ -696,8 +706,21 @@ class _SettingsInfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: AppTypography.bodyMedium.copyWith(color: colors.text)),
-          Text(value, style: AppTypography.body.copyWith(color: colors.textTertiary)),
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.bodyMedium.copyWith(color: colors.text),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.body.copyWith(color: colors.textTertiary),
+            ),
+          ),
         ],
       ),
     );
