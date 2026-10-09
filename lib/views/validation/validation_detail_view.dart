@@ -401,6 +401,8 @@ class _ValidationDetailViewState extends ConsumerState<ValidationDetailView> {
 
                 // Section 2: STRUCTURED FEEDBACK
                 responsesAsync.when(
+                  skipLoadingOnReload: true,
+                  skipLoadingOnRefresh: true,
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (err, _) => Text("Failed to load responses: $err", style: TextStyle(color: colors.error)),
                   data: (responses) {

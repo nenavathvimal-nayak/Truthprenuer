@@ -11,12 +11,28 @@ final validationRepositoryProvider = Provider<ValidationRepository>((ref) {
 class ValidationRepository {
   final SupabaseClient? _client;
 
+  static List<ValidationRequest>? _cachedValidations;
+  static DateTime? _cachedValidationsTime;
+  static const Duration _cacheDuration = Duration(seconds: 45);
+  static final Map<String, ValidationRequest> _itemCache = {};
+
   ValidationRepository([this._client]);
+
+  void clearCache() {
+    _cachedValidations = null;
+    _cachedValidationsTime = null;
+    _itemCache.clear();
+  }
 
   Future<void> createValidation(
     ValidationRequest request,
     List<ValidationQuestion> questions,
   ) async {
+    // Update in-memory cache immediately for 0ms response
+    _cachedValidations ??= [];
+    _cachedValidations!.insert(0, request);
+    _itemCache[request.id] = request;
+
     final client = _client;
     if (client == null) return;
 
@@ -114,9 +130,19 @@ class ValidationRepository {
     String? industry,
     ValidationStage? stage,
     String? status = 'active',
+    bool forceRefresh = false,
   }) async {
+    final isDefaultQuery = (industry == null || industry == 'All') && stage == null && (status == null || status == 'active');
+
+    // Return cached list immediately if fresh
+    if (!forceRefresh && isDefaultQuery && _cachedValidations != null && _cachedValidationsTime != null) {
+      if (DateTime.now().difference(_cachedValidationsTime!) < _cacheDuration) {
+        return _cachedValidations!;
+      }
+    }
+
     final client = _client;
-    if (client == null) return [];
+    if (client == null) return _cachedValidations ?? [];
 
     try {
       var builder = client
@@ -137,14 +163,34 @@ class ValidationRepository {
           .order('created_at', ascending: false)
           .timeout(const Duration(seconds: 2));
 
-      return (response as List).map((data) => _mapToValidationRequest(data)).toList();
+      final results = (response as List).map((data) => _mapToValidationRequest(data)).toList();
+      if (isDefaultQuery && results.isNotEmpty) {
+        _cachedValidations = results;
+        _cachedValidationsTime = DateTime.now();
+        for (final v in results) {
+          _itemCache[v.id] = v;
+        }
+      }
+      return results;
     } catch (_) {
-      // Return empty list on network or parse failure
-      return [];
+      // Return cached list on network or parse failure if available
+      return _cachedValidations ?? [];
     }
   }
 
   Future<ValidationRequest?> getValidationById(String id) async {
+    // Fast return from memory cache
+    if (_itemCache.containsKey(id)) {
+      return _itemCache[id];
+    }
+    if (_cachedValidations != null) {
+      final found = _cachedValidations!.where((v) => v.id == id).firstOrNull;
+      if (found != null) {
+        _itemCache[id] = found;
+        return found;
+      }
+    }
+
     final client = _client;
     if (client == null) return null;
 
@@ -157,7 +203,9 @@ class ValidationRepository {
           .timeout(const Duration(seconds: 2));
 
       if (data == null) return null;
-      return _mapToValidationRequest(data);
+      final item = _mapToValidationRequest(data);
+      _itemCache[id] = item;
+      return item;
     } catch (_) {
       return null;
     }
@@ -201,6 +249,9 @@ class ValidationRepository {
   }
 
   Future<void> deleteValidation(String id) async {
+    _cachedValidations?.removeWhere((v) => v.id == id);
+    _itemCache.remove(id);
+
     final client = _client;
     if (client == null) return;
     await client
@@ -211,6 +262,20 @@ class ValidationRepository {
   }
 
   Future<bool> toggleUpvote(String validationId, {required bool upvote}) async {
+    // Optimistically update in-memory cache
+    final cached = _itemCache[validationId];
+    if (cached != null) {
+      cached.upvotes = upvote ? (cached.upvotes + 1) : ((cached.upvotes > 0) ? cached.upvotes - 1 : 0);
+    }
+    if (_cachedValidations != null) {
+      for (final v in _cachedValidations!) {
+        if (v.id == validationId && !identical(v, cached)) {
+          v.upvotes = upvote ? (v.upvotes + 1) : ((v.upvotes > 0) ? v.upvotes - 1 : 0);
+          break;
+        }
+      }
+    }
+
     final client = _client;
     if (client == null) {
       // Mock / offline fallback succeeds gracefully

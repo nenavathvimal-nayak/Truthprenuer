@@ -184,6 +184,8 @@ class _ValidationsFeed extends ConsumerWidget {
         ref.invalidate(validationsProvider);
       },
       child: validationsAsync.when(
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
         data: (validations) {
           var filtered = validations;
 

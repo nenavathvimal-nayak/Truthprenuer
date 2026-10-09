@@ -20,17 +20,29 @@ class MainTabView extends ConsumerStatefulWidget {
 class _MainTabViewState extends ConsumerState<MainTabView> {
   late int _selectedTab;
   DateTime? _lastBackPressTime;
+  final Set<int> _activatedTabs = {};
 
   @override
   void initState() {
     super.initState();
     _selectedTab = widget.initialIndex;
+    _activatedTabs.add(_selectedTab);
+  }
+
+  @override
+  void didUpdateWidget(covariant MainTabView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialIndex != oldWidget.initialIndex) {
+      setState(() {
+        _selectedTab = widget.initialIndex;
+        _activatedTabs.add(_selectedTab);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
-    const pages = [
+    const rawPages = [
       DashboardView(),
       ExploreView(),
       ValidationDashboardView(),
@@ -38,7 +50,15 @@ class _MainTabViewState extends ConsumerState<MainTabView> {
       ProfileView(),
     ];
 
-    final safeIndex = _selectedTab.clamp(0, pages.length - 1);
+    final safeIndex = _selectedTab.clamp(0, rawPages.length - 1);
+    _activatedTabs.add(safeIndex);
+
+    final pages = List<Widget>.generate(rawPages.length, (index) {
+      if (_activatedTabs.contains(index)) {
+        return rawPages[index];
+      }
+      return const SizedBox.shrink();
+    });
 
     return PopScope(
       canPop: false,
@@ -69,6 +89,7 @@ class _MainTabViewState extends ConsumerState<MainTabView> {
         onTabSelected: (index) {
           setState(() {
             _selectedTab = index;
+            _activatedTabs.add(index);
           });
         },
         children: pages,

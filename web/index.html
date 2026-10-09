@@ -40,6 +40,8 @@
   <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">
 
   <!-- iOS & Mobile Web App Meta -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -383,6 +385,21 @@
   </div>
 
   <!-- Flutter Web Application Bootstrap Loader -->
+  <script>
+    // Smoothly remove prerender SEO shell as soon as Flutter paints its first interactive frame
+    window.addEventListener('flutter-first-frame', function () {
+      var shell = document.getElementById('prerender-shell');
+      if (shell) {
+        shell.style.transition = 'opacity 150ms ease-out';
+        shell.style.opacity = '0';
+        setTimeout(function() {
+          if (shell && shell.parentNode) {
+            shell.parentNode.removeChild(shell);
+          }
+        }, 150);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

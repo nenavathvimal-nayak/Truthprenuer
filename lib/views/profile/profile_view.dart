@@ -30,6 +30,8 @@ class ProfileView extends ConsumerWidget {
           ref.invalidate(validationsProvider);
         },
         child: userAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (user) {
             if (user == null) {
               return ListView(
@@ -300,6 +302,8 @@ class ProfileView extends ConsumerWidget {
               const _SectionLabel("ACTIVE VALIDATION SPRINTS"),
               const SizedBox(height: 10),
               validationsAsync.when(
+                skipLoadingOnReload: true,
+                skipLoadingOnRefresh: true,
                 data: (validations) {
                   if (validations.isEmpty) {
                     return Text(

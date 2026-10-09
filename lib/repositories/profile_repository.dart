@@ -12,11 +12,32 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 class ProfileRepository {
   final SupabaseClient? _client;
 
+  static final Map<String, User> _profileCache = {};
+  static final Map<String, DateTime> _profileCacheTime = {};
+  static const Duration _cacheDuration = Duration(minutes: 5);
+
   ProfileRepository([this._client]);
 
-  Future<User?> getProfile(String userId) async {
+  void clearCache([String? userId]) {
+    if (userId != null) {
+      _profileCache.remove(userId);
+      _profileCacheTime.remove(userId);
+    } else {
+      _profileCache.clear();
+      _profileCacheTime.clear();
+    }
+  }
+
+  Future<User?> getProfile(String userId, {bool forceRefresh = false}) async {
+    // Return cached user profile immediately if still valid
+    if (!forceRefresh && _profileCache.containsKey(userId) && _profileCacheTime.containsKey(userId)) {
+      if (DateTime.now().difference(_profileCacheTime[userId]!) < _cacheDuration) {
+        return _profileCache[userId];
+      }
+    }
+
     final client = _client;
-    if (client == null) return null;
+    if (client == null) return _profileCache[userId];
 
     try {
       final data = await client
@@ -26,7 +47,7 @@ class ProfileRepository {
           .maybeSingle()
           .timeout(const Duration(seconds: 2));
 
-      if (data == null) return null;
+      if (data == null) return _profileCache[userId];
 
       final roleStr = data['role'] ?? 'Founder';
       final roleEnum = UserRole.values.firstWhere(
@@ -39,7 +60,7 @@ class ProfileRepository {
           ? skillsRaw.map((s) => s.toString()).toList()
           : [];
 
-      return User(
+      final user = User(
         id: data['id'],
         name: data['full_name'] ?? 'Founder',
         username: data['username'] ?? 'founder',
@@ -52,12 +73,20 @@ class ProfileRepository {
         skills: skills,
         isVerified: data['is_verified'] ?? false,
       );
+
+      _profileCache[userId] = user;
+      _profileCacheTime[userId] = DateTime.now();
+
+      return user;
     } catch (_) {
-      return null;
+      return _profileCache[userId];
     }
   }
 
   Future<void> updateProfile(User user) async {
+    _profileCache[user.id] = user;
+    _profileCacheTime[user.id] = DateTime.now();
+
     final client = _client;
     if (client == null) return;
 
@@ -75,6 +104,12 @@ class ProfileRepository {
   }
 
   Future<void> updateUserRole(String userId, UserRole role) async {
+    final cached = _profileCache[userId];
+    if (cached != null) {
+      cached.userRole = role;
+      cached.role = role.label;
+    }
+
     final client = _client;
     if (client == null) return;
     try {

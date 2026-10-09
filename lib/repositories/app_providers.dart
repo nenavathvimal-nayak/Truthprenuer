@@ -658,6 +658,8 @@ final upvotesProvider = StateNotifierProvider<UpvotesNotifier, Map<String, Valid
 
 /// Resets all user-scoped providers to completely prevent account-switch data leakage
 void resetAllUserScopedProviders(Ref ref) {
+  ref.read(validationRepositoryProvider).clearCache();
+  ref.read(profileRepositoryProvider).clearCache();
   ref.invalidate(currentUserProvider);
   ref.invalidate(validationsProvider);
   ref.invalidate(evidenceListProvider);

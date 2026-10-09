@@ -156,7 +156,9 @@ class _ActiveValidationsTab extends ConsumerWidget {
         ref.invalidate(validationsProvider);
       },
       child: validationsAsync.when(
-      data: (validations) {
+        skipLoadingOnReload: true,
+        skipLoadingOnRefresh: true,
+        data: (validations) {
         if (validations.isEmpty) {
           return ListView(
             physics: const AlwaysScrollableScrollPhysics(),

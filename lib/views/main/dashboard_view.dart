@@ -62,6 +62,8 @@ class _FounderHomeView extends ConsumerWidget {
     final colors = Theme.of(context).appColors;
 
     return validationsAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
       data: (validations) {
         // Empty State
         if (validations.isEmpty) {
@@ -344,6 +346,8 @@ class _InvestorHomeView extends StatelessWidget {
         const SizedBox(height: 12),
 
         validationsAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (validations) {
             if (validations.isEmpty) {
               return Container(
@@ -491,6 +495,8 @@ class _ProfessionalHomeView extends StatelessWidget {
         const SizedBox(height: 12),
 
         validationsAsync.when(
+          skipLoadingOnReload: true,
+          skipLoadingOnRefresh: true,
           data: (validations) {
             if (validations.isEmpty) {
               return Container(
