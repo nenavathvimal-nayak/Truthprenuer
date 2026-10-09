@@ -1,0 +1,41 @@
+# Truthprenuer — Full System Specification & Knowledge Base
+
+> Truthprenuer helps people validate startup ideas using real human feedback and AI-powered analysis, understand relevant patterns and risks, and connect with people who can help them build.
+
+## Platform Overview
+Truthprenuer is designed to solve the primary cause of early-stage startup failure: building products that customers do not actually want or will not pay for. Rather than relying on optimism or gut feeling, Truthprenuer facilitates empirical validation sprints that combine real domain practitioner insight with AI intelligence.
+
+### 1. Human Validation
+- Real User Feedback: Founders define hypothesis questions (multiple choice, open conviction, rating scales).
+- Validator Scoring: Community validators earn reputation, karma, and validator badges based on the predictive quality and accuracy of their critiques.
+- Anti-Echo Chamber: Structured objection capture isolates hidden market risks before founders invest capital into engineering.
+
+### 2. AI Validation & Synthetic Personas
+- Deep Market Synthesis: AI evaluates target persona definitions, competitive differentiation, and distribution viability.
+- Contrarian Angle Identification: Uncovers pricing objections, regulatory headwinds, and platform dependencies.
+- Structured Evidence Classification: Synthesizes user feedback into supportive, cautionary, or invalidating signals.
+
+### 3. Startup Health & Validation Conviction
+- Conviction Score: Quantitative aggregation of user willingness-to-pay, frequency of problem occurrence, and alternative dissatisfaction.
+- Validation Stages:
+  - Idea Stage: Problem validation and urgency assessment.
+  - Prototype Stage: Solution architecture and initial usability feedback.
+  - MVP Stage: Pricing willingness and early retention signals.
+  - Growth Stage: Unit economics and distribution velocity.
+
+### 4. Founder & Validator Networking
+- Role Perspectives: Specialized operating modes for Founders, Investors, Domain Professionals, and Creators.
+- Connection Engine: Bilateral networking connecting vetted builders with domain mentors and angel capital.
+
+## Canonical Public Endpoints
+- Homepage: https://truthprenuer.pages.dev/
+- Explore: https://truthprenuer.pages.dev/explore
+- Startup Validation: https://truthprenuer.pages.dev/startup-validation
+- AI Startup Validation: https://truthprenuer.pages.dev/ai-startup-validation
+- Human Validation: https://truthprenuer.pages.dev/human-validation
+- Startup Analysis: https://truthprenuer.pages.dev/startup-analysis
+- Startup Health: https://truthprenuer.pages.dev/startup-health
+- How It Works: https://truthprenuer.pages.dev/how-it-works
+- Leaderboard: https://truthprenuer.pages.dev/top-validators
+- About: https://truthprenuer.pages.dev/about
+- FAQ: https://truthprenuer.pages.dev/faq

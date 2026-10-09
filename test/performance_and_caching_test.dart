@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taeed_flutter/repositories/validation_repository.dart';
-import 'package:taeed_flutter/repositories/profile_repository.dart';
 import 'package:taeed_flutter/repositories/app_providers.dart';
 import 'package:taeed_flutter/models/auth_provider.dart';
 import 'package:taeed_flutter/models/models.dart';

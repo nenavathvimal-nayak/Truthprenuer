@@ -1,0 +1,24 @@
+# Truthprenuer
+
+> Truthprenuer helps people validate startup ideas using real human feedback and AI-powered analysis, understand relevant patterns and risks, and connect with people who can help them build.
+
+Truthprenuer is an empirical startup validation engine combining structured human feedback with AI-powered pattern synthesis, startup health signals, and founder-validator networking.
+
+## Core Capabilities
+- Human Validation: Structured feedback from experienced founders, operators, and industry domain experts.
+- AI Validation: Synthetic customer persona testing, market risk analysis, competitive differentiation stress-testing, and assumption validation.
+- Startup Health & Conviction Signals: Real-time conviction metrics based on customer validation data, pricing willingness, and market pull.
+- Founder & Validator Networking: Connecting early-stage builders with mentors, angel investors, and co-founders.
+
+## Public Topics & Guides
+- [Startup Validation](https://truthprenuer.pages.dev/startup-validation): How to validate startup ideas before building.
+- [AI Startup Validation](https://truthprenuer.pages.dev/ai-startup-validation): Leveraging AI for rapid market hypothesis testing and customer persona simulation.
+- [Human Validation](https://truthprenuer.pages.dev/human-validation): Gathering high-signal feedback from real domain practitioners.
+- [Startup Analysis](https://truthprenuer.pages.dev/startup-analysis): Deconstructing problem-solution fit and unit economics.
+- [Startup Health](https://truthprenuer.pages.dev/startup-health): Quantifying market signals, customer conviction, and viability metrics.
+- [How It Works](https://truthprenuer.pages.dev/how-it-works): The step-by-step validation lifecycle on Truthprenuer.
+- [Leaderboard](https://truthprenuer.pages.dev/top-validators): Top community validators ranked by feedback accuracy and conviction score.
+- [Explore Validations](https://truthprenuer.pages.dev/explore): Browse active validation sprints across SaaS, AI, FinTech, and B2B.
+
+## Full System Guide
+- [Full Documentation](https://truthprenuer.pages.dev/llms-full.txt): Detailed product specification and data definitions.

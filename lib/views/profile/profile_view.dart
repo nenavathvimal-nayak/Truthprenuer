@@ -17,8 +17,6 @@ class ProfileView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).appColors;
     final userAsync = ref.watch(currentUserProvider);
-    final currentRole = ref.watch(roleProvider);
-    final validationsAsync = ref.watch(validationsProvider);
 
     return Scaffold(
       appBar: const SharedTopNavBar(title: "Profile"),
@@ -34,333 +32,405 @@ class ProfileView extends ConsumerWidget {
           skipLoadingOnRefresh: true,
           data: (user) {
             if (user == null) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppSpacing.screenPadding),
-                children: [
-                  const SizedBox(height: AppSpacing.xxl),
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      decoration: BoxDecoration(
-                        color: colors.cardBackground,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.account_circle_outlined, size: 64, color: colors.primary),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            "Welcome to Truthprenuer",
-                            style: AppTypography.title2.copyWith(color: colors.text),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            "Sign in to manage your startup profile, validation sprints, and community connections.",
-                            style: AppTypography.body.copyWith(color: colors.textSecondary),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () => context.go('/auth'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: colors.primary,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: const Text("Sign In / Sign Up", style: TextStyle(fontWeight: FontWeight.bold)),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
+              return const _UnauthenticatedProfileView();
             }
-
-            final displayUser = user;
 
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(AppSpacing.screenPadding),
-            children: [
-              // Header — borderless
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: colors.cardBackground,
-                  borderRadius: BorderRadius.circular(16),
+              children: [
+                _ProfileUserHeader(user: user),
+                const SizedBox(height: AppSpacing.sectionGap),
+                const _RoleSelector(),
+                const SizedBox(height: AppSpacing.sectionGap),
+                const _DomainExpertiseSection(),
+                const SizedBox(height: AppSpacing.sectionGap),
+                const _SectionLabel("ACTIVE VALIDATION SPRINTS"),
+                const SizedBox(height: 10),
+                const _ActiveValidationsSection(),
+                const SizedBox(height: 30),
+              ],
+            );
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5),
+          ),
+          error: (err, _) => Center(child: Text("Error: $err")),
+        ),
+      ),
+    );
+  }
+}
+
+class _UnauthenticatedProfileView extends StatelessWidget {
+  const _UnauthenticatedProfileView();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
+      children: [
+        const SizedBox(height: AppSpacing.xxl),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            decoration: BoxDecoration(
+              color: colors.cardBackground,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.account_circle_outlined, size: 64, color: colors.primary),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  "Welcome to Truthprenuer",
+                  style: AppTypography.title2.copyWith(color: colors.text),
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  "Sign in to manage your startup profile, validation sprints, and community connections.",
+                  style: AppTypography.body.copyWith(color: colors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => context.go('/auth'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Sign In / Sign Up", style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileUserHeader extends ConsumerWidget {
+  final User user;
+  const _ProfileUserHeader({required this.user});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).appColors;
+    final roleLabel = ref.watch(roleProvider.select((r) => r.label));
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: AppPalette.orange.withValues(alpha: 0.12),
+                child: Text(
+                  user.name.isNotEmpty ? user.name[0] : "U",
+                  style: const TextStyle(
+                    color: AppPalette.orange,
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: AppPalette.orange.withValues(alpha: 0.12),
+                        Flexible(
                           child: Text(
-                            displayUser.name.isNotEmpty ? displayUser.name[0] : "U",
-                            style: const TextStyle(
-                              color: AppPalette.orange,
-                              fontSize: 26,
+                            user.name,
+                            style: AppTypography.title2.copyWith(
+                              color: colors.text,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      displayUser.name,
-                                      style: AppTypography.title2.copyWith(
-                                        color: colors.text,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.verified, size: 16, color: AppPalette.orange),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                "@${displayUser.username}",
-                                style: AppTypography.footnote.copyWith(color: colors.textTertiary),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppPalette.orange.withValues(alpha: 0.10),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  currentRole.label.toUpperCase(),
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppPalette.orange,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, size: 16, color: AppPalette.orange),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 3),
                     Text(
-                      displayUser.bio,
-                      style: AppTypography.subheadline.copyWith(
-                        color: colors.textSecondary,
-                        height: 1.45,
-                      ),
+                      "@${user.username}",
+                      style: AppTypography.footnote.copyWith(color: colors.textTertiary),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Actions
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Material(
-                            color: AppPalette.orange,
-                            borderRadius: BorderRadius.circular(10),
-                            child: InkWell(
-                              onTap: () {
-                                HapticManager.shared.impactLight();
-                                context.push('/edit-profile');
-                              },
-                              borderRadius: BorderRadius.circular(10),
-                              child: Container(
-                                height: 42,
-                                alignment: Alignment.center,
-                                child: Text(
-                                  "Edit Profile",
-                                  style: AppTypography.buttonLabel.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppPalette.orange.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        roleLabel.toUpperCase(),
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppPalette.orange,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
                         ),
-                        const SizedBox(width: 10),
-                        Material(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                            onTap: () {
-                              HapticManager.shared.impactLight();
-                              context.push('/settings');
-                            },
-                            borderRadius: BorderRadius.circular(10),
-                            child: Semantics(
-                              label: "Settings",
-                              button: true,
-                              child: const SizedBox(
-                                width: 42,
-                                height: 42,
-                                child: Icon(Icons.settings_outlined, size: 20),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            user.bio,
+            style: AppTypography.subheadline.copyWith(
+              color: colors.textSecondary,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 20),
 
-              const SizedBox(height: AppSpacing.sectionGap),
-
-              // Role Switcher — borderless segmented
-              const _SectionLabel("ACTIVE ROLE PERSPECTIVE"),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: colors.surface,
+          // Actions
+          Row(
+            children: [
+              Expanded(
+                child: Material(
+                  color: AppPalette.orange,
                   borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    UserRole.founder,
-                    UserRole.investor,
-                    UserRole.professional,
-                    UserRole.creator,
-                  ].map((role) {
-                    final isSelected = currentRole == role;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticManager.shared.selection();
-                          ref.read(roleProvider.notifier).switchRole(role);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 9),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppPalette.orange : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Text(
-                              role.label,
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : colors.textTertiary,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
+                  child: InkWell(
+                    onTap: () {
+                      HapticManager.shared.impactLight();
+                      context.push('/edit-profile');
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      height: 42,
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Edit Profile",
+                        style: AppTypography.buttonLabel.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(width: 10),
+              Material(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  onTap: () {
+                    HapticManager.shared.impactLight();
+                    context.push('/settings');
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Semantics(
+                    label: "Settings",
+                    button: true,
+                    child: const SizedBox(
+                      width: 42,
+                      height: 42,
+                      child: Icon(Icons.settings_outlined, size: 20),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-              const SizedBox(height: AppSpacing.sectionGap),
+class _RoleSelector extends ConsumerWidget {
+  const _RoleSelector();
 
-              // Expertise
-              const _SectionLabel("DOMAIN EXPERTISE"),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: ["Product Strategy", "B2B SaaS", "User Research", "Market Validation", "Pricing Models"].map((skill) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+  static const _roles = [
+    UserRole.founder,
+    UserRole.investor,
+    UserRole.professional,
+    UserRole.creator,
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).appColors;
+    final currentRole = ref.watch(roleProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel("ACTIVE ROLE PERSPECTIVE"),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: _roles.map((role) {
+              final isSelected = currentRole == role;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    HapticManager.shared.selection();
+                    ref.read(roleProvider.notifier).switchRole(role);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 9),
                     decoration: BoxDecoration(
-                      color: colors.surface,
+                      color: isSelected ? AppPalette.orange : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      skill,
-                      style: AppTypography.caption.copyWith(color: colors.textSecondary, fontWeight: FontWeight.w600),
+                    child: Center(
+                      child: Text(
+                        role.label,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : colors.textTertiary,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 11,
+                        ),
+                      ),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-              const SizedBox(height: AppSpacing.sectionGap),
+class _DomainExpertiseSection extends StatelessWidget {
+  const _DomainExpertiseSection();
 
-              // Validations
-              const _SectionLabel("ACTIVE VALIDATION SPRINTS"),
-              const SizedBox(height: 10),
-              validationsAsync.when(
-                skipLoadingOnReload: true,
-                skipLoadingOnRefresh: true,
-                data: (validations) {
-                  if (validations.isEmpty) {
-                    return Text(
-                      "No active validations.",
-                      style: AppTypography.subheadline.copyWith(color: colors.textTertiary),
-                    );
-                  }
-                  return Column(
-                    children: validations.take(2).map((v) {
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: colors.cardBackground,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.verified, size: 20, color: AppPalette.orange),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    v.title,
-                                    style: AppTypography.subheadline.copyWith(
-                                      color: colors.text,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "${v.responsesCount} verified responses collected",
-                                    style: AppTypography.caption.copyWith(color: colors.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
-                loading: () => const SizedBox(),
-                error: (_, __) => const SizedBox(),
+  static const _skills = [
+    "Product Strategy",
+    "B2B SaaS",
+    "User Research",
+    "Market Validation",
+    "Pricing Models",
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionLabel("DOMAIN EXPERTISE"),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _skills.map((skill) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(height: 30),
-            ],
+              child: Text(
+                skill,
+                style: AppTypography.caption.copyWith(
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActiveValidationsSection extends ConsumerWidget {
+  const _ActiveValidationsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).appColors;
+    final validationsAsync = ref.watch(validationsProvider);
+
+    return validationsAsync.when(
+      skipLoadingOnReload: true,
+      skipLoadingOnRefresh: true,
+      data: (validations) {
+        if (validations.isEmpty) {
+          return Text(
+            "No active validations.",
+            style: AppTypography.subheadline.copyWith(color: colors.textTertiary),
           );
-        },
-        loading: () => const Center(child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2.5)),
-        error: (err, _) => Center(child: Text("Error: $err")),
-      ),
-    ),
-  );
+        }
+        return Column(
+          children: validations.take(2).map((v) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: colors.cardBackground,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified, size: 20, color: AppPalette.orange),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          v.title,
+                          style: AppTypography.subheadline.copyWith(
+                            color: colors.text,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "${v.responsesCount} verified responses collected",
+                          style: AppTypography.caption.copyWith(color: colors.textTertiary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const SizedBox(),
+      error: (_, __) => const SizedBox(),
+    );
   }
 }
 
