@@ -28,6 +28,7 @@ import '../views/profile/edit_profile_view.dart';
 import '../views/validation/startup_health_dashboard_view.dart';
 import '../views/validation/evidence_locker_view.dart';
 import '../views/main/dashboard_view.dart';
+import '../views/admin/admin_dashboard_view.dart';
 import '../models/models.dart';
 
 import '../repositories/supabase_client.dart';
@@ -79,6 +80,7 @@ final GoRouter appRouter = GoRouter(
       '/profile-setup',
       '/team-management',
       '/notifications',
+      '/admin',
     ].contains(state.matchedLocation) ||
         (state.matchedLocation == '/change-password' && !isRecoveryRoute);
 
@@ -353,6 +355,10 @@ final GoRouter appRouter = GoRouter(
           body: AIValidationView(report: report),
         );
       },
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardView(),
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

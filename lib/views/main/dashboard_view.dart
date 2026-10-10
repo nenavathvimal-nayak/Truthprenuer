@@ -8,6 +8,8 @@ import '../../design_system/app_typography.dart';
 import '../../models/models.dart';
 import '../../models/role_provider.dart';
 import '../../repositories/app_providers.dart';
+import '../../repositories/admin_repository.dart';
+import '../../repositories/realtime_sync_service.dart';
 import '../../utils/haptic_manager.dart';
 
 class DashboardView extends ConsumerWidget {
@@ -42,6 +44,7 @@ class DashboardView extends ConsumerWidget {
             UserRole.investor => _InvestorHomeView(validationsAsync: validationsAsync),
             UserRole.professional => _ProfessionalHomeView(validationsAsync: validationsAsync),
             UserRole.creator || UserRole.student => _CreatorHomeView(validationsAsync: validationsAsync),
+            UserRole.admin => _AdminHomeView(validationsAsync: validationsAsync),
           },
         ),
       ),
@@ -915,3 +918,370 @@ class _ActionRow extends StatelessWidget {
     );
   }
 }
+
+// ==========================================
+// ADMIN OPERATING SURFACE
+// ==========================================
+class _AdminHomeView extends ConsumerWidget {
+  final AsyncValue<List<ValidationRequest>> validationsAsync;
+
+  const _AdminHomeView({required this.validationsAsync});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).appColors;
+    final realtime = ref.watch(realtimeSyncProvider);
+    final metricsAsync = ref.watch(adminMetricsProvider);
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(AppSpacing.screenPadding),
+      children: [
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Platform\nGovernance",
+                    style: AppTypography.h2.copyWith(
+                      color: colors.text,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      height: 1.15,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Real-time health, live moderation & validator network",
+                    style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: realtime.isConnected ? colors.success.withAlpha(25) : colors.warning.withAlpha(25),
+                borderRadius: BorderRadius.circular(100),
+                border: Border.all(
+                  color: realtime.isConnected ? colors.success : colors.warning,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: realtime.isConnected ? colors.success : colors.warning,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    realtime.isConnected ? "LIVE ${realtime.latencyMs}ms" : "CONNECTING",
+                    style: AppTypography.caption2.copyWith(
+                      color: realtime.isConnected ? colors.success : colors.warning,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: AppSpacing.xl),
+
+        // Quick Admin Console CTA Card
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppPalette.orange.withAlpha(30),
+                colors.cardBackground,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppPalette.orange.withAlpha(80), width: 1.2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppPalette.orange.withAlpha(30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.admin_panel_settings_rounded, color: AppPalette.orange, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Truthprenuer Admin Console",
+                          style: AppTypography.title3.copyWith(
+                            color: colors.text,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Full platform control, moderation, user verification & audit log",
+                          style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _PrimaryActionButton(
+                label: "Open Full Admin Console",
+                icon: Icons.dashboard_customize_rounded,
+                onTap: () {
+                  HapticManager.shared.impactMedium();
+                  context.push('/admin');
+                },
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.sectionGap),
+        const _SectionHeader(title: "REALTIME PLATFORM METRICS"),
+        const SizedBox(height: 12),
+
+        metricsAsync.when(
+          data: (metrics) => Row(
+            children: [
+              Expanded(
+                child: _AdminStatTile(
+                  title: "Validations",
+                  value: "${metrics.totalValidations}",
+                  subtitle: "${metrics.activeValidations} active",
+                  icon: Icons.biotech_rounded,
+                  accentColor: AppPalette.orange,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _AdminStatTile(
+                  title: "Users",
+                  value: "${metrics.totalUsers}",
+                  subtitle: "${metrics.verifiedValidators} verified",
+                  icon: Icons.people_outline_rounded,
+                  accentColor: colors.info,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _AdminStatTile(
+                  title: "Conviction",
+                  value: "${(metrics.averageConvictionScore * 10).round()}%",
+                  subtitle: "High fidelity",
+                  icon: Icons.analytics_outlined,
+                  accentColor: colors.success,
+                ),
+              ),
+            ],
+          ),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2),
+            ),
+          ),
+          error: (_, __) => const SizedBox(),
+        ),
+
+        const SizedBox(height: AppSpacing.sectionGap),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const _SectionHeader(title: "LIVE SPRINT MODERATION"),
+            TextButton(
+              onPressed: () => context.push('/admin'),
+              child: Text(
+                "Manage All →",
+                style: AppTypography.caption.copyWith(
+                  color: AppPalette.orange,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        validationsAsync.when(
+          data: (validations) {
+            if (validations.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: colors.cardBackground,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: Text(
+                    "No validation sprints currently registered.",
+                    style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                  ),
+                ),
+              );
+            }
+
+            return Column(
+              children: validations.take(4).map((v) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colors.divider.withAlpha(50)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              v.title,
+                              style: AppTypography.subheadline.copyWith(
+                                color: colors.text,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Status: ${v.status.toUpperCase()} • ${v.responsesCount} responses • ${v.tags.join(', ')}",
+                              style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                        color: colors.textTertiary,
+                        onPressed: () {
+                          HapticManager.shared.impactLight();
+                          context.push('/validation-detail/${v.id}', extra: v);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppPalette.orange, strokeWidth: 2),
+          ),
+          error: (_, __) => const SizedBox(),
+        ),
+
+        const SizedBox(height: AppSpacing.sectionGap),
+        const _SectionHeader(title: "QUICK OPERATIONS"),
+        const SizedBox(height: 12),
+        _ActionRow(
+          icon: Icons.cleaning_services_rounded,
+          iconColor: AppPalette.orange,
+          title: "Flush Platform Caches",
+          subtitle: "Evicts stale cache entries and forces fresh reconvergence",
+          onTap: () {
+            ref.read(adminRepositoryProvider).flushPlatformCache();
+            HapticManager.shared.impactHeavy();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Global platform cache evicted & re-synced.")),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        _ActionRow(
+          icon: Icons.history_rounded,
+          iconColor: colors.info,
+          title: "Realtime Audit Stream",
+          subtitle: "${realtime.recentEvents.length} events recorded in current session",
+          onTap: () => context.push('/admin'),
+        ),
+      ],
+    );
+  }
+}
+
+class _AdminStatTile extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color accentColor;
+
+  const _AdminStatTile({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).appColors;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.divider.withAlpha(50)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: AppTypography.caption2.copyWith(color: colors.textSecondary),
+              ),
+              Icon(icon, size: 16, color: accentColor),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTypography.title2.copyWith(
+              color: colors.text,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: AppTypography.caption2.copyWith(color: colors.textTertiary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

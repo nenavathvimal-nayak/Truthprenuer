@@ -55,6 +55,7 @@ class RoleNotifier extends StateNotifier<UserRole> {
   bool get isProfessional => state == UserRole.professional;
   bool get isCreator => state == UserRole.creator;
   bool get isStudent => state == UserRole.student;
+  bool get isAdmin => state == UserRole.admin;
 }
 
 final roleProvider = StateNotifierProvider<RoleNotifier, UserRole>((ref) {

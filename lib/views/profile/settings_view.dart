@@ -364,6 +364,20 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                 ),
               ],
             ),
+            _SettingsSection(
+              title: "Administration & Governance",
+              children: [
+                _SettingsNavRow(
+                  icon: Icons.admin_panel_settings_rounded,
+                  iconColor: AppPalette.orange,
+                  title: "Admin Console",
+                  onTap: () {
+                    HapticManager.shared.impactMedium();
+                    context.push('/admin');
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.xl),
 
             _SettingsSection(

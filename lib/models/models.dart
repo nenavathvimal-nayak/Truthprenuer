@@ -5,7 +5,8 @@ enum UserRole {
   investor('Investor', 'Discover truth-validated deal flow'),
   professional('Professional', 'Lend expertise & earn validation karma'),
   creator('Creator', 'Share startup wisdom & grow your audience'),
-  student('Student', 'Learn startup validation by doing');
+  student('Student', 'Learn startup validation by doing'),
+  admin('Admin', 'Platform governance & live validation management');
 
   final String label;
   final String description;
@@ -130,6 +131,8 @@ class User {
   int validationsCount;
 
   ValidationPassport validationPassport;
+
+  bool get isAdmin => userRole == UserRole.admin || role.toLowerCase() == 'admin';
 
   User({
     required this.id,

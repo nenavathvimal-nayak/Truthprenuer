@@ -284,6 +284,12 @@ class RoleSwitcherModal extends ConsumerWidget {
           "ACADEMY",
           "Learn validation by doing, practice arena & mentor matchmaking",
         );
+      case UserRole.admin:
+        return (
+          Icons.admin_panel_settings_rounded,
+          "GOVERNANCE",
+          "Platform governance, live moderation & telemetry oversight",
+        );
     }
   }
 }
@@ -302,6 +308,7 @@ class RoleBadgePill extends ConsumerWidget {
       UserRole.professional => Icons.psychology_rounded,
       UserRole.creator => Icons.campaign_rounded,
       UserRole.student => Icons.school_rounded,
+      UserRole.admin => Icons.admin_panel_settings_rounded,
     };
 
     return Material(

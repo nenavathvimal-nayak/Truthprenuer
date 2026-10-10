@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_spacing.dart';
 import '../design_system/app_typography.dart';
+import '../models/models.dart';
+import '../models/role_provider.dart';
 import '../repositories/app_providers.dart';
 import '../utils/haptic_manager.dart';
 
@@ -126,6 +128,15 @@ class SharedTopNavBar extends ConsumerWidget implements PreferredSizeWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (ref.watch(roleProvider) == UserRole.admin || (ref.watch(currentUserProvider).valueOrNull?.isAdmin ?? false))
+                    _NavIconButton(
+                      icon: Icons.admin_panel_settings_outlined,
+                      tooltip: 'Admin Console',
+                      onTap: () {
+                        HapticManager.shared.impactMedium();
+                        context.push('/admin');
+                      },
+                    ),
                   _NavIconButton(
                     icon: Icons.chat_bubble_outline_rounded,
                     tooltip: 'Messages',
