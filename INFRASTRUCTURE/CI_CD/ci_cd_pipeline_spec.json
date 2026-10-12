@@ -1,0 +1,22 @@
+{
+  "pipeline": "Truthprenuer Enterprise CI/CD",
+  "triggers": ["push", "pull_request"],
+  "stages": [
+    {
+      "name": "lint-and-analyze",
+      "steps": ["dart analyze", "tsc -b", "flake8 backend/"]
+    },
+    {
+      "name": "unit-and-integration-tests",
+      "steps": ["flutter test", "pytest backend/tests/ -v", "pytest ALGORITHMS/TESTS/ -v"]
+    },
+    {
+      "name": "security-audit",
+      "steps": ["./DEVTOOLS/SECURITY_SCANNING/run_security_scan.sh", "./ADMIN/SCRIPTS/audit_admin_isolation.sh"]
+    },
+    {
+      "name": "build-client-artifacts",
+      "steps": ["flutter build web --release", "flutter build apk --release"]
+    }
+  ]
+}

@@ -213,3 +213,27 @@ def test_rate_limiter_enforcement(client):
     assert last_res.status_code == 429
     assert "Retry-After" in last_res.headers
 
+def test_admin_blocked_from_external_ip(client):
+    """
+    Verify zero-trust local network isolation:
+    Even with valid Admin credentials, any request originating from an external / public IP
+    is strictly rejected with HTTP 403 Forbidden.
+    """
+    admin_token = make_test_jwt(
+        user_id="admin-agent-01",
+        email="admin@truthprenuer.com",
+        app_metadata_role="Admin"
+    )
+
+    # Simulated external internet / cloud request
+    res = client.get(
+        "/api/v1/admin/audit-logs",
+        headers={
+            "Authorization": f"Bearer {admin_token}",
+            "X-Forwarded-For": "198.51.100.42"  # Public Internet IP
+        }
+    )
+    assert res.status_code == 403
+    assert "local loopback access only" in res.json()["detail"].lower()
+
+

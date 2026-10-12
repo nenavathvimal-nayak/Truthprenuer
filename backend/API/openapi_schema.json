@@ -1,0 +1,13 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Truthprenuer Enterprise API",
+    "version": "1.0.0",
+    "description": "Enterprise claim verification, Bayesian consensus, and evidence scoring API."
+  },
+  "paths": {
+    "/health/liveness": { "get": { "summary": "Liveness Probe" } },
+    "/health/readiness": { "get": { "summary": "Readiness Probe" } },
+    "/api/v1/claims/verify": { "post": { "summary": "Verify claim statement" } }
+  }
+}

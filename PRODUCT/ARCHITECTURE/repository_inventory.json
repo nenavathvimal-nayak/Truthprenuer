@@ -1,0 +1,449 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "project": "Truthprenuer",
+  "source_directory": "taeed_flutter_source",
+  "version": "1.0.0",
+  "generated_at": "2026-10-12T21:45:00Z",
+  "architecture_model": "Universal Monorepo with Strict Boundary Isolation",
+  "subsystems": {
+    "USERS": {
+      "owner": "Universal Client Team",
+      "description": "Customer-facing Flutter universal clients across Web, iOS, Android, and Desktop.",
+      "boundary": "Public client with zero elevated database access or admin credentials."
+    },
+    "ADMIN": {
+      "owner": "Administrative Operations Team",
+      "description": "Strictly local React 19 / Vite 8 administrative console.",
+      "boundary": "Strictly loopback-only on 127.0.0.1:60135 with server-verified zero-trust checks."
+    },
+    "BACKEND": {
+      "owner": "Backend Engineering Team",
+      "description": "High-throughput FastAPI asynchronous REST API service.",
+      "boundary": "Public endpoints rate-limited; admin routes require loopback peer socket."
+    },
+    "DATABASE": {
+      "owner": "Database & Security Engineering",
+      "description": "Canonical Supabase PostgreSQL 15+ schemas, RLS policies, triggers, and migrations.",
+      "boundary": "Row Level Security enabled on all client-accessible tables; immutable WORM audit logs."
+    },
+    "ALGORITHMS": {
+      "owner": "Decision & Intelligence Engineering",
+      "description": "Domain validation models, Bayesian consensus scoring, and credibility algorithms.",
+      "boundary": "Framework-independent algorithmic logic decoupled from UI widgets."
+    },
+    "INFRASTRUCTURE": {
+      "owner": "DevSecOps & SRE Organization",
+      "description": "Docker multi-stage containers, deployment configurations, and GitHub Actions CI/CD.",
+      "boundary": "Zero public exposure for admin services; encrypted HTTPS/TLS 1.3 for user applications."
+    },
+    "PRODUCT": {
+      "owner": "Product Management & Systems Architecture",
+      "description": "Master PRDs, design system specifications, user journeys, runbooks, and threat models.",
+      "boundary": "Authoritative product and architecture single source of truth."
+    },
+    "DEVTOOLS": {
+      "owner": "Engineering Productivity Team",
+      "description": "Automation scripts, asset generators, and repository integrity validators.",
+      "boundary": "Local maintenance utilities with automated boundary enforcement."
+    }
+  },
+  "inventory": [
+    {
+      "path": "pubspec.yaml",
+      "target_path": "pubspec.yaml",
+      "logical_domain": "USERS",
+      "owner": "Universal Client",
+      "category": "Manifest",
+      "runtime_status": "Production (Critical)",
+      "action": "Preserve (Framework Root Invariant)",
+      "dependencies": ["Flutter SDK", "flutter_riverpod", "supabase_flutter", "go_router"],
+      "verification": "flutter pub get && flutter test"
+    },
+    {
+      "path": "pubspec.lock",
+      "target_path": "pubspec.lock",
+      "logical_domain": "USERS",
+      "owner": "Universal Client",
+      "category": "Lockfile",
+      "runtime_status": "Production (Critical)",
+      "action": "Preserve (Deterministic Build Dependency)",
+      "dependencies": ["pubspec.yaml"],
+      "verification": "flutter test"
+    },
+    {
+      "path": "lib/main.dart",
+      "target_path": "lib/main.dart",
+      "logical_domain": "USERS/SHARED",
+      "owner": "Universal Client",
+      "category": "Application Entry Point",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve (Framework Entry Invariant)",
+      "dependencies": ["lib/router/app_router.dart", "lib/repositories/app_providers.dart"],
+      "verification": "flutter test"
+    },
+    {
+      "path": "lib/components/adaptive_app_shell.dart",
+      "target_path": "lib/components/adaptive_app_shell.dart",
+      "logical_domain": "USERS/COMPONENTS",
+      "owner": "Universal Client",
+      "category": "UI Widget",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (Offline Semantics & Responsive Breakpoints)",
+      "dependencies": ["flutter/material.dart", "lib/repositories/app_providers.dart"],
+      "verification": "flutter test test/realtime_and_offline_regression_test.dart"
+    },
+    {
+      "path": "lib/router/app_router.dart",
+      "target_path": "lib/router/app_router.dart",
+      "logical_domain": "USERS/SHARED",
+      "owner": "Universal Client",
+      "category": "Navigation",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (Admin Route Guard Invariant)",
+      "dependencies": ["go_router", "lib/views/"],
+      "verification": "flutter test test/admin_and_realtime_test.dart"
+    },
+    {
+      "path": "lib/repositories/app_providers.dart",
+      "target_path": "lib/repositories/app_providers.dart",
+      "logical_domain": "USERS/SHARED",
+      "owner": "Universal Client",
+      "category": "State Management",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (Optimistic Rollbacks & Realtime Telemetry)",
+      "dependencies": ["flutter_riverpod", "lib/models/"],
+      "verification": "flutter test"
+    },
+    {
+      "path": "lib/repositories/auth_repository.dart",
+      "target_path": "lib/repositories/auth_repository.dart",
+      "logical_domain": "USERS/SHARED",
+      "owner": "Universal Client",
+      "category": "Data Access",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (GDPR Erasure Logging)",
+      "dependencies": ["supabase_flutter"],
+      "verification": "flutter test test/auth_authorization_flow_test.dart"
+    },
+    {
+      "path": "android/",
+      "target_path": "android/",
+      "logical_domain": "USERS/ANDROID",
+      "owner": "Android Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Production Build",
+      "action": "Preserve (Flutter CLI Toolchain Requirement)",
+      "dependencies": ["Gradle 8", "Android SDK 34"],
+      "verification": "flutter doctor -v"
+    },
+    {
+      "path": "ios/",
+      "target_path": "ios/",
+      "logical_domain": "USERS/IOS",
+      "owner": "iOS Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Production Build",
+      "action": "Preserve (Xcode Toolchain Requirement)",
+      "dependencies": ["CocoaPods", "Xcode 15+"],
+      "verification": "flutter doctor -v"
+    },
+    {
+      "path": "web/",
+      "target_path": "web/",
+      "logical_domain": "USERS/WEB",
+      "owner": "Web Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Production (Cloudflare Pages)",
+      "action": "Preserve (Flutter Web Compiler Requirement)",
+      "dependencies": ["Flutter Web Engine"],
+      "verification": "flutter build web --dry-run"
+    },
+    {
+      "path": "macos/",
+      "target_path": "macos/",
+      "logical_domain": "USERS/DESKTOP",
+      "owner": "Desktop Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Desktop Target",
+      "action": "Preserve (Flutter macOS Runner)",
+      "dependencies": ["macOS AppKit"],
+      "verification": "flutter doctor -v"
+    },
+    {
+      "path": "windows/",
+      "target_path": "windows/",
+      "logical_domain": "USERS/DESKTOP",
+      "owner": "Desktop Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Desktop Target",
+      "action": "Preserve (Flutter Windows Runner)",
+      "dependencies": ["MSVC toolchain"],
+      "verification": "flutter doctor -v"
+    },
+    {
+      "path": "linux/",
+      "target_path": "linux/",
+      "logical_domain": "USERS/DESKTOP",
+      "owner": "Desktop Platform",
+      "category": "Platform Wrapper",
+      "runtime_status": "Desktop Target",
+      "action": "Preserve (Flutter Linux Runner)",
+      "dependencies": ["GTK 3.0+"],
+      "verification": "flutter doctor -v"
+    },
+    {
+      "path": "test/",
+      "target_path": "test/",
+      "logical_domain": "USERS/TESTS",
+      "owner": "Universal Client QA",
+      "category": "Test Suite",
+      "runtime_status": "Test (64 Tests)",
+      "action": "Preserve (Default Flutter Test Discovery Invariant)",
+      "dependencies": ["flutter_test", "flutter_riverpod"],
+      "verification": "flutter test (64/64 passing)"
+    },
+    {
+      "path": "backend/app/main.py",
+      "target_path": "backend/app/main.py",
+      "logical_domain": "BACKEND/API",
+      "owner": "Backend API",
+      "category": "FastAPI Entry Point",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (FastAPI Routing)",
+      "dependencies": ["FastAPI", "Uvicorn", "Starlette"],
+      "verification": "backend/venv/bin/pytest backend/tests/ -v"
+    },
+    {
+      "path": "backend/app/api/deps.py",
+      "target_path": "backend/app/api/deps.py",
+      "logical_domain": "BACKEND/SECURITY",
+      "owner": "Backend Security",
+      "category": "Security Middleware",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (Zero-Trust Peer Socket Loopback Check)",
+      "dependencies": ["FastAPI", "JWT", "socket"],
+      "verification": "backend/venv/bin/pytest backend/tests/test_api_suite.py::test_admin_blocked_from_external_ip"
+    },
+    {
+      "path": "backend/app/api/v1/ai.py",
+      "target_path": "backend/app/api/v1/ai.py",
+      "logical_domain": "BACKEND/API",
+      "owner": "AI Intelligence",
+      "category": "API Endpoint",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (Prompt Injection Sanitization)",
+      "dependencies": ["google-generativeai", "FastAPI"],
+      "verification": "backend/venv/bin/pytest backend/tests/test_api_suite.py::test_ai_validation_endpoint"
+    },
+    {
+      "path": "backend/app/services/audit_service.py",
+      "target_path": "backend/app/services/audit_service.py",
+      "logical_domain": "BACKEND/SERVICES",
+      "owner": "Audit & Compliance",
+      "category": "Domain Service",
+      "runtime_status": "Production (Active)",
+      "action": "Preserve & Harden (WORM Audit Trail Persistence)",
+      "dependencies": ["supabase_client"],
+      "verification": "backend/venv/bin/pytest backend/tests/test_api_suite.py::test_admin_suspend_user_and_audit"
+    },
+    {
+      "path": "backend/requirements.txt",
+      "target_path": "backend/requirements.txt",
+      "logical_domain": "BACKEND/CONFIG",
+      "owner": "Backend API",
+      "category": "Dependency Manifest",
+      "runtime_status": "Production (Critical)",
+      "action": "Preserve (Python Dependency Definition)",
+      "dependencies": ["pip", "python 3.11"],
+      "verification": "backend/venv/bin/pip check"
+    },
+    {
+      "path": "backend/tests/",
+      "target_path": "backend/tests/",
+      "logical_domain": "BACKEND/TESTS",
+      "owner": "Backend QA",
+      "category": "Pytest Test Suite",
+      "runtime_status": "Test (13 Tests)",
+      "action": "Preserve (Pytest Discovery Invariant)",
+      "dependencies": ["pytest", "httpx"],
+      "verification": "backend/venv/bin/pytest backend/tests/ -v (13/13 passing)"
+    },
+    {
+      "path": "admin_panel/package.json",
+      "target_path": "admin_panel/package.json",
+      "logical_domain": "ADMIN/CONFIG",
+      "owner": "Admin Operations",
+      "category": "Dependency Manifest",
+      "runtime_status": "Production (Critical)",
+      "action": "Preserve & Harden (Scripts Bound to 127.0.0.1:60135)",
+      "dependencies": ["React 19", "Vite 8", "Lucide React"],
+      "verification": "cd admin_panel && npm run build"
+    },
+    {
+      "path": "admin_panel/vite.config.ts",
+      "target_path": "admin_panel/vite.config.ts",
+      "logical_domain": "ADMIN/CONFIG",
+      "owner": "Admin Operations",
+      "category": "Bundler Configuration",
+      "runtime_status": "Production (Strict Loopback)",
+      "action": "Preserve & Harden (Strict Host 127.0.0.1, Port 60135, StrictPort true)",
+      "dependencies": ["Vite 8", "@vitejs/plugin-react"],
+      "verification": "npm run build && DEVTOOLS/REPOSITORY_MAINTENANCE/validate_repository_integrity.sh"
+    },
+    {
+      "path": "admin_panel/src/",
+      "target_path": "admin_panel/src/",
+      "logical_domain": "ADMIN/FRONTEND",
+      "owner": "Admin Operations",
+      "category": "Admin UI Source",
+      "runtime_status": "Production (Loopback Only)",
+      "action": "Preserve & Harden (Zero-Trust Session Guarding)",
+      "dependencies": ["React 19", "TypeScript 6"],
+      "verification": "cd admin_panel && npm run build"
+    },
+    {
+      "path": "ADMIN/RUN_LOCAL/start_admin_60135.sh",
+      "target_path": "ADMIN/RUN_LOCAL/start_admin_60135.sh",
+      "logical_domain": "ADMIN/RUN_LOCAL",
+      "owner": "DevSecOps",
+      "category": "Startup Automation",
+      "runtime_status": "Operational Utility",
+      "action": "Authoritative Admin Loopback Launcher",
+      "dependencies": ["Bash", "lsof", "Vite"],
+      "verification": "bash -n ADMIN/RUN_LOCAL/start_admin_60135.sh"
+    },
+    {
+      "path": "DATABASE/SCHEMA/schema.sql",
+      "target_path": "DATABASE/SCHEMA/schema.sql",
+      "logical_domain": "DATABASE/SCHEMA",
+      "owner": "Database Architecture",
+      "category": "DDL Schema",
+      "runtime_status": "Production Baseline",
+      "action": "Authoritative DDL Definition (18 Tables)",
+      "dependencies": ["PostgreSQL 15+"],
+      "verification": "DATABASE/TESTS/test_db_schema.sql"
+    },
+    {
+      "path": "DATABASE/POLICIES/rls_policies.sql",
+      "target_path": "DATABASE/POLICIES/rls_policies.sql",
+      "logical_domain": "DATABASE/POLICIES",
+      "owner": "Database Security",
+      "category": "RLS Policies",
+      "runtime_status": "Production Security",
+      "action": "Authoritative Security Policies",
+      "dependencies": ["PostgreSQL RLS"],
+      "verification": "SQL Syntax Verification"
+    },
+    {
+      "path": "DATABASE/MIGRATIONS/001_initial_schema.sql",
+      "target_path": "DATABASE/MIGRATIONS/001_initial_schema.sql",
+      "logical_domain": "DATABASE/MIGRATIONS",
+      "owner": "Database Architecture",
+      "category": "Migration",
+      "runtime_status": "Versioned Migration Baseline",
+      "action": "Authoritative Initial Migration",
+      "dependencies": ["PostgreSQL"],
+      "verification": "Database migration test"
+    },
+    {
+      "path": "DATABASE/SEEDS/seed_data.sql",
+      "target_path": "DATABASE/SEEDS/seed_data.sql",
+      "logical_domain": "DATABASE/SEEDS",
+      "owner": "Database QA",
+      "category": "Development Fixtures",
+      "runtime_status": "Development / Staging Fixture",
+      "action": "Preserve (Guarded Non-Production Seeds)",
+      "dependencies": ["DATABASE/SCHEMA/schema.sql"],
+      "verification": "SQL parse check"
+    },
+    {
+      "path": "DEVTOOLS/VALIDATORS/validate_repository_integrity.sh",
+      "target_path": "DEVTOOLS/VALIDATORS/validate_repository_integrity.sh",
+      "logical_domain": "DEVTOOLS/VALIDATORS",
+      "owner": "DevSecOps",
+      "category": "Integrity Script",
+      "runtime_status": "Authoritative Validator",
+      "action": "Create Authoritative Multi-Point Validator",
+      "dependencies": ["Bash", "git", "grep"],
+      "verification": "./DEVTOOLS/VALIDATORS/validate_repository_integrity.sh"
+    },
+    {
+      "path": "DEVTOOLS/SCRIPTS/build_flutter_web.sh",
+      "target_path": "DEVTOOLS/SCRIPTS/build_flutter_web.sh",
+      "logical_domain": "DEVTOOLS/SCRIPTS",
+      "owner": "DevSecOps",
+      "category": "Build Automation",
+      "runtime_status": "Production Build Runner",
+      "action": "Preserve (Web Release Compiler)",
+      "dependencies": ["Flutter SDK"],
+      "verification": "bash -n DEVTOOLS/SCRIPTS/build_flutter_web.sh"
+    },
+    {
+      "path": "scratch/generate_all_icons.swift",
+      "target_path": "DEVTOOLS/GENERATORS/generate_all_icons.swift",
+      "logical_domain": "DEVTOOLS/GENERATORS",
+      "owner": "Design Tooling",
+      "category": "Asset Generator",
+      "runtime_status": "Developer Utility",
+      "action": "Move from scratch/ to DEVTOOLS/GENERATORS/",
+      "dependencies": ["Swift", "AppKit"],
+      "verification": "swiftc -parse DEVTOOLS/GENERATORS/generate_all_icons.swift"
+    },
+    {
+      "path": "tool/generate_icons.swift",
+      "target_path": "DEVTOOLS/GENERATORS/generate_icons.swift",
+      "logical_domain": "DEVTOOLS/GENERATORS",
+      "owner": "Design Tooling",
+      "category": "Asset Generator",
+      "runtime_status": "Developer Utility",
+      "action": "Move from tool/ to DEVTOOLS/GENERATORS/",
+      "dependencies": ["Swift", "AppKit"],
+      "verification": "swiftc -parse DEVTOOLS/GENERATORS/generate_icons.swift"
+    },
+    {
+      "path": "design_system/truthprenuer_master_spec/",
+      "target_path": "PRODUCT/DESIGN_SYSTEM/truthprenuer_master_spec/",
+      "logical_domain": "PRODUCT/DESIGN_SYSTEM",
+      "owner": "UI/UX Architecture",
+      "category": "Design Specifications",
+      "runtime_status": "Authoritative 195-Screen Specifications",
+      "action": "Move from root design_system/ to PRODUCT/DESIGN_SYSTEM/truthprenuer_master_spec/",
+      "dependencies": ["Markdown", "HTML Prototype Viewer"],
+      "verification": "Verify file presence and links"
+    },
+    {
+      "path": "design-system/truthprenuer/MASTER.md",
+      "target_path": "PRODUCT/DESIGN_SYSTEM/legacy/MASTER.md",
+      "logical_domain": "PRODUCT/DESIGN_SYSTEM",
+      "owner": "UI/UX Architecture",
+      "category": "Legacy Design Spec",
+      "runtime_status": "Archived Draft",
+      "action": "Move from root design-system/ to PRODUCT/DESIGN_SYSTEM/legacy/",
+      "dependencies": ["Markdown"],
+      "verification": "Verify file presence"
+    },
+    {
+      "path": "DOC/",
+      "target_path": "PRODUCT/RAW_SPECS/",
+      "logical_domain": "PRODUCT/RAW_SPECS",
+      "owner": "Product Architecture",
+      "category": "Raw Specifications Archive",
+      "runtime_status": "Historical Reference",
+      "action": "Consolidate root DOC/ into PRODUCT/RAW_SPECS/",
+      "dependencies": ["Markdown"],
+      "verification": "Verify presence of all 66 specs"
+    },
+    {
+      ".github/workflows/ci.yml": {
+        "target_path": ".github/workflows/ci.yml",
+        "logical_domain": "INFRASTRUCTURE/CI_CD",
+        "owner": "DevSecOps",
+        "category": "CI Pipeline",
+        "runtime_status": "Production Automation",
+        "action": "Preserve (.github Root Invariant)",
+        "dependencies": ["GitHub Actions Runner"],
+        "verification": "YAML Lint Check"
+      }
+    }
+  ]
+}

@@ -16,14 +16,14 @@ updates:
 
   # Maintain React Admin Panel dependencies
   - package-ecosystem: "npm"
-    directory: "/admin_panel"
+    directory: "/ADMIN"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
 
   # Maintain Flutter Mobile dependencies
   - package-ecosystem: "pub"
-    directory: "/"
+    directory: "/USERS"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

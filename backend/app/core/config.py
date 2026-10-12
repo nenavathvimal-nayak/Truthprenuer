@@ -10,12 +10,13 @@ class Settings(BaseSettings):
     
     # Security & CORS
     ALLOWED_ORIGINS: List[str] = [
-        "https://truthprenuer.pages.dev",
-        "https://admin-truthprenuer.pages.dev",
-        "http://localhost:5173",  # Admin panel (Vite dev)
-        "http://localhost:3000",  # Public Web dev
-        "http://localhost:8080",  # Flutter web dev
+        "https://truthprenuer.pages.dev",  # User application (Online / Cloud / Internet)
+        "http://localhost:60135",  # Admin panel (Strictly Localhost:60135)
+        "http://127.0.0.1:60135",  # Admin panel (Strictly Localhost:60135)
+        "http://localhost:5173",  # Local dev fallback
         "http://127.0.0.1:5173",
+        "http://localhost:3000",  # Web app dev
+        "http://localhost:8080",  # Flutter client dev
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8080",
     ]
@@ -24,10 +25,16 @@ class Settings(BaseSettings):
     def safe_allowed_origins(self) -> List[str]:
         """
         High Security Origin Filter:
-        In production, completely disallow insecure localhost/HTTP origins.
+        Allows authenticated online production user applications (HTTPS)
+        and strictly loopback localhost addresses for administrative operations.
+        Never permits public external HTTP origins or wildcards.
         """
+        loopback_hosts = ("http://localhost:", "http://127.0.0.1:")
         if self.ENVIRONMENT.lower() == "production":
-            return [o for o in self.ALLOWED_ORIGINS if o.startswith("https://")]
+            return [
+                o for o in self.ALLOWED_ORIGINS 
+                if o.startswith("https://") or any(o.startswith(lh) for lh in loopback_hosts)
+            ]
         return self.ALLOWED_ORIGINS
 
     # Supabase credentials (server-side only)

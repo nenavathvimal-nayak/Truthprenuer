@@ -60,6 +60,12 @@ def verify_jwt_token(credentials: Optional[HTTPAuthorizationCredentials] = Secur
                 options={"verify_exp": True, "verify_aud": False}
             )
         else:
+            # Strictly fail closed if in production without configured JWT secret
+            if settings.ENVIRONMENT.lower() == "production":
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Server security configuration error: SUPABASE_JWT_SECRET required in production"
+                )
             # For local development where secret might not yet be configured, decode and verify expiration
             payload = jwt.decode(
                 token,

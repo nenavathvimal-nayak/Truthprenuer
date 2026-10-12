@@ -7,8 +7,38 @@ def get_current_user(user: AuthenticatedUser = Depends(verify_jwt_token)) -> Aut
     """Dependency returning authenticated user."""
     return user
 
-def require_admin(user: AuthenticatedUser = Depends(get_current_user)) -> AuthenticatedUser:
-    """Strict server-side RBAC: requires Admin, Super_Admin, or Security role."""
+def require_local_admin_origin(request: Request) -> None:
+    """
+    Zero-Trust Local Network Boundary for Admin Operations:
+    Ensures administrative requests originate strictly from local loopback (localhost).
+    Blocks any access from external networks, internet proxies, or public cloud IP addresses.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    local_loopbacks = {"127.0.0.1", "::1", "localhost", "testclient"}
+
+    # If behind reverse proxy or CDN, check X-Forwarded-For
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        ips = [ip.strip() for ip in forwarded_for.split(",") if ip.strip()]
+        for ip in ips:
+            if ip not in local_loopbacks and not ip.startswith("127."):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: Admin operations are strictly restricted to local loopback access only. External internet access is blocked."
+                )
+
+    if client_ip not in local_loopbacks and not client_ip.startswith("127."):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: Admin operations cannot be accessed from public or external network addresses."
+        )
+
+def require_admin(
+    request: Request,
+    user: AuthenticatedUser = Depends(get_current_user)
+) -> AuthenticatedUser:
+    """Strict server-side RBAC and Local-Only origin validation for Admin operations."""
+    require_local_admin_origin(request)
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -16,8 +46,12 @@ def require_admin(user: AuthenticatedUser = Depends(get_current_user)) -> Authen
         )
     return user
 
-def require_moderator(user: AuthenticatedUser = Depends(get_current_user)) -> AuthenticatedUser:
-    """Strict server-side RBAC: requires Moderator or higher role."""
+def require_moderator(
+    request: Request,
+    user: AuthenticatedUser = Depends(get_current_user)
+) -> AuthenticatedUser:
+    """Strict server-side RBAC and Local-Only origin validation for Moderator operations."""
+    require_local_admin_origin(request)
     if not user.is_moderator:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

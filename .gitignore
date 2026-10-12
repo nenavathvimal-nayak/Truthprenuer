@@ -75,3 +75,7 @@ key.properties
 # Cloudflare Wrangler
 .wrangler/
 .wrangler
+
+# Security scanner temporary runs
+strix_runs/
+

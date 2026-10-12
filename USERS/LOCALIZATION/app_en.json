@@ -1,0 +1,13 @@
+{
+  "@@locale": "en",
+  "appTitle": "Truthprenuer",
+  "feedTitle": "Consensus Feed",
+  "searchPlaceholder": "Search claims, startups, and evidence...",
+  "verifyClaim": "Verify Claim",
+  "evidenceAttached": "Evidence Attached",
+  "confidenceScore": "Consensus Score",
+  "offlineBanner": "You are currently offline. Actions will sync automatically.",
+  "statusVerified": "VERIFIED TRUE",
+  "statusDebunked": "DEBUNKED",
+  "statusInvestigating": "UNDER INVESTIGATION"
+}

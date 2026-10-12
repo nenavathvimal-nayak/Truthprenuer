@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "platforms": {
+    "macos": {
+      "canonicalRoot": "macos/",
+      "appName": "Truthprenuer",
+      "bundleIdentifier": "com.truthprenuer.desktop.macos",
+      "runner": "macos/Runner.xcodeproj",
+      "buildCmd": "flutter build macos --release"
+    },
+    "linux": {
+      "canonicalRoot": "linux/",
+      "appName": "truthprenuer",
+      "cMakeLists": "linux/CMakeLists.txt",
+      "buildCmd": "flutter build linux --release"
+    },
+    "windows": {
+      "canonicalRoot": "windows/",
+      "appName": "truthprenuer",
+      "cMakeLists": "windows/CMakeLists.txt",
+      "buildCmd": "flutter build windows --release"
+    }
+  }
+}

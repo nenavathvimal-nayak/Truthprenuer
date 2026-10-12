@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "platform": "android",
+  "application": "Truthprenuer Client Android",
+  "canonicalRoot": "android/",
+  "packageName": "com.truthprenuer.app",
+  "minSdkVersion": 21,
+  "targetSdkVersion": 34,
+  "compileSdkVersion": 34,
+  "manifest": "android/app/src/main/AndroidManifest.xml",
+  "gradle": {
+    "projectBuildGradle": "android/build.gradle",
+    "appBuildGradle": "android/app/build.gradle",
+    "settingsGradle": "android/settings.gradle",
+    "wrapper": "android/gradle/wrapper/gradle-wrapper.properties"
+  },
+  "signing": {
+    "keystoreConfig": "android/key.properties",
+    "buildTypes": ["debug", "release", "profile"]
+  },
+  "buildCommands": {
+    "debug": "flutter run -d android",
+    "apk": "flutter build apk --release",
+    "appbundle": "flutter build appbundle --release"
+  }
+}

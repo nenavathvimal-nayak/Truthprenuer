@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "platform": "web",
+  "application": "Truthprenuer Client Web",
+  "canonicalRoot": "web/",
+  "buildTarget": "lib/main.dart",
+  "defaultRenderer": "canvaskit",
+  "pwa": {
+    "enabled": true,
+    "manifest": "web/manifest.json",
+    "favicon": "web/favicon.png",
+    "themeColor": "#0F172A",
+    "backgroundColor": "#020617"
+  },
+  "security": {
+    "contentSecurityPolicy": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:;",
+    "crossOriginEmbedderPolicy": "require-corp",
+    "crossOriginOpenerPolicy": "same-origin"
+  },
+  "buildCommands": {
+    "debug": "flutter run -d chrome",
+    "release": "flutter build web --release --web-renderer canvaskit",
+    "wasm": "flutter build web --release --wasm"
+  }
+}

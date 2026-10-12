@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRUTHPRENUER — Interactive Master Prototype & Screen Explorer (195 Screens)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --orange: #F44A22;
+      --orange-hover: #D93812;
+      --orange-light: rgba(244, 74, 34, 0.1);
+      --black: #161616;
+      --cream: #FEF8E8;
+      --light-grey: #E4E2E3;
+      --stone-grey: #A8AAAC;
+      --white: #FFFFFF;
+      --surface-dark: #1F1F1F;
+      --border-dark: #2D2D2D;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --info: #6366F1;
+      --font-display: 'Space Grotesk', -apple-system, sans-serif;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: #0F0F11;
+      color: #E0E0E2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Master Top Shell */
+    header.master-header {
+      height: 60px;
+      background: #161616;
+      border-bottom: 1px solid #282828;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo-badge {
+      background: var(--orange);
+      color: #FFF;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      color: #FFF;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--stone-grey);
+      margin-left: 8px;
+      border-left: 1px solid #333;
+      padding-left: 10px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .viewport-toggle, .theme-toggle, .view-mode-toggle {
+      display: flex;
+      background: #222225;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+
+    .toolbar-btn {
+      background: transparent;
+      border: none;
+      color: #A0A0A5;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .toolbar-btn:hover { color: #FFF; }
+    .toolbar-btn.active {
+      background: var(--orange);
+      color: #FFF;
+      font-weight: 600;
+    }
+
+    /* Main Workspace Layout */
+    .app-workspace {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 60px);
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Screen Explorer */
+    aside.screen-explorer {
+      width: 340px;
+      background: #141416;
+      border-right: 1px solid #242426;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      padding: 14px 16px;
+      border-bottom: 1px solid #242426;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #1F1F22;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: #FFF;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus { border-color: var(--orange); }
+
+    .module-nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 8px;
+    }
+
+    .module-group-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--stone-grey);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 10px 12px 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .screen-item {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      color: #B5B5B8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+
+    .screen-item:hover {
+      background: #202024;
+      color: #FFF;
+    }
+
+    .screen-item.active {
+      background: rgba(244, 74, 34, 0.15);
+      color: var(--orange);
+      font-weight: 600;
+      border-left: 3px solid var(--orange);
+    }
+
+    .screen-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: #252528;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: var(--stone-grey);
+    }
+
+    .screen-item.active .screen-badge {
+      background: var(--orange);
+      color: #FFF;
+    }
+
+    /* Central Canvas Stage */
+    main.canvas-stage {
+      flex: 1;
+      background: #0B0B0C;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    .canvas-meta-bar {
+      width: 100%;
+      max-width: 1440px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .screen-title-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .active-screen-id {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--orange);
+      color: #FFF;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .active-screen-name {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: #FFF;
+    }
+
+    .screen-journey-tag {
+      font-size: 11px;
+      background: #222228;
+      color: #8E8E95;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+
+    /* The Editable Screen Frame */
+    .screen-frame {
+      background: var(--white);
+      color: var(--black);
+      border-radius: 8px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      border: 1px solid #333;
+    }
+
+    .screen-frame.dark-theme {
+      background: var(--black);
+      color: var(--cream);
+      border-color: #2D2D2D;
+    }
+
+    /* Viewport Sizes */
+    .screen-frame.viewport-desktop {
+      width: 1440px;
+      min-height: 900px;
+    }
+
+    .screen-frame.viewport-tablet {
+      width: 1024px;
+      min-height: 768px;
+    }
+
+    .screen-frame.viewport-mobile {
+      width: 390px;
+      min-height: 844px;
+    }
+
+    /* Design System Components Inside Frame */
+    .prov-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.2px;
+    }
+
+    .prov-verified { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+    .prov-hypothesis { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+    .prov-ai { background: #EEF2FF; color: #3730A3; border: 1px solid #C7D2FE; }
+    .prov-community { background: #FFF7ED; color: #9A3412; border: 1px solid #FFEDD5; }
+
+    .dark-theme .prov-verified { background: #064E3B; color: #6EE7B7; border-color: #047857; }
+    .dark-theme .prov-hypothesis { background: #78350F; color: #FCD34D; border-color: #B45309; }
+    .dark-theme .prov-ai { background: #312E81; color: #A5B4FC; border-color: #4338CA; }
+    .dark-theme .prov-community { background: #7C2D12; color: #FDBA74; border-color: #9A3412; }
+
+    /* Frame App Chrome */
+    .app-topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--light-grey);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      background: inherit;
+    }
+
+    .dark-theme .app-topbar {
+      border-bottom: 1px solid #282828;
+    }
+
+    .app-body {
+      display: flex;
+      flex: 1;
+      min-height: calc(900px - 64px);
+    }
+
+    .app-sidebar {
+      width: 240px;
+      border-right: 1px solid var(--light-grey);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: inherit;
+    }
+
+    .dark-theme .app-sidebar {
+      border-right: 1px solid #282828;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .nav-link:hover { background: rgba(0,0,0,0.04); }
+    .dark-theme .nav-link:hover { background: rgba(255,255,255,0.06); }
+
+    .nav-link.active {
+      background: var(--orange-light);
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    .app-content {
+      flex: 1;
+      padding: 32px;
+      overflow-y: auto;
+      background: inherit;
+    }
+
+    /* Common Card */
+    .card {
+      background: #FFFFFF;
+      border: 1px solid var(--light-grey);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .dark-theme .card {
+      background: var(--surface-dark);
+      border-color: var(--border-dark);
+    }
+
+    /* Buttons inside prototype */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #FFF;
+    }
+    .btn-primary:hover { background: var(--orange-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--stone-grey);
+      color: inherit;
+    }
+    .btn-secondary:hover { background: rgba(0,0,0,0.04); }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #FFF;
+    }
+
+    /* Interactive Stepper Footer */
+    footer.master-footer {
+      height: 48px;
+      background: #141416;
+      border-top: 1px solid #242426;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 12px;
+      color: var(--stone-grey);
+      flex-shrink: 0;
+    }
+
+    .journey-stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-btn {
+      background: #202024;
+      border: 1px solid #333;
+      color: #FFF;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .step-btn:hover { background: var(--orange); }
+
+    /* Canvas Radar Styles */
+    .radar-canvas-box {
+      width: 280px;
+      height: 280px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MASTER TOP HEADER -->
+  <header class="master-header">
+    <div class="brand-group">
+      <span class="brand-logo-badge">TP</span>
+      <span class="brand-title">TRUTHPRENUER</span>
+      <span class="brand-subtitle">Master UI/UX Interactive Artboard System (195 Screens)</span>
+    </div>
+
+    <div class="toolbar-group">
+      <!-- Journey Quick Jump -->
+      <select id="journeySelector" class="toolbar-btn" style="background:#222225; border:1px solid #333;" onchange="handleJourneySelect(this.value)">
+        <option value="">-- Jump to User Journey --</option>
+        <option value="J-A">Journey A: New Founder Onboarding & Validation</option>
+        <option value="J-B">Journey B: Validator Peer Feedback</option>
+        <option value="J-C">Journey C: Investor Due Diligence</option>
+        <option value="J-D">Journey D: Professional Collaboration</option>
+        <option value="J-E">Journey E: Founder Networking</option>
+        <option value="J-F">Journey F: Privacy & Account Control</option>
+        <option value="J-G">Journey G: Admin & Trust Moderation</option>
+      </select>
+
+      <!-- Viewport Switcher -->
+      <div class="viewport-toggle">
+        <button class="toolbar-btn active" id="btnDesktop" onclick="setViewport('desktop')">Desktop (1440)</button>
+        <button class="toolbar-btn" id="btnTablet" onclick="setViewport('tablet')">Tablet (1024)</button>
+        <button class="toolbar-btn" id="btnMobile" onclick="setViewport('mobile')">Mobile (390)</button>
+      </div>
+
+      <!-- Theme Switcher -->
+      <div class="theme-toggle">
+        <button class="toolbar-btn active" id="btnLight" onclick="setTheme('light')">Light</button>
+        <button class="toolbar-btn" id="btnDark" onclick="setTheme('dark')">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MASTER WORKSPACE -->
+  <div class="app-workspace">
+    <!-- LEFT SIDEBAR: SCREEN EXPLORER -->
+    <aside class="screen-explorer">
+      <div class="search-box">
+        <input type="text" id="screenSearch" class="search-input" placeholder="Search 195 screens (e.g., pricing, radar, SCR-054)..." oninput="filterScreens(this.value)">
+      </div>
+      <div class="module-nav-list" id="screenListContainer">
+        <!-- Rendered dynamically by script -->
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE: EDITABLE ARTBOARD FRAME -->
+    <main class="canvas-stage">
+      <div class="canvas-meta-bar">
+        <div class="screen-title-banner">
+          <span class="active-screen-id" id="lblScreenId">SCR-001</span>
+          <span class="active-screen-name" id="lblScreenName">Homepage / Main Landing Page</span>
+          <span class="screen-journey-tag" id="lblModuleTag">Module A: Public Website & Marketing</span>
+        </div>
+        <div style="font-size:12px; color:#A8AAAC;">
+          Status: <strong style="color:var(--success);">Production High-Fidelity</strong>
+        </div>
+      </div>
+
+      <!-- The Real Frame Canvas -->
+      <div class="screen-frame viewport-desktop" id="mainScreenFrame">
+        <!-- Dynamic Frame Content will be rendered here -->
+        <div id="frameInnerContent" style="display:flex; flex-direction:column; flex:1; height:100%;"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MASTER BOTTOM FOOTER -->
+  <footer class="master-footer">
+    <div>
+      TRUTHPRENUER Design System Specification • Brand Palette: <code>#F44A22</code>, <code>#161616</code>, <code>#FEF8E8</code> • WCAG 2.2 AA Compliant
+    </div>
+    <div class="journey-stepper">
+      <span>Quick Stepper:</span>
+      <button class="step-btn" onclick="navigateScreen(-1)">&larr; Previous Screen</button>
+      <button class="step-btn" onclick="navigateScreen(1)">Next Screen &rarr;</button>
+    </div>
+  </footer>
+
+  <script>
+    // Complete 195 Screen Database
+    const SCREENS = [
+      // MODULE A: PUBLIC WEBSITE (001-015)
+      { id: "SCR-001", name: "Homepage / Main Landing Page", module: "Module A: Marketing", route: "/", role: "Public", journey: "J-A" },
+      { id: "SCR-002", name: "How Truthprenuer Works", module: "Module A: Marketing", route: "/how-it-works", role: "Public", journey: "J-A" },
+      { id: "SCR-003", name: "Product Features Overview", module: "Module A: Marketing", route: "/features", role: "Public" },
+      { id: "SCR-004", name: "Human Validation Explained", module: "Module A: Marketing", route: "/human-validation", role: "Public", journey: "J-B" },
+      { id: "SCR-005", name: "AI Validation Explained", module: "Module A: Marketing", route: "/ai-validation", role: "Public" },
+      { id: "SCR-006", name: "Startup Analysis and Intelligence", module: "Module A: Marketing", route: "/intelligence", role: "Public" },
+      { id: "SCR-007", name: "Startup Health and Readiness", module: "Module A: Marketing", route: "/health-radar", role: "Public" },
+      { id: "SCR-008", name: "Use Cases by User Type", module: "Module A: Marketing", route: "/use-cases", role: "Public" },
+      { id: "SCR-009", name: "Founder Success Stories & Case Studies", module: "Module A: Marketing", route: "/case-studies", role: "Public" },
+      { id: "SCR-010", name: "Pricing and Plans", module: "Module A: Marketing", route: "/pricing", role: "Public" },
+      { id: "SCR-011", name: "Pricing Comparison", module: "Module A: Marketing", route: "/pricing/compare", role: "Public" },
+      { id: "SCR-012", name: "About Truthprenuer", module: "Module A: Marketing", route: "/about", role: "Public" },
+      { id: "SCR-013", name: "Blog and Articles Listing", module: "Module A: Marketing", route: "/blog", role: "Public" },
+      { id: "SCR-014", name: "Article Details Page", module: "Module A: Marketing", route: "/blog/:slug", role: "Public" },
+      { id: "SCR-015", name: "Contact, Support, and Enquiry Page", module: "Module A: Marketing", route: "/contact", role: "Public" },
+
+      // MODULE B: AUTHENTICATION (016-025)
+      { id: "SCR-016", name: "Sign Up — Phone", module: "Module B: Authentication", route: "/signup/phone", role: "New User" },
+      { id: "SCR-017", name: "Sign Up — Email", module: "Module B: Authentication", route: "/signup", role: "New User", journey: "J-A" },
+      { id: "SCR-018", name: "Phone OTP Verification", module: "Module B: Authentication", route: "/signup/verify-phone", role: "New User" },
+      { id: "SCR-019", name: "Email Verification", module: "Module B: Authentication", route: "/signup/verify-email", role: "New User", journey: "J-A" },
+      { id: "SCR-020", name: "Login", module: "Module B: Authentication", route: "/login", role: "Returning User" },
+      { id: "SCR-021", name: "Social Login / Connected Identity", module: "Module B: Authentication", route: "/login/identity", role: "User" },
+      { id: "SCR-022", name: "Create or Reset Password", module: "Module B: Authentication", route: "/auth/reset-password", role: "User" },
+      { id: "SCR-023", name: "Forgot Password", module: "Module B: Authentication", route: "/forgot-password", role: "User" },
+      { id: "SCR-024", name: "Account Recovery", module: "Module B: Authentication", route: "/account-recovery", role: "User" },
+      { id: "SCR-025", name: "Session Expired / Re-authentication", module: "Module B: Authentication", route: "/session-expired", role: "User", journey: "J-F" },
+
+      // MODULE C: ONBOARDING (026-035)
+      { id: "SCR-026", name: "Welcome / Onboarding Introduction", module: "Module C: Onboarding", route: "/onboarding/welcome", role: "New User", journey: "J-A" },
+      { id: "SCR-027", name: "Role Selection", module: "Module C: Onboarding", route: "/onboarding/role", role: "New User", journey: "J-A" },
+      { id: "SCR-028", name: "Founder Onboarding", module: "Module C: Onboarding", route: "/onboarding/founder", role: "Founder", journey: "J-A" },
+      { id: "SCR-029", name: "Investor Onboarding", module: "Module C: Onboarding", route: "/onboarding/investor", role: "Investor", journey: "J-C" },
+      { id: "SCR-030", name: "Professional or Validator Onboarding", module: "Module C: Onboarding", route: "/onboarding/validator", role: "Validator", journey: "J-B" },
+      { id: "SCR-031", name: "Student Onboarding", module: "Module C: Onboarding", route: "/onboarding/student", role: "Student" },
+      { id: "SCR-032", name: "Creator Onboarding", module: "Module C: Onboarding", route: "/onboarding/creator", role: "Creator" },
+      { id: "SCR-033", name: "Industry and Interests Selection", module: "Module C: Onboarding", route: "/onboarding/interests", role: "New User", journey: "J-A" },
+      { id: "SCR-034", name: "Skills and Expertise Selection", module: "Module C: Onboarding", route: "/onboarding/skills", role: "New User" },
+      { id: "SCR-035", name: "Profile Completion and Success", module: "Module C: Onboarding", route: "/onboarding/success", role: "New User", journey: "J-A" },
+
+      // MODULE D: GLOBAL NAVIGATION & DISCOVERY (036-045)
+      { id: "SCR-036", name: "Main Home Dashboard", module: "Module D: Navigation & Discovery", route: "/app/home", role: "All Users" },
+      { id: "SCR-037", name: "Explore Validations", module: "Module D: Navigation & Discovery", route: "/app/explore/validations", role: "All Users", journey: "J-B" },
+      { id: "SCR-038", name: "Explore People", module: "Module D: Navigation & Discovery", route: "/app/explore/people", role: "All Users", journey: "J-E" },
+      { id: "SCR-039", name: "Explore Startups", module: "Module D: Navigation & Discovery", route: "/app/explore/startups", role: "Investor / Public", journey: "J-C" },
+      { id: "SCR-040", name: "Global Search Results", module: "Module D: Navigation & Discovery", route: "/app/search", role: "All Users" },
+      { id: "SCR-041", name: "Advanced Search and Filters", module: "Module D: Navigation & Discovery", route: "/app/search/advanced", role: "All Users" },
+      { id: "SCR-042", name: "Saved Searches", module: "Module D: Navigation & Discovery", route: "/app/search/saved", role: "All Users" },
+      { id: "SCR-043", name: "Trending Topics and Categories", module: "Module D: Navigation & Discovery", route: "/app/explore/trending", role: "All Users" },
+      { id: "SCR-044", name: "Bookmarks", module: "Module D: Navigation & Discovery", route: "/app/bookmarks", role: "All Users" },
+      { id: "SCR-045", name: "Search No-Results / Empty State", module: "Module D: Navigation & Discovery", route: "/app/search/empty", role: "All Users" },
+
+      // MODULE E: WORKSPACES (046-053)
+      { id: "SCR-046", name: "First-Time User Dashboard", module: "Module E: Workspaces", route: "/app/dashboard/welcome", role: "Founder", journey: "J-A" },
+      { id: "SCR-047", name: "Returning Founder Dashboard", module: "Module E: Workspaces", route: "/app/dashboard", role: "Founder" },
+      { id: "SCR-048", name: "Active Validation Workspace Overview", module: "Module E: Workspaces", route: "/app/validations/:id/workspace", role: "Founder" },
+      { id: "SCR-049", name: "Recent Activities and Updates", module: "Module E: Workspaces", route: "/app/dashboard/activity", role: "Founder" },
+      { id: "SCR-050", name: "Recommended Actions", module: "Module E: Workspaces", route: "/app/dashboard/recommendations", role: "Founder" },
+      { id: "SCR-051", name: "Weekly Progress and Activity", module: "Module E: Workspaces", route: "/app/dashboard/velocity", role: "Founder" },
+      { id: "SCR-052", name: "Personalised Opportunities", module: "Module E: Workspaces", route: "/app/dashboard/opportunities", role: "Founder" },
+      { id: "SCR-053", name: "Dashboard Customisation Preferences", module: "Module E: Workspaces", route: "/app/dashboard/customize", role: "Founder" },
+
+      // MODULE F: VALIDATION CREATION (054-065)
+      { id: "SCR-054", name: "Create Validation — Introduction", module: "Module F: Creation", route: "/app/validations/create", role: "Founder", journey: "J-A" },
+      { id: "SCR-055", name: "Validation Type Selection", module: "Module F: Creation", route: "/app/validations/create/type", role: "Founder", journey: "J-A" },
+      { id: "SCR-056", name: "Problem Statement Builder", module: "Module F: Creation", route: "/app/validations/create/problem", role: "Founder", journey: "J-A" },
+      { id: "SCR-057", name: "Target Customer Definition", module: "Module F: Creation", route: "/app/validations/create/customer", role: "Founder", journey: "J-A" },
+      { id: "SCR-058", name: "Proposed Solution Details", module: "Module F: Creation", route: "/app/validations/create/solution", role: "Founder", journey: "J-A" },
+      { id: "SCR-059", name: "Value Proposition Builder", module: "Module F: Creation", route: "/app/validations/create/value-prop", role: "Founder" },
+      { id: "SCR-060", name: "Business Model and Pricing Hypothesis", module: "Module F: Creation", route: "/app/validations/create/pricing", role: "Founder", journey: "J-A" },
+      { id: "SCR-061", name: "Assumptions and Hypothesis Setup", module: "Module F: Creation", route: "/app/validations/create/hypotheses", role: "Founder", journey: "J-A" },
+      { id: "SCR-062", name: "Evidence & Supporting Upload", module: "Module F: Creation", route: "/app/validations/create/evidence", role: "Founder", journey: "J-A" },
+      { id: "SCR-063", name: "Research Questions Design", module: "Module F: Creation", route: "/app/validations/create/questions", role: "Founder", journey: "J-A" },
+      { id: "SCR-064", name: "Audience & Visibility Settings", module: "Module F: Creation", route: "/app/validations/create/audience", role: "Founder", journey: "J-A" },
+      { id: "SCR-065", name: "Validation Review and Publish", module: "Module F: Creation", route: "/app/validations/create/review", role: "Founder", journey: "J-A" },
+
+      // MODULE G: VALIDATION LIFECYCLE (066-075)
+      { id: "SCR-066", name: "Validation Detail — Public View", module: "Module G: Lifecycle", route: "/v/:slug", role: "Validator / Public", journey: "J-B" },
+      { id: "SCR-067", name: "Validation Detail — Private Founder View", module: "Module G: Lifecycle", route: "/app/validations/:id", role: "Founder", journey: "J-A" },
+      { id: "SCR-068", name: "Validation Overview and Status", module: "Module G: Lifecycle", route: "/app/validations/:id/status", role: "Founder" },
+      { id: "SCR-069", name: "Edit Existing Validation", module: "Module G: Lifecycle", route: "/app/validations/:id/edit", role: "Founder" },
+      { id: "SCR-070", name: "Validation Settings", module: "Module G: Lifecycle", route: "/app/validations/:id/settings", role: "Founder" },
+      { id: "SCR-071", name: "Validation Pause / Resume", module: "Module G: Lifecycle", route: "/app/validations/:id/pause", role: "Founder" },
+      { id: "SCR-072", name: "Extend or Close Validation", module: "Module G: Lifecycle", route: "/app/validations/:id/close", role: "Founder" },
+      { id: "SCR-073", name: "Duplicate / Create New Experiment", module: "Module G: Lifecycle", route: "/app/validations/:id/branch", role: "Founder" },
+      { id: "SCR-074", name: "Archive Validation", module: "Module G: Lifecycle", route: "/app/validations/:id/archive", role: "Founder" },
+      { id: "SCR-075", name: "Delete Validation Confirmation", module: "Module G: Lifecycle", route: "/app/validations/:id/delete", role: "Founder" },
+
+      // MODULE H: HUMAN FEEDBACK (076-085)
+      { id: "SCR-076", name: "Give Feedback", module: "Module H: Feedback", route: "/v/:slug/review", role: "Validator", journey: "J-B" },
+      { id: "SCR-077", name: "Structured Feedback Questionnaire", module: "Module H: Feedback", route: "/v/:slug/review/step-1", role: "Validator", journey: "J-B" },
+      { id: "SCR-078", name: "Rating and Confidence Input", module: "Module H: Feedback", route: "/v/:slug/review/ratings", role: "Validator", journey: "J-B" },
+      { id: "SCR-079", name: "Willingness-to-Pay / Pricing Feedback", module: "Module H: Feedback", route: "/v/:slug/review/pricing", role: "Validator", journey: "J-B" },
+      { id: "SCR-080", name: "Problem Severity and Frequency Feedback", module: "Module H: Feedback", route: "/v/:slug/review/severity", role: "Validator" },
+      { id: "SCR-081", name: "Comments and Discussion", module: "Module H: Feedback", route: "/app/validations/:id/discussion", role: "Community" },
+      { id: "SCR-082", name: "Reply to a Comment", module: "Module H: Feedback", route: "/app/validations/:id/discussion/reply", role: "Community" },
+      { id: "SCR-083", name: "Feedback Submission Success", module: "Module H: Feedback", route: "/v/:slug/review/success", role: "Validator", journey: "J-B" },
+      { id: "SCR-084", name: "Edit or Withdraw Feedback", module: "Module H: Feedback", route: "/app/my-feedback/:id/edit", role: "Validator" },
+      { id: "SCR-085", name: "Report Inappropriate Content", module: "Module H: Feedback", route: "/v/:slug/report", role: "Community", journey: "J-G" },
+
+      // MODULE I: EVIDENCE LOCKER (086-093)
+      { id: "SCR-086", name: "Evidence Locker Overview", module: "Module I: Evidence", route: "/app/validations/:id/evidence", role: "Founder / Diligence", journey: "J-A" },
+      { id: "SCR-087", name: "Evidence Item Details", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId", role: "Founder / Diligence", journey: "J-C" },
+      { id: "SCR-088", name: "Upload Evidence", module: "Module I: Evidence", route: "/app/validations/:id/evidence/upload", role: "Founder", journey: "J-A" },
+      { id: "SCR-089", name: "Source and Provenance Details", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId/provenance", role: "Founder" },
+      { id: "SCR-090", name: "Evidence Tagging and Categorisation", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId/tagging", role: "Founder" },
+      { id: "SCR-091", name: "Evidence Quality Review", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId/quality", role: "Founder" },
+      { id: "SCR-092", name: "Evidence Linking to Hypotheses", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId/link", role: "Founder" },
+      { id: "SCR-093", name: "Evidence Access, Export, and Removal", module: "Module I: Evidence", route: "/app/validations/:id/evidence/:itemId/access", role: "Founder" },
+
+      // MODULE J: AI ANALYSIS (094-105)
+      { id: "SCR-094", name: "AI Analysis Overview", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai", role: "Founder", journey: "J-A" },
+      { id: "SCR-095", name: "Analysis Setup and Scope", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/setup", role: "Founder" },
+      { id: "SCR-096", name: "Analysis in Progress", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/running", role: "Founder" },
+      { id: "SCR-097", name: "AI Executive Summary", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/summary", role: "Founder / Investor", journey: "J-C" },
+      { id: "SCR-098", name: "Assumption and Hypothesis Analysis", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/hypotheses", role: "Founder" },
+      { id: "SCR-099", name: "Problem–Solution Fit Analysis", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/ps-fit", role: "Founder" },
+      { id: "SCR-100", name: "Customer Segment Insights", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/segments", role: "Founder" },
+      { id: "SCR-101", name: "Pricing & Willingness-to-Pay Analysis", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/pricing", role: "Founder", journey: "J-A" },
+      { id: "SCR-102", name: "Market Research Synthesis", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/market", role: "Founder" },
+      { id: "SCR-103", name: "Positive and Negative Signals", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/signals", role: "Founder" },
+      { id: "SCR-104", name: "Contradictions and Evidence Gaps", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/contradictions", role: "Founder" },
+      { id: "SCR-105", name: "Recommended Next Experiments", module: "Module J: AI Synthesis", route: "/app/validations/:id/ai/next-experiments", role: "Founder", journey: "J-A" },
+
+      // MODULE K: STARTUP HEALTH (106-115)
+      { id: "SCR-106", name: "Startup Health Overview", module: "Module K: Startup Health", route: "/app/validations/:id/health", role: "Founder / Investor", journey: "J-C" },
+      { id: "SCR-107", name: "Startup Health Radar", module: "Module K: Startup Health", route: "/app/validations/:id/health/radar", role: "Founder / Investor", journey: "J-C" },
+      { id: "SCR-108", name: "Detailed Health Score Breakdown", module: "Module K: Startup Health", route: "/app/validations/:id/health/breakdown", role: "Founder" },
+      { id: "SCR-109", name: "Problem Fit Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/problem", role: "Founder" },
+      { id: "SCR-110", name: "Customer Demand Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/demand", role: "Founder" },
+      { id: "SCR-111", name: "Solution Strength Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/solution", role: "Founder" },
+      { id: "SCR-112", name: "Market and Competitive Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/competition", role: "Founder" },
+      { id: "SCR-113", name: "Traction and Growth Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/traction", role: "Founder" },
+      { id: "SCR-114", name: "Business Model & Revenue Analysis", module: "Module K: Startup Health", route: "/app/validations/:id/health/business-model", role: "Founder" },
+      { id: "SCR-115", name: "Team and Execution Readiness", module: "Module K: Startup Health", route: "/app/validations/:id/health/team", role: "Founder" },
+
+      // MODULE L: DECISIONS & EXPERIMENTS (116-122)
+      { id: "SCR-116", name: "Decision Log", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/decisions", role: "Founder", journey: "J-A" },
+      { id: "SCR-117", name: "Create a Decision Record", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/decisions/new", role: "Founder", journey: "J-A" },
+      { id: "SCR-118", name: "Experiment Planner", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/experiments", role: "Founder", journey: "J-A" },
+      { id: "SCR-119", name: "Experiment Detail and Results", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/experiments/:expId", role: "Founder" },
+      { id: "SCR-120", name: "Recommended Next Steps", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/next-steps", role: "Founder" },
+      { id: "SCR-121", name: "Validation Progress and Timeline", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/timeline", role: "Founder" },
+      { id: "SCR-122", name: "Exportable Validation Report", module: "Module L: Decisions & Experiments", route: "/app/validations/:id/export", role: "Founder / Investor", journey: "J-A" },
+
+      // MODULE M: NETWORK (123-132)
+      { id: "SCR-123", name: "Network Overview", module: "Module M: Network", route: "/app/network", role: "All Users", journey: "J-E" },
+      { id: "SCR-124", name: "Discover Founders", module: "Module M: Network", route: "/app/network/founders", role: "Founder / Investor" },
+      { id: "SCR-125", name: "Founder Profile Details", module: "Module M: Network", route: "/app/network/founders/:user", role: "All Users", journey: "J-E" },
+      { id: "SCR-126", name: "Discover Investors", module: "Module M: Network", route: "/app/network/investors", role: "Founder", journey: "J-C" },
+      { id: "SCR-127", name: "Investor Profile Details", module: "Module M: Network", route: "/app/network/investors/:user", role: "Founder", journey: "J-C" },
+      { id: "SCR-128", name: "Discover Professionals & Validators", module: "Module M: Network", route: "/app/network/validators", role: "Founder / Professional" },
+      { id: "SCR-129", name: "Professional Profile Details", module: "Module M: Network", route: "/app/network/validators/:user", role: "All Users", journey: "J-D" },
+      { id: "SCR-130", name: "Follow / Connect / Request States", module: "Module M: Network", route: "/app/network/connect-states", role: "All Users", journey: "J-E" },
+      { id: "SCR-131", name: "Connection Requests Inbox", module: "Module M: Network", route: "/app/network/requests", role: "All Users", journey: "J-E" },
+      { id: "SCR-132", name: "Connection Request Review & Actions", module: "Module M: Network", route: "/app/network/requests/:id", role: "All Users", journey: "J-E" },
+
+      // MODULE N: TALENT (133-140)
+      { id: "SCR-133", name: "Co-Founder Discovery", module: "Module N: Talent & Opportunities", route: "/app/talent/co-founders", role: "Founder / Seeker", journey: "J-D" },
+      { id: "SCR-134", name: "Co-Founder Opportunity Details", module: "Module N: Talent & Opportunities", route: "/app/talent/co-founders/:id", role: "Seeker", journey: "J-D" },
+      { id: "SCR-135", name: "Create a Co-Founder Listing", module: "Module N: Talent & Opportunities", route: "/app/talent/co-founders/new", role: "Founder" },
+      { id: "SCR-136", name: "Talent and Skills Directory", module: "Module N: Talent & Opportunities", route: "/app/talent/directory", role: "All Users" },
+      { id: "SCR-137", name: "Professional Opportunity Details", module: "Module N: Talent & Opportunities", route: "/app/talent/opportunities/:id", role: "All Users" },
+      { id: "SCR-138", name: "Create Job or Collaboration Listing", module: "Module N: Talent & Opportunities", route: "/app/talent/opportunities/new", role: "Founder" },
+      { id: "SCR-139", name: "Applicants / Interested People", module: "Module N: Talent & Opportunities", route: "/app/talent/my-listings/:id/applicants", role: "Founder" },
+      { id: "SCR-140", name: "Opportunity Management", module: "Module N: Talent & Opportunities", route: "/app/talent/my-listings", role: "Founder" },
+
+      // MODULE O: MESSAGING & COMMUNITIES (141-150)
+      { id: "SCR-141", name: "Messages Inbox", module: "Module O: Messaging", route: "/app/messages", role: "All Users", journey: "J-E" },
+      { id: "SCR-142", name: "One-to-One Conversation", module: "Module O: Messaging", route: "/app/messages/:id", role: "All Users", journey: "J-E" },
+      { id: "SCR-143", name: "New Message / Start Conversation", module: "Module O: Messaging", route: "/app/messages/new", role: "All Users" },
+      { id: "SCR-144", name: "Message Requests", module: "Module O: Messaging", route: "/app/messages/requests", role: "All Users" },
+      { id: "SCR-145", name: "Message Search", module: "Module O: Messaging", route: "/app/messages/search", role: "All Users" },
+      { id: "SCR-146", name: "Notifications & Activity Centre", module: "Module O: Messaging", route: "/app/notifications", role: "All Users" },
+      { id: "SCR-147", name: "Notifications Preferences", module: "Module O: Messaging", route: "/app/notifications/preferences", role: "All Users" },
+      { id: "SCR-148", name: "Communities Directory", module: "Module O: Messaging", route: "/app/communities", role: "All Users" },
+      { id: "SCR-149", name: "Community Details & Discussion", module: "Module O: Messaging", route: "/app/communities/:slug", role: "All Users" },
+      { id: "SCR-150", name: "Community Creation & Management", module: "Module O: Messaging", route: "/app/communities/new", role: "Creator / Admin" },
+
+      // MODULE P: PROFILES (151-158)
+      { id: "SCR-151", name: "My Profile", module: "Module P: Profile & Reputation", route: "/app/profile", role: "All Users" },
+      { id: "SCR-152", name: "Edit Profile", module: "Module P: Profile & Reputation", route: "/app/profile/edit", role: "All Users" },
+      { id: "SCR-153", name: "Public Profile Preview", module: "Module P: Profile & Reputation", route: "/app/profile/preview", role: "All Users" },
+      { id: "SCR-154", name: "Skills and Experience", module: "Module P: Profile & Reputation", route: "/app/profile/experience", role: "All Users" },
+      { id: "SCR-155", name: "Validation Contributions", module: "Module P: Profile & Reputation", route: "/app/profile/contributions", role: "Validator", journey: "J-B" },
+      { id: "SCR-156", name: "Achievements and Badges", module: "Module P: Profile & Reputation", route: "/app/profile/badges", role: "All Users" },
+      { id: "SCR-157", name: "Reputation & Contribution History", module: "Module P: Profile & Reputation", route: "/app/profile/reputation", role: "Validator" },
+      { id: "SCR-158", name: "Profile Visibility & Verification", module: "Module P: Profile & Reputation", route: "/app/profile/verification", role: "All Users" },
+
+      // MODULE Q: SETTINGS (159-168)
+      { id: "SCR-159", name: "Settings Overview", module: "Module Q: Settings", route: "/app/settings", role: "All Users", journey: "J-F" },
+      { id: "SCR-160", name: "Account Settings", module: "Module Q: Settings", route: "/app/settings/account", role: "All Users" },
+      { id: "SCR-161", name: "Theme and Appearance", module: "Module Q: Settings", route: "/app/settings/theme", role: "All Users" },
+      { id: "SCR-162", name: "Notification Preferences", module: "Module Q: Settings", route: "/app/settings/notifications", role: "All Users" },
+      { id: "SCR-163", name: "Connected Accounts", module: "Module Q: Settings", route: "/app/settings/connected", role: "All Users" },
+      { id: "SCR-164", name: "Privacy and Visibility", module: "Module Q: Settings", route: "/app/settings/privacy", role: "All Users", journey: "J-F" },
+      { id: "SCR-165", name: "Security and Active Sessions", module: "Module Q: Settings", route: "/app/settings/security", role: "All Users", journey: "J-F" },
+      { id: "SCR-166", name: "Data Export Request", module: "Module Q: Settings", route: "/app/settings/data-export", role: "All Users", journey: "J-F" },
+      { id: "SCR-167", name: "Account Deletion Workflow", module: "Module Q: Settings", route: "/app/settings/delete-account", role: "All Users", journey: "J-F" },
+      { id: "SCR-168", name: "Consent and Data Preferences", module: "Module Q: Settings", route: "/app/settings/consent", role: "All Users" },
+
+      // MODULE R: HELP & LEGAL (169-175)
+      { id: "SCR-169", name: "Help Centre", module: "Module R: Help & Support", route: "/help", role: "All Users" },
+      { id: "SCR-170", name: "Search Help Articles", module: "Module R: Help & Support", route: "/help/search", role: "All Users" },
+      { id: "SCR-171", name: "Support Request Form", module: "Module R: Help & Support", route: "/help/contact", role: "All Users" },
+      { id: "SCR-172", name: "Bug Report / Feedback Form", module: "Module R: Help & Support", route: "/help/bug-report", role: "All Users" },
+      { id: "SCR-173", name: "Terms of Service", module: "Module R: Help & Support", route: "/legal/terms", role: "Public" },
+      { id: "SCR-174", name: "Privacy Policy", module: "Module R: Help & Support", route: "/legal/privacy", role: "Public" },
+      { id: "SCR-175", name: "Community Guidelines and Safety", module: "Module R: Help & Support", route: "/legal/guidelines", role: "Public" },
+
+      // MODULE S: ADMIN (176-185)
+      { id: "SCR-176", name: "Admin Dashboard", module: "Module S: Administration", route: "/admin", role: "Admin", journey: "J-G" },
+      { id: "SCR-177", name: "User Management", module: "Module S: Administration", route: "/admin/users", role: "Admin" },
+      { id: "SCR-178", name: "User Details & Account Actions", module: "Module S: Administration", route: "/admin/users/:id", role: "Admin", journey: "J-G" },
+      { id: "SCR-179", name: "Validation Moderation Queue", module: "Module S: Administration", route: "/admin/moderation/validations", role: "Admin", journey: "J-G" },
+      { id: "SCR-180", name: "Report and Abuse Review", module: "Module S: Administration", route: "/admin/moderation/reports", role: "Admin", journey: "J-G" },
+      { id: "SCR-181", name: "Content Moderation Details", module: "Module S: Administration", route: "/admin/moderation/reports/:id", role: "Admin", journey: "J-G" },
+      { id: "SCR-182", name: "Community Management", module: "Module S: Administration", route: "/admin/communities", role: "Admin" },
+      { id: "SCR-183", name: "Platform Categories & Taxonomy", module: "Module S: Administration", route: "/admin/taxonomy", role: "Admin" },
+      { id: "SCR-184", name: "Platform Analytics & Health", module: "Module S: Administration", route: "/admin/analytics", role: "Admin" },
+      { id: "SCR-185", name: "Admin Roles & Audit Log", module: "Module S: Administration", route: "/admin/audit-log", role: "Admin", journey: "J-G" },
+
+      // MODULE T: GLOBAL STATES (186-195)
+      { id: "SCR-186", name: "Global Loading / Skeleton State", module: "Module T: Global States", route: "State: Loading", role: "System" },
+      { id: "SCR-187", name: "Empty Dashboard State", module: "Module T: Global States", route: "State: Empty Dashboard", role: "Founder" },
+      { id: "SCR-188", name: "Empty Explore State", module: "Module T: Global States", route: "State: Empty Explore", role: "All Users" },
+      { id: "SCR-189", name: "Empty Validation State", module: "Module T: Global States", route: "State: Empty Validation", role: "Founder" },
+      { id: "SCR-190", name: "No Search Results State", module: "Module T: Global States", route: "State: Empty Search", role: "All Users" },
+      { id: "SCR-191", name: "Permission Denied State", module: "Module T: Global States", route: "/403", role: "System" },
+      { id: "SCR-192", name: "Session Expired State", module: "Module T: Global States", route: "/session-expired", role: "System" },
+      { id: "SCR-193", name: "Network or Server Error State", module: "Module T: Global States", route: "/500", role: "System" },
+      { id: "SCR-194", name: "Offline / Reconnection State", module: "Module T: Global States", route: "State: Offline Banner", role: "System" },
+      { id: "SCR-195", name: "Responsive Navigation (Mobile)", module: "Module T: Global States", route: "Global 390px Navigation", role: "Mobile Users" }
+    ];
+
+    let currentScreenIndex = 0;
+    let currentTheme = 'light';
+    let currentViewport = 'desktop';
+
+    // Initialize list
+    function renderScreenList(filter = '') {
+      const container = document.getElementById('screenListContainer');
+      container.innerHTML = '';
+
+      let currentMod = '';
+      SCREENS.forEach((screen, index) => {
+        if (filter) {
+          const match = screen.name.toLowerCase().includes(filter.toLowerCase()) ||
+                        screen.id.toLowerCase().includes(filter.toLowerCase()) ||
+                        screen.module.toLowerCase().includes(filter.toLowerCase());
+          if (!match) return;
+        }
+
+        if (screen.module !== currentMod) {
+          currentMod = screen.module;
+          const modHeader = document.createElement('div');
+          modHeader.className = 'module-group-header';
+          modHeader.innerHTML = `<span>${currentMod}</span>`;
+          container.appendChild(modHeader);
+        }
+
+        const item = document.createElement('div');
+        item.className = `screen-item ${index === currentScreenIndex ? 'active' : ''}`;
+        item.innerHTML = `
+          <span class="screen-badge">${screen.id}</span>
+          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${screen.name}</span>
+        `;
+        item.onclick = () => selectScreen(index);
+        container.appendChild(item);
+      });
+    }
+
+    function selectScreen(index) {
+      currentScreenIndex = index;
+      renderScreenList(document.getElementById('screenSearch').value);
+      renderActiveFrame();
+    }
+
+    function navigateScreen(dir) {
+      let next = currentScreenIndex + dir;
+      if (next < 0) next = SCREENS.length - 1;
+      if (next >= SCREENS.length) next = 0;
+      selectScreen(next);
+    }
+
+    function filterScreens(query) {
+      renderScreenList(query);
+    }
+
+    function setViewport(vp) {
+      currentViewport = vp;
+      document.querySelectorAll('.viewport-toggle .toolbar-btn').forEach(b => b.classList.remove('active'));
+      if (vp === 'desktop') document.getElementById('btnDesktop').classList.add('active');
+      if (vp === 'tablet') document.getElementById('btnTablet').classList.add('active');
+      if (vp === 'mobile') document.getElementById('btnMobile').classList.add('active');
+
+      const frame = document.getElementById('mainScreenFrame');
+      frame.className = `screen-frame viewport-${vp} ${currentTheme === 'dark' ? 'dark-theme' : ''}`;
+      renderActiveFrame();
+    }
+
+    function setTheme(th) {
+      currentTheme = th;
+      document.querySelectorAll('.theme-toggle .toolbar-btn').forEach(b => b.classList.remove('active'));
+      if (th === 'light') document.getElementById('btnLight').classList.add('active');
+      if (th === 'dark') document.getElementById('btnDark').classList.add('active');
+
+      const frame = document.getElementById('mainScreenFrame');
+      if (th === 'dark') {
+        frame.classList.add('dark-theme');
+      } else {
+        frame.classList.remove('dark-theme');
+      }
+    }
+
+    function handleJourneySelect(journeyId) {
+      if (!journeyId) return;
+      const target = SCREENS.findIndex(s => s.journey === journeyId);
+      if (target !== -1) selectScreen(target);
+    }
+
+    // Render screen frame content dynamically based on current screen ID
+    function renderActiveFrame() {
+      const scr = SCREENS[currentScreenIndex];
+      document.getElementById('lblScreenId').innerText = scr.id;
+      document.getElementById('lblScreenName').innerText = scr.name;
+      document.getElementById('lblModuleTag').innerText = scr.module + ' • ' + scr.route;
+
+      const inner = document.getElementById('frameInnerContent');
+      inner.innerHTML = '';
+
+      // Check module category to render tailored high-fidelity UI
+      if (scr.id === 'SCR-001') {
+        // HOMEPAGE
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="brand-logo-badge">TP</span>
+              <strong style="font-family:var(--font-display); font-size:16px;">TRUTHPRENUER</strong>
+            </div>
+            <div style="display:flex; gap:20px; font-size:13.5px; font-weight:500;">
+              <span style="cursor:pointer;" onclick="selectScreen(1)">How it Works</span>
+              <span style="cursor:pointer;" onclick="selectScreen(2)">Features</span>
+              <span style="cursor:pointer;" onclick="selectScreen(3)">Human vs AI</span>
+              <span style="cursor:pointer;" onclick="selectScreen(9)">Pricing</span>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-secondary" onclick="selectScreen(19)">Log In</button>
+              <button class="btn btn-primary" onclick="selectScreen(16)">Validate Free &rarr;</button>
+            </div>
+          </div>
+          <div style="padding:60px 40px; text-align:center; max-width:920px; margin:0 auto;">
+            <div style="color:var(--orange); font-weight:700; font-size:13px; letter-spacing:1px; margin-bottom:12px; text-transform:uppercase;">
+              Ideas to Impact. Together.
+            </div>
+            <h1 style="font-family:var(--font-display); font-size:44px; font-weight:700; line-height:1.15; margin-bottom:20px;">
+              Stop Building What Nobody Wants. Validate with Human Truth + AI Rigor.
+            </h1>
+            <p style="font-size:18px; color:var(--stone-grey); line-height:1.6; margin-bottom:32px;">
+              Get brutally honest feedback from verified buyers, domain mentors, and multi-agent market synthesis before spending 6 months of your life on code.
+            </p>
+            <div style="display:flex; justify-content:center; gap:16px; margin-bottom:48px;">
+              <button class="btn btn-primary" style="padding:14px 28px; font-size:15px;" onclick="selectScreen(16)">Validate Your Idea Free &rarr;</button>
+              <button class="btn btn-secondary" style="padding:14px 28px; font-size:15px;" onclick="selectScreen(36)">Explore Active Validations</button>
+            </div>
+
+            <!-- Live Sample Validation Preview Card -->
+            <div class="card" style="text-align:left; border-left:4px solid var(--orange); padding:24px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                  <span class="prov-badge prov-verified">VERIFIED PROTOTYPE STUDY</span>
+                  <h3 style="font-family:var(--font-display); font-size:20px; font-weight:600; margin-top:6px;">EcoPack: Zero-Waste Shipping Envelope</h3>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:12px; color:var(--stone-grey);">Confidence Signal</div>
+                  <div style="font-size:24px; font-weight:700; color:var(--orange);">74% (High)</div>
+                </div>
+              </div>
+              <p style="font-size:14px; color:inherit; margin-bottom:16px;">
+                Testing whether mid-market D2C brands will pay a 25% premium ($1.20/unit) for certified home-compostable packaging.
+              </p>
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <span class="prov-badge prov-community">48 Validator Responses</span>
+                <span class="prov-badge prov-verified">3 Audio Call Transcripts Linked</span>
+                <span class="prov-badge prov-ai">AI Flaw Stress-Test Passed</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (scr.id === 'SCR-017' || scr.id === 'SCR-016') {
+        // SIGNUP
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <div style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="selectScreen(0)">
+              <span class="brand-logo-badge">TP</span>
+              <strong style="font-family:var(--font-display); font-size:16px;">TRUTHPRENUER</strong>
+            </div>
+            <div>Already have an account? <a href="#" style="color:var(--orange); font-weight:600;" onclick="selectScreen(19)">Log In</a></div>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px;">
+            <div class="card" style="width:100%; max-width:440px; padding:32px;">
+              <h2 style="font-family:var(--font-display); font-size:22px; font-weight:700; margin-bottom:8px;">Create Your Account</h2>
+              <p style="font-size:13px; color:var(--stone-grey); margin-bottom:24px;">Start stress-testing your startup assumptions with real human truth.</p>
+              
+              <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Full Name</label>
+                <input type="text" class="search-input" value="Sarah Jenkins" style="background:inherit; border:1px solid #CCC; color:inherit; padding:10px;">
+              </div>
+              <div style="margin-bottom:16px;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Work Email</label>
+                <input type="email" class="search-input" value="sarah@startup.io" style="background:inherit; border:1px solid #CCC; color:inherit; padding:10px;">
+              </div>
+              <div style="margin-bottom:20px;">
+                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:6px;">Password</label>
+                <input type="password" class="search-input" value="••••••••••••" style="background:inherit; border:1px solid #CCC; color:inherit; padding:10px;">
+                <div style="font-size:11px; color:var(--success); margin-top:4px;">✓ Strong password (12 characters, symbols, uppercase)</div>
+              </div>
+
+              <button class="btn btn-primary" style="width:100%; padding:12px;" onclick="selectScreen(18)">Create Account &rarr;</button>
+            </div>
+          </div>
+        `;
+      } else if (scr.id === 'SCR-027') {
+        // ROLE SELECTION
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <span class="brand-logo-badge">TP</span>
+            <div style="font-size:13px; font-weight:600;">Step 1 of 3: Personalized Workspace Setup</div>
+            <div></div>
+          </div>
+          <div style="max-width:960px; margin:40px auto; padding:0 24px;">
+            <h2 style="font-family:var(--font-display); font-size:28px; font-weight:700; text-align:center; margin-bottom:8px;">How will you use Truthprenuer?</h2>
+            <p style="text-align:center; color:var(--stone-grey); margin-bottom:36px;">Select your primary identity. You can participate in multiple roles later.</p>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+              <div class="card" style="border:2px solid var(--orange); cursor:pointer; background:var(--orange-light);" onclick="selectScreen(27)">
+                <div style="font-size:28px; margin-bottom:8px;">🚀</div>
+                <h3 style="font-size:17px; font-weight:700; margin-bottom:6px;">Founder / Startup Team</h3>
+                <p style="font-size:13px; color:inherit; opacity:0.85;">I have an idea, hypothesis, or product and want real human validation before spending code & capital.</p>
+                <div style="margin-top:16px; font-weight:700; color:var(--orange); font-size:12px;">SELECT FOUNDER &rarr;</div>
+              </div>
+
+              <div class="card" style="cursor:pointer;" onclick="selectScreen(28)">
+                <div style="font-size:28px; margin-bottom:8px;">💼</div>
+                <h3 style="font-size:17px; font-weight:700; margin-bottom:6px;">Investor / VC / Angel</h3>
+                <p style="font-size:13px; color:inherit; opacity:0.85;">I want to discover and diligence high-conviction startups backed by transparent customer evidence.</p>
+                <div style="margin-top:16px; font-weight:600; color:var(--stone-grey); font-size:12px;">SELECT INVESTOR &rarr;</div>
+              </div>
+
+              <div class="card" style="cursor:pointer;" onclick="selectScreen(29)">
+                <div style="font-size:28px; margin-bottom:8px;">🎯</div>
+                <h3 style="font-size:17px; font-weight:700; margin-bottom:6px;">Domain Expert / Validator</h3>
+                <p style="font-size:13px; color:inherit; opacity:0.85;">I want to review early concepts, give brutal feedback, and earn reputation and advisory stakes.</p>
+                <div style="margin-top:16px; font-weight:600; color:var(--stone-grey); font-size:12px;">SELECT VALIDATOR &rarr;</div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (scr.id === 'SCR-047' || scr.id === 'SCR-046') {
+        // FOUNDER DASHBOARD
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <span class="brand-logo-badge">TP</span>
+              <strong style="font-family:var(--font-display);">ECOPACK STUDIO</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <button class="btn btn-primary" onclick="selectScreen(53)">+ New Validation</button>
+              <div style="width:36px; height:36px; border-radius:50%; background:var(--orange); color:#FFF; display:flex; align-items:center; justify-content:center; font-weight:700;">SJ</div>
+            </div>
+          </div>
+          <div class="app-body">
+            <div class="app-sidebar">
+              <div class="nav-link active" onclick="selectScreen(46)">📊 Dashboard</div>
+              <div class="nav-link" onclick="selectScreen(36)">🔍 Explore Ideas</div>
+              <div class="nav-link" onclick="selectScreen(53)">⚡ Validations (2)</div>
+              <div class="nav-link" onclick="selectScreen(85)">📁 Evidence Locker</div>
+              <div class="nav-link" onclick="selectScreen(93)">🤖 AI Intelligence</div>
+              <div class="nav-link" onclick="selectScreen(105)">📈 Health Radar</div>
+              <div class="nav-link" onclick="selectScreen(115)">⚖️ Decisions & Log</div>
+              <div class="nav-link" onclick="selectScreen(122)">🌐 Network</div>
+              <div class="nav-link" onclick="selectScreen(158)">⚙️ Settings</div>
+            </div>
+            <div class="app-content">
+              <!-- KPI Row -->
+              <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px;">
+                <div class="card" style="margin-bottom:0;">
+                  <div style="font-size:12px; color:var(--stone-grey);">Overall Signal</div>
+                  <div style="font-size:26px; font-weight:700; color:var(--orange);">74%</div>
+                  <span class="prov-badge prov-ai" style="margin-top:6px;">High Confidence</span>
+                </div>
+                <div class="card" style="margin-bottom:0;">
+                  <div style="font-size:12px; color:var(--stone-grey);">Human Responses</div>
+                  <div style="font-size:26px; font-weight:700;">48 / 50</div>
+                  <span class="prov-badge prov-community" style="margin-top:6px;">+12 this week</span>
+                </div>
+                <div class="card" style="margin-bottom:0;">
+                  <div style="font-size:12px; color:var(--stone-grey);">Willingness to Pay</div>
+                  <div style="font-size:26px; font-weight:700; color:var(--success);">$1.20/ea</div>
+                  <span class="prov-badge prov-verified" style="margin-top:6px;">68% Affirmative</span>
+                </div>
+                <div class="card" style="margin-bottom:0;">
+                  <div style="font-size:12px; color:var(--stone-grey);">Fatal Blindspots</div>
+                  <div style="font-size:26px; font-weight:700; color:var(--danger);">1 Active</div>
+                  <span class="prov-badge prov-hypothesis" style="margin-top:6px;">Moisture Barrier Risk</span>
+                </div>
+              </div>
+
+              <!-- Active Validation Table Card -->
+              <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                  <h3 style="font-family:var(--font-display); font-size:18px; font-weight:600;">Active Hypotheses in Test</h3>
+                  <button class="btn btn-secondary" style="font-size:12px;" onclick="selectScreen(93)">Run Multi-Agent Synthesis &rarr;</button>
+                </div>
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                  <thead>
+                    <tr style="text-align:left; border-bottom:1px solid #CCC; color:var(--stone-grey);">
+                      <th style="padding:10px 0;">HYPOTHESIS STATEMENT</th>
+                      <th>RISK</th>
+                      <th>RESPONSES</th>
+                      <th>CONVICTION</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style="border-bottom:1px solid #EEE;">
+                      <td style="padding:12px 0;"><strong>H1: Problem Severity</strong> — Mid-market D2C brands face existential plastic packaging backlash.</td>
+                      <td><span style="color:var(--danger); font-weight:600;">High</span></td>
+                      <td>48 Reviews</td>
+                      <td><span class="prov-badge prov-verified">Validated (84%)</span></td>
+                      <td><a href="#" style="color:var(--orange); font-weight:600;" onclick="selectScreen(97)">Inspect &rarr;</a></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #EEE;">
+                      <td style="padding:12px 0;"><strong>H2: Willingness to Pay</strong> — Brands will accept 25% cost premium over standard plastic bubble mailers.</td>
+                      <td><span style="color:var(--warning); font-weight:600;">Critical</span></td>
+                      <td>48 Reviews</td>
+                      <td><span class="prov-badge prov-hypothesis">Contradiction (58%)</span></td>
+                      <td><a href="#" style="color:var(--orange); font-weight:600;" onclick="selectScreen(100)">Inspect &rarr;</a></td>
+                    </tr>
+                    <tr>
+                      <td style="padding:12px 0;"><strong>H3: Shelf Life</strong> — Compostable mailers must withstand 180 days in warehouse conditions.</td>
+                      <td><span style="color:var(--info); font-weight:600;">Medium</span></td>
+                      <td>28 Reviews</td>
+                      <td><span class="prov-badge prov-verified">Confirmed (92%)</span></td>
+                      <td><a href="#" style="color:var(--orange); font-weight:600;" onclick="selectScreen(97)">Inspect &rarr;</a></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (scr.id === 'SCR-107' || scr.id === 'SCR-106') {
+        // HEALTH RADAR
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <strong style="font-family:var(--font-display);">ECOPACK: 6-AXIS STARTUP HEALTH RADAR</strong>
+            <button class="btn btn-secondary" onclick="selectScreen(121)">Export Diligence Dossier (PDF)</button>
+          </div>
+          <div class="app-body">
+            <div class="app-sidebar">
+              <div class="nav-link" onclick="selectScreen(46)">📊 Dashboard</div>
+              <div class="nav-link" onclick="selectScreen(85)">📁 Evidence Locker</div>
+              <div class="nav-link" onclick="selectScreen(93)">🤖 AI Intelligence</div>
+              <div class="nav-link active" onclick="selectScreen(106)">📈 Health Radar</div>
+              <div class="nav-link" onclick="selectScreen(115)">⚖️ Decisions & Log</div>
+            </div>
+            <div class="app-content" style="display:flex; gap:32px;">
+              <div class="card" style="flex:1; text-align:center;">
+                <h3 style="font-family:var(--font-display); font-size:18px; margin-bottom:16px;">Diagnostic Polygon</h3>
+                <div class="radar-canvas-box">
+                  <svg viewBox="0 0 300 300" style="width:100%; height:100%;">
+                    <!-- Radar Web Circles -->
+                    <circle cx="150" cy="150" r="120" fill="none" stroke="#CCC" stroke-dasharray="3,3" />
+                    <circle cx="150" cy="150" r="80" fill="none" stroke="#DDD" />
+                    <circle cx="150" cy="150" r="40" fill="none" stroke="#EEE" />
+                    <!-- Axis lines -->
+                    <line x1="150" y1="30" x2="150" y2="270" stroke="#BBB" />
+                    <line x1="30" y1="150" x2="270" y2="150" stroke="#BBB" />
+                    <!-- Radar Polygon Shape -->
+                    <polygon points="150,50 240,110 220,230 150,220 80,210 60,110" fill="rgba(244, 74, 34, 0.25)" stroke="#F44A22" stroke-width="2.5" />
+                    <!-- Labels -->
+                    <text x="150" y="24" text-anchor="middle" font-size="11" font-weight="700" fill="inherit">Problem Fit (84)</text>
+                    <text x="250" y="110" font-size="11" font-weight="700" fill="inherit">Demand (79)</text>
+                    <text x="230" y="245" font-size="11" font-weight="700" fill="inherit">Solution (72)</text>
+                    <text x="150" y="290" text-anchor="middle" font-size="11" font-weight="700" fill="inherit">Market Moat (86)</text>
+                    <text x="35" y="225" font-size="11" font-weight="700" fill="inherit">Business (61)</text>
+                    <text x="35" y="105" font-size="11" font-weight="700" fill="inherit">Team (88)</text>
+                  </svg>
+                </div>
+                <div style="margin-top:20px; font-size:13px; color:var(--stone-grey);">
+                  Overall Health Score: <strong style="font-size:20px; color:var(--orange);">78 / 100</strong>
+                </div>
+              </div>
+              <div style="flex:1;">
+                <div class="card">
+                  <h4 style="font-size:16px; font-weight:700; margin-bottom:12px;">Pillar Strengths & Vulnerabilities</h4>
+                  <p style="font-size:13.5px; line-height:1.6; margin-bottom:16px;">
+                    <strong>Primary Strength:</strong> High Problem Fit (84/100) and Verified Team Readiness (88/100). 92% of target brands report customer complaints regarding single-use plastics.
+                  </p>
+                  <p style="font-size:13.5px; line-height:1.6; margin-bottom:16px; color:var(--danger);">
+                    <strong>Primary Vulnerability:</strong> Business Model Score (61/100). At scale < 100k units, unit economics yield single-digit margins unless batch production is outsourced to Tier-1 packaging mills.
+                  </p>
+                  <button class="btn btn-primary" onclick="selectScreen(116)">Add Pivot Decision to Log &rarr;</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        // GENERIC STANDARDIZED TEMPLATE FOR OTHER SCREENS
+        inner.innerHTML = `
+          <div class="app-topbar">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span class="brand-logo-badge">TP</span>
+              <strong style="font-family:var(--font-display);">${scr.name}</strong>
+              <span class="prov-badge prov-verified">${scr.id}</span>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <button class="btn btn-secondary" onclick="navigateScreen(-1)">&larr; Back</button>
+              <button class="btn btn-primary" onclick="navigateScreen(1)">Next Screen &rarr;</button>
+            </div>
+          </div>
+          <div class="app-body">
+            <div class="app-sidebar">
+              <div class="nav-link active">${scr.module}</div>
+              <div class="nav-link" onclick="selectScreen(0)">Home / Landing</div>
+              <div class="nav-link" onclick="selectScreen(46)">Dashboard</div>
+              <div class="nav-link" onclick="selectScreen(53)">Validations</div>
+              <div class="nav-link" onclick="selectScreen(85)">Evidence Locker</div>
+              <div class="nav-link" onclick="selectScreen(93)">AI Synthesis</div>
+              <div class="nav-link" onclick="selectScreen(106)">Health Radar</div>
+              <div class="nav-link" onclick="selectScreen(115)">Decisions Log</div>
+            </div>
+            <div class="app-content">
+              <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                  <div>
+                    <span class="prov-badge prov-hypothesis">ROUTE: ${scr.route}</span>
+                    <h2 style="font-family:var(--font-display); font-size:24px; font-weight:700; margin-top:8px;">${scr.name}</h2>
+                    <p style="font-size:14px; color:var(--stone-grey); margin-top:4px;">Primary Actor: <strong>${scr.role}</strong> • Production Spec Verified</p>
+                  </div>
+                  <div>
+                    <button class="btn btn-primary" onclick="alert('Action completed for ' + '${scr.id}')">Perform Primary Action</button>
+                  </div>
+                </div>
+
+                <div style="padding:24px; background:rgba(0,0,0,0.02); border-radius:8px; border:1px dashed #CCC; margin-bottom:24px;">
+                  <h4 style="font-size:14px; font-weight:700; margin-bottom:8px;">Interactive State Model</h4>
+                  <ul style="font-size:13px; line-height:1.8; padding-left:20px;">
+                    <li><strong>Layout Grid:</strong> Responsive 12-column system, 240px sidebar, 840px central work area, 360px contextual rail.</li>
+                    <li><strong>Provenances:</strong> Explicitly marked with <code>[Verified Evidence]</code>, <code>[Founder Hypothesis]</code>, or <code>[AI Synthesis]</code>.</li>
+                    <li><strong>State Variants:</strong> Normal, Loading Skeleton, Empty, Error, Destructive Confirmation.</li>
+                    <li><strong>Keyboard Shortcuts:</strong> <code>Cmd+K</code> for Search, <code>Esc</code> for Modals, <code>Tab</code> for Focus Ring.</li>
+                  </ul>
+                </div>
+
+                <div style="display:flex; gap:16px;">
+                  <button class="btn btn-secondary" onclick="selectScreen(46)">Return to Dashboard</button>
+                  <button class="btn btn-secondary" onclick="selectScreen(0)">View Public Website</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      renderScreenList();
+      renderActiveFrame();
+    });
+  </script>
+</body>
+</html>
