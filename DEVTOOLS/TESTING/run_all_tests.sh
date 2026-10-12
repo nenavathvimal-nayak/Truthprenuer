@@ -21,7 +21,12 @@ echo "=================================================================="
 backend/venv/bin/pytest backend/tests/ -v
 
 echo "=================================================================="
-echo "  3. RUNNING ADMIN PANEL TYPECHECK & BUILD"
+echo "  3. RUNNING ALGORITHM DOMAIN SUITE"
+echo "=================================================================="
+backend/venv/bin/pytest ALGORITHMS/TESTS/test_algorithms.py -v
+
+echo "=================================================================="
+echo "  4. RUNNING ADMIN PANEL TYPECHECK & BUILD"
 echo "=================================================================="
 cd ADMIN
 npm run build

@@ -53,15 +53,15 @@ A structured, multi-tier enterprise layout separating concerns across:
 ## 4. Architectural Changes
 
 1. **Localhost-Only Admin Enforcement:**
-   - Modified `admin_panel/vite.config.ts` to set `host: '127.0.0.1'`, `port: 60135`, `strictPort: true`.
-   - Updated `admin_panel/package.json` to enforce `--host 127.0.0.1 --port 60135`.
+   - Configured `ADMIN/vite.config.ts` to set `host: '127.0.0.1'`, `port: 60135`, `strictPort: true`.
+   - Updated `ADMIN/package.json` to enforce `--host 127.0.0.1 --port 60135`.
 2. **Backend Gateway Origin Guard (`require_local_admin_origin`):**
    - Added TCP socket IP verification in `backend/app/api/deps.py`. Any request to `/api/v1/admin/*` that does not originate from loopback is terminated with HTTP 403 Forbidden.
 3. **CORS Hardening:**
    - Whitelisted `http://127.0.0.1:60135` and `http://localhost:60135` in `backend/app/core/config.py`.
    - Removed all public cloud admin domains (`https://admin-truthprenuer.pages.dev`).
 4. **Persistent Realtime Chat:**
-   - Integrated `MessagingRepository` into `ConversationsNotifier` and `ChatMessagesNotifier` in `lib/repositories/app_providers.dart` with optimistic local UI and background Supabase sync.
+   - Integrated `MessagingRepository` into `ConversationsNotifier` and `ChatMessagesNotifier` in `USERS/lib/repositories/app_providers.dart` with optimistic local UI and background Supabase sync.
 5. **Memory Leak Mitigation:**
    - Added periodic timestamp garbage collection to `SlidingWindowRateLimiter` in `backend/app/core/rate_limit.py`.
 
@@ -94,9 +94,10 @@ A structured, multi-tier enterprise layout separating concerns across:
 
 | Suite | Execution Command | Result | Pass Rate |
 | :--- | :--- | :--- | :--- |
-| **Flutter Client** | `flutter test` | **64 passed, 0 failed** | 100% |
+| **Flutter Client** | `(cd USERS && flutter test)` | **64 passed, 0 failed** | 100% |
 | **Backend API** | `backend/venv/bin/pytest backend/tests/ -v` | **13 passed, 0 failed** | 100% |
-| **Admin Console** | `tsc -b && vite build` in `admin_panel/` | **0 errors (clean bundle emitted)** | 100% |
+| **Algorithm Domain** | `backend/venv/bin/pytest ALGORITHMS/TESTS/test_algorithms.py -v` | **4 passed, 0 failed** | 100% |
+| **Admin Console** | `cd ADMIN && npm run build` | **0 errors (clean bundle emitted)** | 100% |
 
 ---
 
@@ -129,7 +130,7 @@ If an unexpected regression occurs:
 ### Start User Applications:
 ```bash
 # Public Flutter Web (Dev)
-flutter run -d chrome --web-port=8080
+cd USERS && flutter run -d chrome --web-port=8080
 
 # Public Backend Gateway
 cd backend && source venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

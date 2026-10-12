@@ -15,8 +15,10 @@ else
 fi
 
 # 2. Verify Vite binding in config
-if grep -q "host: '127.0.0.1'" admin_panel/vite.config.ts; then
-  echo "  [OK] admin_panel/vite.config.ts strictly binds 127.0.0.1"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+if grep -q "host: '127.0.0.1'" "${ROOT_DIR}/ADMIN/vite.config.ts"; then
+  echo "  [OK] ADMIN/vite.config.ts strictly binds 127.0.0.1"
 else
   echo "  [FAIL] Vite config does not specify host 127.0.0.1"
   exit 1
