@@ -1,6 +1,9 @@
 import urllib.request
 import urllib.error
-import pytest
+try:
+    import pytest
+except ImportError:
+    pytest = None
 
 def test_admin_loopback_reachable():
     """Verify that Admin Console is running on http://127.0.0.1:60135 when server is active."""
@@ -11,4 +14,8 @@ def test_admin_loopback_reachable():
             html = response.read().decode("utf-8")
             assert "Truthprenuer" in html or "root" in html
     except (urllib.error.URLError, ConnectionRefusedError, OSError):
-        pytest.skip("Admin local dev server on 127.0.0.1:60135 is not currently running.")
+        if pytest:
+            pytest.skip("Admin local dev server on 127.0.0.1:60135 is not currently running.")
+        else:
+            return  # Server not running and pytest unavailable
+

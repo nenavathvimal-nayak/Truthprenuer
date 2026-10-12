@@ -1,0 +1,19 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/bin/python",
+  "python.testing.pytestPath": "${workspaceFolder}/backend/venv/bin/pytest",
+  "python.testing.pytestArgs": [
+    "backend/tests",
+    "ALGORITHMS/TESTS",
+    "ADMIN/TESTS"
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/backend/venv/lib/python3.9/site-packages",
+    "${workspaceFolder}/backend/venv/lib/python3.10/site-packages",
+    "${workspaceFolder}/backend/venv/lib/python3.11/site-packages",
+    "${workspaceFolder}/backend/venv/lib/python3.12/site-packages",
+    "${workspaceFolder}/backend/venv/lib/python3.13/site-packages"
+  ]
+}
