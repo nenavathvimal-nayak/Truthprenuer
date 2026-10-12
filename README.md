@@ -29,6 +29,9 @@ Truthprenuer is engineered with strict separation between **Public User Applicat
 
 ### 2.1 Starting User Applications (Local)
 ```bash
+# Navigate to USERS application directory
+cd USERS
+
 # Install Flutter dependencies
 flutter pub get
 
