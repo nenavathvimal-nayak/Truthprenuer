@@ -34,10 +34,12 @@ class StructuredJsonFormatter(logging.Formatter):
         }
         
         # Attach extra structured fields if present
-        if hasattr(record, "request_id"):
-            log_obj["request_id"] = record.request_id
-        if hasattr(record, "extra_fields"):
-            log_obj.update(sanitize_data(record.extra_fields))
+        request_id = getattr(record, "request_id", None)
+        if request_id is not None:
+            log_obj["request_id"] = request_id
+        extra_fields = getattr(record, "extra_fields", None)
+        if extra_fields is not None and isinstance(extra_fields, dict):
+            log_obj.update(sanitize_data(extra_fields))
             
         if record.exc_info:
             log_obj["exception"] = self.formatException(record.exc_info)

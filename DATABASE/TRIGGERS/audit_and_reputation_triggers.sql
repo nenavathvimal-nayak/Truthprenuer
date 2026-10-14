@@ -1,40 +1,52 @@
 -- ==============================================================================
--- TRUTHPRENUER — DATABASE TRIGGERS
--- Automatic Timestamps, Reputation Calibration, and Immutability Guards
+-- TRUTHPRENUER PRODUCTION DATABASE TRIGGERS
+-- Automatic Timestamps, Profile Roles Protection & Immutability Guards
 -- ==============================================================================
 
 -- 1. Automatic updated_at trigger function
-CREATE OR REPLACE FUNCTION set_updated_at_column()
+CREATE OR REPLACE FUNCTION public.set_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = timezone('utc'::text, now());
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at to mutable tables
-DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
-CREATE TRIGGER trg_users_updated_at
-  BEFORE UPDATE ON users
+DROP TRIGGER IF EXISTS trg_profiles_updated_at ON public.profiles;
+CREATE TRIGGER trg_profiles_updated_at
+  BEFORE UPDATE ON public.profiles
   FOR EACH ROW
-  EXECUTE FUNCTION set_updated_at_column();
+  EXECUTE FUNCTION public.set_updated_at_column();
 
-DROP TRIGGER IF EXISTS trg_campaigns_updated_at ON campaigns;
-CREATE TRIGGER trg_campaigns_updated_at
-  BEFORE UPDATE ON campaigns
+DROP TRIGGER IF EXISTS trg_startups_updated_at ON public.startups;
+CREATE TRIGGER trg_startups_updated_at
+  BEFORE UPDATE ON public.startups
   FOR EACH ROW
-  EXECUTE FUNCTION set_updated_at_column();
+  EXECUTE FUNCTION public.set_updated_at_column();
 
--- 2. Strict Audit Log Immutability Trigger (Double Layer on top of RLS)
-CREATE OR REPLACE FUNCTION prevent_audit_log_modification()
+DROP TRIGGER IF EXISTS trg_validations_updated_at ON public.validations;
+CREATE TRIGGER trg_validations_updated_at
+  BEFORE UPDATE ON public.validations
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_connection_requests_updated_at ON public.connection_requests;
+CREATE TRIGGER trg_connection_requests_updated_at
+  BEFORE UPDATE ON public.connection_requests
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_updated_at_column();
+
+-- 2. Strict Admin Audit Log Immutability Trigger (Double Layer on top of RLS)
+CREATE OR REPLACE FUNCTION public.prevent_audit_log_modification()
 RETURNS TRIGGER AS $$
 BEGIN
-  RAISE EXCEPTION 'CRITICAL SECURITY VIOLATION: Audit logs are strictly WORM (Write-Once, Read-Only). Updates and Deletions are forbidden by system law.';
+  RAISE EXCEPTION 'CRITICAL SECURITY VIOLATION: Admin audit logs are strictly WORM (Write-Once, Read-Only). Updates and Deletions are forbidden by system policy.';
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_audit_log_prevent_update ON audit_logs;
-CREATE TRIGGER trg_audit_log_prevent_update
-  BEFORE UPDATE OR DELETE ON audit_logs
+DROP TRIGGER IF EXISTS trg_admin_audit_log_prevent_update ON public.admin_audit_logs;
+CREATE TRIGGER trg_admin_audit_log_prevent_update
+  BEFORE UPDATE OR DELETE ON public.admin_audit_logs
   FOR EACH ROW
-  EXECUTE FUNCTION prevent_audit_log_modification();
+  EXECUTE FUNCTION public.prevent_audit_log_modification();

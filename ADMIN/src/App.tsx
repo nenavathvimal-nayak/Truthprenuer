@@ -20,7 +20,7 @@ const Settings = () => (
       <div className="flex justify-between items-center pb-3 border-b border-[#2A2A2A]">
         <div>
           <div className="font-semibold text-sm text-white">Database Row Level Security</div>
-          <div className="text-xs text-gray-400">Deny-by-default access policies across all 13 core tables</div>
+          <div className="text-xs text-gray-400">Deny-by-default access policies across all 21 core tables</div>
         </div>
         <span className="px-2.5 py-1 rounded bg-green-500/10 text-green-400 text-xs font-mono font-bold">Enforced</span>
       </div>

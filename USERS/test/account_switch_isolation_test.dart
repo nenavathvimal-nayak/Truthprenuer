@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:taeed_flutter/models/auth_provider.dart';
+import 'package:taeed_flutter/models/models.dart';
 import 'package:taeed_flutter/models/startup_health_models.dart';
 import 'package:taeed_flutter/repositories/app_providers.dart';
 
@@ -18,7 +19,17 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      // 1. Initial seeded state
+      // 1. Initial state: add test notification for User A
+      final testNotif = AppNotification(
+        id: "notif_user_a",
+        type: AppNotificationType.feedback,
+        actorId: "actor_1",
+        actorName: "Test Actor",
+        message: "Test message",
+        time: DateTime.now(),
+        isRead: false,
+      );
+      container.read(notificationsProvider.notifier).addNotification(testNotif);
       final notifsBefore = container.read(notificationsProvider);
       expect(notifsBefore.isNotEmpty, isTrue);
 
@@ -51,12 +62,18 @@ void main() {
       expect(evidenceAfterLogout.any((e) => e.id == "ev_user_a_private"), isFalse);
 
       final notifsAfterLogout = container.read(notificationsProvider);
-      expect(notifsAfterLogout.any((n) => !n.isRead), isTrue,
-          reason: 'Initial unread notifications should be restored rather than keeping User A read state');
+      expect(notifsAfterLogout.isEmpty, isTrue,
+          reason: 'User session reset must flush all notifications from User A rather than keeping them');
     });
 
     test('ConnectionsNotifier supports multi-state transitions and prevents rapid oscillations', () async {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [
+          connectionsProvider.overrideWith((ref) => ConnectionsNotifier({
+            'user_elena': ConnectionStatus.received,
+          })),
+        ],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(connectionsProvider.notifier);

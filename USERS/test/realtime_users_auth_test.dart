@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:taeed_flutter/main.dart';
 import 'package:taeed_flutter/models/auth_provider.dart';
+import 'package:taeed_flutter/models/models.dart';
 import 'package:taeed_flutter/repositories/app_providers.dart';
 
 void main() {
@@ -14,9 +15,27 @@ void main() {
     });
 
     test('communityUsersProvider resolves community users for real profiles', () async {
-      final container = ProviderContainer();
+      final List<User> testUsers = [
+        User(
+          id: 'test_user_elena',
+          name: 'Elena Rostova',
+          username: 'erostova',
+          bio: 'Partner at Apex Ventures.',
+          role: 'Investor',
+          userRole: UserRole.investor,
+          skills: ['Venture Capital', 'B2B SaaS'],
+          location: 'San Francisco, CA',
+          isVerified: true,
+        ),
+      ];
+      final container = ProviderContainer(
+        overrides: [
+          realCommunityUsersProvider.overrideWith((ref) => Future<List<User>>.value(testUsers)),
+        ],
+      );
       addTearDown(container.dispose);
 
+      await container.read(realCommunityUsersProvider.future);
       final users = container.read(communityUsersProvider);
       expect(users, isNotEmpty);
       expect(users.any((u) => u.name.isNotEmpty), isTrue);

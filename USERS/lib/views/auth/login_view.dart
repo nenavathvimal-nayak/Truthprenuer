@@ -26,6 +26,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
   String? _errorMessage;
   bool _isEmailNotConfirmed = false;
   bool _isInvalidCredentials = false;
+  bool _useOtpMode = false;
 
   @override
   void dispose() {
@@ -42,6 +43,60 @@ class _LoginViewState extends ConsumerState<LoginView> {
       return decoded;
     }
     return '/';
+  }
+
+  void _handleSendOtp() async {
+    if (_isLoading) return;
+
+    final email = _emailController.text.trim();
+    final emailRegex = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,}$');
+    if (email.isEmpty || !emailRegex.hasMatch(email)) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+        _isEmailNotConfirmed = false;
+        _isInvalidCredentials = false;
+      });
+      return;
+    }
+
+    HapticManager.shared.impactMedium();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _isEmailNotConfirmed = false;
+      _isInvalidCredentials = false;
+    });
+
+    try {
+      await ref.read(authProvider.notifier).signInWithOtp(email, shouldCreateUser: false);
+      if (!mounted) return;
+      HapticManager.shared.notificationSuccess();
+      final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+      final redirectParam = rawRedirect != null && rawRedirect.isNotEmpty ? '&redirect=${Uri.encodeComponent(rawRedirect)}' : '';
+      context.push('/otp?email=${Uri.encodeComponent(email)}&type=email$redirectParam');
+    } catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+      String errorText = 'Unable to send 6-digit verification code. Please try again.';
+      if (e is AuthException) {
+        final lower = e.message.toLowerCase();
+        if (lower.contains('rate limit') || lower.contains('over_email_send_rate_limit')) {
+          errorText = 'Too many attempts. Please wait a minute and try again.';
+        } else if (lower.contains('user not found') || lower.contains('signups not allowed')) {
+          errorText = 'No account found with this email. Please sign up first.';
+        } else {
+          errorText = e.message;
+        }
+      }
+      setState(() {
+        _errorMessage = errorText;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _handleSignIn() async {
@@ -228,44 +283,158 @@ class _LoginViewState extends ConsumerState<LoginView> {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.xl),
+        // Mode Selector: Password vs 6-Digit OTP
+        Container(
+          margin: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _useOtpMode = false;
+                    _errorMessage = null;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: !_useOtpMode ? colors.primary.withAlpha(30) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "Password Login",
+                        style: AppTypography.footnote.copyWith(
+                          color: !_useOtpMode ? colors.primary : colors.textSecondary,
+                          fontWeight: !_useOtpMode ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _useOtpMode = true;
+                    _errorMessage = null;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _useOtpMode ? colors.primary.withAlpha(30) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.pin_outlined, size: 16, color: _useOtpMode ? colors.primary : colors.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                            "6-Digit OTP",
+                            style: AppTypography.footnote.copyWith(
+                              color: _useOtpMode ? colors.primary : colors.textSecondary,
+                              fontWeight: _useOtpMode ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         CustomTextField(
           placeholder: "Email Address",
           controller: _emailController,
           icon: Icons.mail_outline,
           keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
+          textInputAction: _useOtpMode ? TextInputAction.done : TextInputAction.next,
+          onSubmitted: _useOtpMode ? _handleSendOtp : null,
         ),
-        const SizedBox(height: AppSpacing.md),
-        CustomTextField(
-          placeholder: "Password",
-          controller: _passwordController,
-          icon: Icons.lock_outline,
-          isSecure: true,
-          textInputAction: TextInputAction.done,
-          onSubmitted: _handleSignIn,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Align(
-          alignment: Alignment.centerRight,
-          child: GestureDetector(
-            onTap: () {
-              context.push('/forgot-password');
-            },
-            child: Text(
-              "Forgot Password?",
-              style: AppTypography.footnote.copyWith(
-                color: colors.primary,
+        if (!_useOtpMode) ...[
+          const SizedBox(height: AppSpacing.md),
+          CustomTextField(
+            placeholder: "Password",
+            controller: _passwordController,
+            icon: Icons.lock_outline,
+            isSecure: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: _handleSignIn,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () {
+                context.push('/forgot-password');
+              },
+              child: Text(
+                "Forgot Password?",
+                style: AppTypography.footnote.copyWith(
+                  color: colors.primary,
+                ),
               ),
             ),
           ),
-        ),
+        ] else ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            "We will send a 6-digit one-time passcode to your email.",
+            style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+          ),
+        ],
         const SizedBox(height: AppSpacing.xl),
         PrimaryButton(
-          title: "Sign In",
+          title: _useOtpMode ? "Send 6-Digit Code" : "Sign In",
           isLoading: _isLoading,
-          action: _handleSignIn,
+          action: _useOtpMode ? _handleSendOtp : _handleSignIn,
         ),
+        if (!_useOtpMode) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() {
+                _useOtpMode = true;
+                _errorMessage = null;
+              }),
+              icon: Icon(Icons.pin_outlined, size: 18, color: colors.primary),
+              label: Text(
+                "Sign in with 6-digit OTP code",
+                style: AppTypography.footnote.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: AppSpacing.sm),
+          Center(
+            child: TextButton(
+              onPressed: () {
+                final email = _emailController.text.trim();
+                context.push('/otp?email=${Uri.encodeComponent(email)}&type=email');
+              },
+              child: Text(
+                "Already received a code? Enter 6-digit code",
+                style: AppTypography.footnote.copyWith(
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
 

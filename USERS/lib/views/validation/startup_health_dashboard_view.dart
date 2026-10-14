@@ -6,6 +6,7 @@ import '../../design_system/app_spacing.dart';
 import '../../design_system/app_typography.dart';
 import '../../models/startup_health_models.dart';
 import '../../repositories/app_providers.dart';
+import '../../repositories/supabase_client.dart';
 import '../../utils/haptic_manager.dart';
 
 class StartupHealthDashboardView extends ConsumerStatefulWidget {
@@ -98,7 +99,10 @@ class _StartupHealthDashboardViewState extends ConsumerState<StartupHealthDashbo
         recommendation: "Package this validation dossier into the angel pitch data room.",
       ),
     ];
-    return StartupHealth(startupId: "mock_startup", scores: scores);
+    return StartupHealth(
+      startupId: validation?.id ?? (safeSupabaseClient?.auth.currentUser?.id ?? "unassessed"),
+      scores: scores,
+    );
   }
 
   Color _scoreColor(int score, AppThemeColors colors) {

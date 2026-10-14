@@ -108,10 +108,9 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
     setState(() => _replyingTo = null);
     _scrollToBottom();
 
-    // Auto-reply simulation only for AI Mentor or offline mock demo previews
+    // Automated advice generation ONLY for dedicated AI Mentor conversation
     final isAIMentor = widget.otherUser.id == "ai_mentor";
-    final isMockDemo = safeSupabaseClient == null || widget.conversation.id.startsWith('conv_');
-    if (!isAIMentor && !isMockDemo) {
+    if (!isAIMentor) {
       return;
     }
 
@@ -124,30 +123,13 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
       _replyTimer = Timer(const Duration(milliseconds: 2200), () {
         if (mounted) {
           setState(() => _isTyping = false);
-          List<String> replies;
-          if (widget.otherUser.id == "ai_mentor") {
-            replies = [
-              "Based on your recent validation metrics, I recommend running a pricing survey with 5 targeted beta users 💡.",
-              "Looking at your startup health score (82/100), your Problem-Space validation is strong, but Go-To-Market distribution needs early experimentation.",
-              "Great question! Focus on validating willingness-to-pay before building complex custom features. Have you collected pre-orders or intent letters?",
-              "Analyzing founder feedback: 4 out of 5 validators asked for the core collaboration workflow. I suggest prioritizing that in your MVP roadmap 🚀.",
-              "I'm continuously monitoring your validation progress. Let's draft your next structured feedback questions together!"
-            ];
-          } else if (widget.otherUser.role.toLowerCase().contains("investor")) {
-            replies = [
-              "Impressive traction on the validation score. Send over the deck and your target cap table 📈.",
-              "What is your customer acquisition hypothesis for Q4? Let's discuss on our next sync.",
-              "Thanks for the update! The unit economics look promising at this stage."
-            ];
-          } else {
-            replies = [
-              "That makes complete sense! 💡",
-              "100% aligned on this approach.",
-              "Would love to test this prototype when you deploy it!",
-              "Thanks for sharing, this is super actionable 🙏",
-              "Let's set up a quick 15-min sync to walk through this!"
-            ];
-          }
+          final replies = [
+            "Based on your recent validation metrics, I recommend running a pricing survey with 5 targeted beta users 💡.",
+            "Looking at your startup health score, your Problem-Space validation is strong, but Go-To-Market distribution needs early experimentation.",
+            "Great question! Focus on validating willingness-to-pay before building complex custom features. Have you collected pre-orders or intent letters?",
+            "Analyzing founder feedback: validators prioritize the core workflow. I suggest focusing on that in your MVP roadmap 🚀.",
+            "I'm continuously monitoring your validation progress. Let's draft your next structured feedback questions together!"
+          ];
 
           final replyText = (replies.toList()..shuffle()).first;
           ref.read(chatMessagesProvider(widget.conversation.id).notifier).sendMessage(text: replyText);
@@ -193,58 +175,49 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _AttachmentOptionTile(
-                  icon: Icons.picture_as_pdf_rounded,
-                  iconColor: Colors.redAccent,
-                  title: "Startup Pitch Deck",
-                  subtitle: "Truthprenuer_Seed_Deck_v2.pdf (12 slides • 4.2 MB)",
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _sendMessage(
-                      attachmentType: "pitch_deck",
-                      attachmentTitle: "Truthprenuer_Seed_Deck_v2.pdf",
-                      attachmentSubtitle: "12 slides • 4.2 MB",
-                    );
-                  },
-                ),
-                _AttachmentOptionTile(
                   icon: Icons.rocket_launch_rounded,
                   iconColor: colors.primary,
-                  title: "Active Validation Project",
-                  subtitle: "Truthprenuer — Automated Startup Validation (Idea Stage)",
+                  title: "Share Validation Sprint",
+                  subtitle: "Attach one of your live validation projects",
                   onTap: () {
                     Navigator.pop(ctx);
-                    _sendMessage(
-                      attachmentType: "validation",
-                      attachmentTitle: "Truthprenuer — Automated Startup Validation",
-                      attachmentSubtitle: "Health Score: 82/100 • 14 Validators",
-                    );
+                    final myValidations = ref.read(validationsProvider).asData?.value ?? [];
+                    if (myValidations.isNotEmpty) {
+                      final activeVal = myValidations.first;
+                      _sendMessage(
+                        attachmentType: "validation",
+                        attachmentTitle: activeVal.title,
+                        attachmentSubtitle: "Health Score: ${activeVal.healthScore}/100 • ${activeVal.stage}",
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("No active validation projects available to share.")),
+                      );
+                    }
                   },
                 ),
                 _AttachmentOptionTile(
-                  icon: Icons.image_rounded,
+                  icon: Icons.link_rounded,
                   iconColor: Colors.blueAccent,
-                  title: "Prototype Screenshot",
-                  subtitle: "Truthprenuer_UI_Mockup_v3.png (High Resolution)",
+                  title: "Attach Resource Link",
+                  subtitle: "Share an external URL, document, or prototype",
                   onTap: () {
                     Navigator.pop(ctx);
-                    _sendMessage(
-                      attachmentType: "image",
-                      attachmentTitle: "Truthprenuer_UI_Mockup_v3.png",
-                      attachmentSubtitle: "1240 × 2800 • Prototype Preview",
-                    );
+                    _showLinkAttachmentDialog();
                   },
                 ),
                 _AttachmentOptionTile(
-                  icon: Icons.mic_rounded,
-                  iconColor: Colors.purpleAccent,
-                  title: "Voice Memo Note",
-                  subtitle: "Quick founder audio summary (0:45)",
+                  icon: Icons.cloud_upload_outlined,
+                  iconColor: colors.textSecondary,
+                  title: "Evidence Vault File",
+                  subtitle: "Requires cloud storage evidence vault integration",
                   onTap: () {
                     Navigator.pop(ctx);
-                    _sendMessage(
-                      attachmentType: "audio",
-                      attachmentTitle: "Founder Audio Memo (0:45)",
-                      attachmentSubtitle: "Recorded just now • 44.1 kHz",
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Encrypted evidence attachments require cloud storage integration."),
+                        duration: Duration(seconds: 3),
+                      ),
                     );
                   },
                 ),
@@ -257,53 +230,56 @@ class _ChatRoomViewState extends ConsumerState<ChatRoomView> {
     );
   }
 
-  void _showCallSimulation() {
-    HapticManager.shared.impactMedium();
+  void _showLinkAttachmentDialog() {
     final colors = Theme.of(context).appColors;
+    final controller = TextEditingController();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.cardBackground,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        contentPadding: const EdgeInsets.all(AppSpacing.xl),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AvatarView(name: widget.otherUser.name, imageURL: widget.otherUser.avatarURL, size: 72),
-            const SizedBox(height: AppSpacing.md),
-            Text(widget.otherUser.name, style: AppTypography.title2.copyWith(color: colors.text)),
-            const SizedBox(height: 4),
-            Text("Calling Founder Network Audio...", style: AppTypography.caption1.copyWith(color: colors.primary)),
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: colors.surfaceElevated,
-                  child: Icon(Icons.mic_off_rounded, color: colors.textSecondary),
-                ),
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: colors.surfaceElevated,
-                  child: Icon(Icons.volume_up_rounded, color: colors.textSecondary),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    HapticManager.shared.impactMedium();
-                    Navigator.pop(ctx);
-                  },
-                  child: const CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.redAccent,
-                    child: Icon(Icons.call_end_rounded, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ],
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text("Attach Link", style: AppTypography.headline.copyWith(color: colors.text)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: AppTypography.body.copyWith(color: colors.text),
+          decoration: InputDecoration(
+            hintText: "https://example.com/spec",
+            hintStyle: AppTypography.body.copyWith(color: colors.textSecondary),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("Cancel", style: TextStyle(color: colors.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                Navigator.pop(ctx);
+                _sendMessage(
+                  attachmentType: "link",
+                  attachmentTitle: text,
+                  attachmentSubtitle: "External Resource Link",
+                );
+              }
+            },
+            child: const Text("Attach"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCallSimulation() {
+    HapticManager.shared.impactMedium();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Direct voice calling requires WebRTC gateway integration (not yet enabled)."),
+        duration: Duration(seconds: 3),
       ),
     );
   }

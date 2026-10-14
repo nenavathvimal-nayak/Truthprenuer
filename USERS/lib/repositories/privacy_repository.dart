@@ -49,6 +49,13 @@ class PrivacyRepository {
     final userId = client.auth.currentUser?.id;
     if (userId == null) return;
 
+    await client.from('privacy_requests').insert({
+      'user_id': userId,
+      'request_type': 'erasure',
+      'status': 'pending',
+      'details': 'User initiated GDPR/DPDP account erasure request',
+    });
+
     await _logAccess(
       action: 'DELETION_REQUEST',
       resource: 'profiles',
@@ -63,6 +70,13 @@ class PrivacyRepository {
 
     final userId = client.auth.currentUser?.id;
     if (userId == null) return;
+
+    await client.from('privacy_requests').insert({
+      'user_id': userId,
+      'request_type': 'export',
+      'status': 'pending',
+      'details': 'User initiated GDPR/DPDP data export request',
+    });
 
     await _logAccess(
       action: 'DATA_EXPORT_REQUEST',

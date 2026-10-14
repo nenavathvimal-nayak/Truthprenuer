@@ -28,6 +28,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _isUserAlreadyRegistered = false;
+  bool _useOtpSignupMode = false;
 
   @override
   void dispose() {
@@ -45,6 +46,84 @@ class _SignupViewState extends ConsumerState<SignupView> {
       return decoded;
     }
     return '/';
+  }
+
+  void _handleOtpSignUp() async {
+    if (_isLoading) return;
+
+    final name = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+
+    if (name.isEmpty) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Please enter your full name';
+        _isUserAlreadyRegistered = false;
+      });
+      return;
+    }
+
+    if (name.length < 2) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Name must be at least 2 characters';
+        _isUserAlreadyRegistered = false;
+      });
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[\w\-]{2,}$');
+    if (email.isEmpty || !emailRegex.hasMatch(email)) {
+      HapticManager.shared.error();
+      setState(() {
+        _errorMessage = 'Please enter a valid email address';
+        _isUserAlreadyRegistered = false;
+      });
+      return;
+    }
+
+    HapticManager.shared.impactMedium();
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _isUserAlreadyRegistered = false;
+    });
+
+    try {
+      await ref.read(authProvider.notifier).signUpWithOtp(email, name);
+      if (!mounted) return;
+      HapticManager.shared.notificationSuccess();
+      final rawRedirect = GoRouterState.of(context).uri.queryParameters['redirect'];
+      final redirectParam = rawRedirect != null && rawRedirect.isNotEmpty ? '&redirect=${Uri.encodeComponent(rawRedirect)}' : '';
+      context.push('/otp?email=${Uri.encodeComponent(email)}&type=email$redirectParam');
+    } catch (e) {
+      if (!mounted) return;
+      HapticManager.shared.error();
+
+      String errorText = 'Unable to send 6-digit activation code. Please try again.';
+      bool userExists = false;
+
+      if (e is AuthException) {
+        final msg = e.message.toLowerCase();
+        if (msg.contains('already registered') || msg.contains('user already exists')) {
+          errorText = 'An account with this email already exists.';
+          userExists = true;
+        } else if (msg.contains('rate limit') || msg.contains('over_email_send_rate_limit')) {
+          errorText = 'Too many sign up requests. Please wait a minute and try again.';
+        } else {
+          errorText = e.message;
+        }
+      }
+
+      setState(() {
+        _errorMessage = errorText;
+        _isUserAlreadyRegistered = userExists;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   void _handleSignUp() async {
@@ -243,7 +322,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
               TextButton(
                 onPressed: () {
                   Navigator.of(ctx).pop();
-                  context.push('/otp?email=${Uri.encodeComponent(email)}');
+                  context.push('/otp?email=${Uri.encodeComponent(email)}&type=signup');
                 },
                 child: Text(
                   "Enter 6-Digit Code",
@@ -355,7 +434,76 @@ class _SignupViewState extends ConsumerState<SignupView> {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.xl),
+        // Mode Selector: Password vs 6-Digit OTP Sign Up
+        Container(
+          margin: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.border),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _useOtpSignupMode = false;
+                    _errorMessage = null;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: !_useOtpSignupMode ? colors.primary.withAlpha(30) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "Password Sign Up",
+                        style: AppTypography.footnote.copyWith(
+                          color: !_useOtpSignupMode ? colors.primary : colors.textSecondary,
+                          fontWeight: !_useOtpSignupMode ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _useOtpSignupMode = true;
+                    _errorMessage = null;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _useOtpSignupMode ? colors.primary.withAlpha(30) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.pin_outlined, size: 16, color: _useOtpSignupMode ? colors.primary : colors.textSecondary),
+                          const SizedBox(width: 6),
+                          Text(
+                            "6-Digit OTP",
+                            style: AppTypography.footnote.copyWith(
+                              color: _useOtpSignupMode ? colors.primary : colors.textSecondary,
+                              fontWeight: _useOtpSignupMode ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
         CustomTextField(
           placeholder: "Full Name",
           controller: _fullNameController,
@@ -368,31 +516,76 @@ class _SignupViewState extends ConsumerState<SignupView> {
           controller: _emailController,
           icon: Icons.mail_outline,
           keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
+          textInputAction: _useOtpSignupMode ? TextInputAction.done : TextInputAction.next,
+          onSubmitted: _useOtpSignupMode ? _handleOtpSignUp : null,
         ),
-        const SizedBox(height: AppSpacing.md),
-        CustomTextField(
-          placeholder: "Password (min 6 characters)",
-          controller: _passwordController,
-          icon: Icons.lock_outline,
-          isSecure: true,
-          textInputAction: TextInputAction.next,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        CustomTextField(
-          placeholder: "Confirm Password",
-          controller: _confirmPasswordController,
-          icon: Icons.lock_reset_outlined,
-          isSecure: true,
-          textInputAction: TextInputAction.done,
-          onSubmitted: _handleSignUp,
-        ),
+        if (!_useOtpSignupMode) ...[
+          const SizedBox(height: AppSpacing.md),
+          CustomTextField(
+            placeholder: "Password (min 6 characters)",
+            controller: _passwordController,
+            icon: Icons.lock_outline,
+            isSecure: true,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          CustomTextField(
+            placeholder: "Confirm Password",
+            controller: _confirmPasswordController,
+            icon: Icons.lock_reset_outlined,
+            isSecure: true,
+            textInputAction: TextInputAction.done,
+            onSubmitted: _handleSignUp,
+          ),
+        ] else ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            "We will send a 6-digit activation code to your email. No password needed.",
+            style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+          ),
+        ],
         const SizedBox(height: AppSpacing.xl),
         PrimaryButton(
-          title: "Sign Up",
+          title: _useOtpSignupMode ? "Send 6-Digit Activation Code" : "Sign Up",
           isLoading: _isLoading,
-          action: _handleSignUp,
+          action: _useOtpSignupMode ? _handleOtpSignUp : _handleSignUp,
         ),
+        if (!_useOtpSignupMode) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() {
+                _useOtpSignupMode = true;
+                _errorMessage = null;
+              }),
+              icon: Icon(Icons.pin_outlined, size: 18, color: colors.primary),
+              label: Text(
+                "Sign up with 6-digit OTP code (passwordless)",
+                style: AppTypography.footnote.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ] else ...[
+          const SizedBox(height: AppSpacing.sm),
+          Center(
+            child: TextButton(
+              onPressed: () => setState(() {
+                _useOtpSignupMode = false;
+                _errorMessage = null;
+              }),
+              child: Text(
+                "Switch back to standard sign up with password",
+                style: AppTypography.footnote.copyWith(
+                  color: colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
 

@@ -58,7 +58,7 @@ for sdir in "${SUB_DIRS[@]}"; do
   fi
 done
 
-# 2. Verify Admin Panel Loopback Binding (Strictly 127.0.0.1:60135)
+# 2. Verify Admin Panel Network Boundary...
 echo "--> 2. Verifying Admin Panel Network Boundary..."
 if grep -E "host:\s*['\"]0\.0\.0\.0['\"]" "${ROOT_DIR}/ADMIN/vite.config.ts" >/dev/null 2>&1; then
   echo "  [ERROR] Security violation: ADMIN/vite.config.ts exposes 0.0.0.0!"
@@ -106,12 +106,7 @@ else
   echo "  [OK] No private Anthropic keys found in backend"
 fi
 
-CLIENT_DIR="${ROOT_DIR}/USERS/lib"
-if [ ! -d "${CLIENT_DIR}" ]; then
-  CLIENT_DIR="${ROOT_DIR}/lib"
-fi
-
-if grep -rn "service_role" "${CLIENT_DIR}" 2>/dev/null; then
+if grep -rn "service_role" "${ROOT_DIR}/USERS/lib" 2>/dev/null; then
   echo "  [ERROR] Supabase service_role key found in public client code!"
   FAILED=1
 else

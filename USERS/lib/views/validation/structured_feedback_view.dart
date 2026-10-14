@@ -570,16 +570,12 @@ class _StructuredFeedbackViewState extends ConsumerState<StructuredFeedbackView>
         
         GestureDetector(
           onTap: () {
-            setState(() {
-              _uploadedEvidence.add(
-                EvidenceAttachment(
-                  id: "ev_${DateTime.now().millisecondsSinceEpoch}",
-                  type: EvidenceType.image,
-                  url: "simulated_upload.jpg",
-                  description: "Uploaded Screenshot",
-                ),
-              );
-            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Direct image binary uploads require storage integration. Please use the link attachment input below to attach your screenshot or proof URL."),
+                duration: Duration(seconds: 3),
+              ),
+            );
           },
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),

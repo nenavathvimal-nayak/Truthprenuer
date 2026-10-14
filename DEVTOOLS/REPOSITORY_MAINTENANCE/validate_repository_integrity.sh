@@ -77,9 +77,9 @@ fi
 # 3. Verify Framework-Required Root Manifests & Canonical Root Files
 echo "--> 3. Verifying Package Manifests & Root Files..."
 ROOT_FILES=(
-  "pubspec.yaml"
+  "USERS/pubspec.yaml"
   "backend/requirements.txt"
-  "admin_panel/package.json"
+  "ADMIN/package.json"
   "README.md"
   "CONTRIBUTING.md"
   "SECURITY.md"

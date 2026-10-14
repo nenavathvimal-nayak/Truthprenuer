@@ -182,18 +182,63 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> verifyOTP(String email, String token) async {
+  /// Sends a 6-digit OTP code to the user's email for passwordless sign-in / login.
+  Future<void> signInWithOtp(String email, {bool shouldCreateUser = false}) async {
+    final client = safeSupabaseClient;
+    if (client == null) {
+      return;
+    }
+    try {
+      await client.auth.signInWithOtp(
+        email: email.trim(),
+        shouldCreateUser: shouldCreateUser,
+        emailRedirectTo: 'https://truthprenuer.pages.dev/auth/callback',
+      );
+    } on AuthException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
+      rethrow;
+    }
+  }
+
+  /// Sends a 6-digit OTP code to sign up a new user with full name metadata.
+  Future<void> signUpWithOtp(String email, String fullName) async {
+    final client = safeSupabaseClient;
+    if (client == null) {
+      return;
+    }
+    try {
+      await client.auth.signInWithOtp(
+        email: email.trim(),
+        shouldCreateUser: true,
+        data: {'full_name': fullName.trim()},
+        emailRedirectTo: 'https://truthprenuer.pages.dev/auth/callback',
+      );
+    } on AuthException catch (e) {
+      state = state.copyWith(errorMessage: e.message);
+      rethrow;
+    } catch (e) {
+      state = state.copyWith(errorMessage: e.toString());
+      rethrow;
+    }
+  }
+
+  /// Verifies a 6-digit OTP token for login (OtpType.email) or signup (OtpType.signup).
+  Future<bool> verifyOTP(String email, String token, {OtpType? type}) async {
     final client = safeSupabaseClient;
     if (client == null) {
       state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
       refreshUserSession();
       return true;
     }
+    final primaryType = type ?? OtpType.email;
     try {
       final res = await client.auth.verifyOTP(
         email: email.trim(),
         token: token.trim(),
-        type: OtpType.signup,
+        type: primaryType,
       );
       if (res.session != null) {
         state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
@@ -202,6 +247,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       return false;
     } on AuthException catch (e) {
+      // If primary type verification fails, attempt fallback (e.g. signup vs email OTP)
+      if (type == null || type == OtpType.email) {
+        try {
+          final fallbackRes = await client.auth.verifyOTP(
+            email: email.trim(),
+            token: token.trim(),
+            type: OtpType.signup,
+          );
+          if (fallbackRes.session != null) {
+            state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+            refreshUserSession();
+            return true;
+          }
+        } catch (_) {}
+      } else if (type == OtpType.signup) {
+        try {
+          final fallbackRes = await client.auth.verifyOTP(
+            email: email.trim(),
+            token: token.trim(),
+            type: OtpType.email,
+          );
+          if (fallbackRes.session != null) {
+            state = state.copyWith(status: AuthStatus.authenticated, errorMessage: null);
+            refreshUserSession();
+            return true;
+          }
+        } catch (_) {}
+      }
       state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: e.message);
       rethrow;
     } catch (e) {
@@ -210,11 +283,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> resendConfirmationEmail(String email) async {
+  /// Resends a 6-digit confirmation or login OTP code to the email address.
+  Future<void> resendConfirmationEmail(String email, {OtpType type = OtpType.signup}) async {
     final client = safeSupabaseClient;
     if (client == null) return;
     try {
-      await client.auth.resend(type: OtpType.signup, email: email.trim());
+      if (type == OtpType.email) {
+        await client.auth.signInWithOtp(
+          email: email.trim(),
+          emailRedirectTo: 'https://truthprenuer.pages.dev/auth/callback',
+        );
+      } else {
+        await client.auth.resend(type: type, email: email.trim());
+      }
     } on AuthException catch (e) {
       state = state.copyWith(errorMessage: e.message);
       rethrow;

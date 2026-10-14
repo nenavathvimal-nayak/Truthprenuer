@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,14 +18,27 @@ class SearchOverlayView extends ConsumerStatefulWidget {
 
 class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
   final TextEditingController _searchCtrl = TextEditingController();
+  Timer? _debounce;
+  String _activeQuery = '';
   int _selectedFilterIndex = 0; // 0: All, 1: Validations, 2: People
   final List<String> _filters = ["All", "Validations", "People"];
-  final List<String> _searchHistory = ["Invoice OCR", "SOC2 Compliance", "B2B SaaS", "Pricing Strategy"];
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        setState(() {
+          _activeQuery = val.trim().toLowerCase();
+        });
+      }
+    });
   }
 
   @override
@@ -32,23 +46,27 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
     final colors = Theme.of(context).appColors;
     final validations = ref.watch(validationsProvider).value ?? [];
     final users = ref.watch(communityUsersProvider);
-    final query = _searchCtrl.text.trim().toLowerCase();
+    final isQueryTooShort = _activeQuery.isNotEmpty && _activeQuery.length < 2;
 
-    // Filtered data
-    final filteredValidations = validations.where((v) {
-      if (query.isEmpty) return true;
-      return v.title.toLowerCase().contains(query) ||
-          v.problem.toLowerCase().contains(query) ||
-          v.tags.any((t) => t.toLowerCase().contains(query));
-    }).toList();
+    // Filtered data with bounded scans (max 20 items)
+    final filteredValidations = isQueryTooShort
+        ? <dynamic>[]
+        : validations.where((v) {
+            if (_activeQuery.isEmpty) return true;
+            return v.title.toLowerCase().contains(_activeQuery) ||
+                v.problem.toLowerCase().contains(_activeQuery) ||
+                v.tags.any((t) => t.toLowerCase().contains(_activeQuery));
+          }).take(20).toList();
 
-    final filteredUsers = users.where((u) {
-      if (query.isEmpty) return true;
-      return u.name.toLowerCase().contains(query) ||
-          u.username.toLowerCase().contains(query) ||
-          u.role.toLowerCase().contains(query) ||
-          u.skills.any((s) => s.toLowerCase().contains(query));
-    }).toList();
+    final filteredUsers = isQueryTooShort
+        ? <dynamic>[]
+        : users.where((u) {
+            if (_activeQuery.isEmpty) return true;
+            return u.name.toLowerCase().contains(_activeQuery) ||
+                u.username.toLowerCase().contains(_activeQuery) ||
+                u.role.toLowerCase().contains(_activeQuery) ||
+                u.skills.any((s) => s.toLowerCase().contains(_activeQuery));
+          }).take(20).toList();
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -75,7 +93,7 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
             hintStyle: AppTypography.body.copyWith(color: colors.textTertiary),
             border: InputBorder.none,
           ),
-          onChanged: (_) => setState(() {}),
+          onChanged: _onSearchChanged,
         ),
         actions: [
           if (_searchCtrl.text.isNotEmpty)
@@ -83,7 +101,10 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
               icon: Icon(Icons.clear, color: colors.textSecondary),
               onPressed: () {
                 _searchCtrl.clear();
-                setState(() {});
+                _debounce?.cancel();
+                setState(() {
+                  _activeQuery = '';
+                });
               },
             ),
         ],
@@ -134,38 +155,58 @@ class _SearchOverlayViewState extends ConsumerState<SearchOverlayView> {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.all(AppSpacing.md),
                 children: [
-                  // Suggestions / History if query is empty
-                  if (query.isEmpty) ...[
+                  // Minimum Query Length Indicator
+                  if (isQueryTooShort) ...[
                     Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Text(
-                        "POPULAR SEARCHES",
-                        style: AppTypography.caption.copyWith(
-                          color: colors.textTertiary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      child: Center(
+                        child: Text(
+                          "Enter at least 2 characters to search...",
+                          style: AppTypography.caption.copyWith(color: colors.textSecondary),
                         ),
                       ),
                     ),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _searchHistory.map((term) {
-                        return ActionChip(
-                          avatar: Icon(Icons.trending_up, size: 14, color: colors.primary),
-                          label: Text(term),
-                          labelStyle: AppTypography.caption.copyWith(color: colors.text),
-                          backgroundColor: colors.cardBackground,
-                          side: BorderSide(color: colors.border),
-                          onPressed: () {
-                            HapticManager.shared.selection();
-                            _searchCtrl.text = term;
-                            setState(() {});
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
+                  // Suggestions / Tags if query is empty
+                  if (_activeQuery.isEmpty) ...[
+                    if (validations.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: Text(
+                          "DISCOVER THEMES",
+                          style: AppTypography.caption.copyWith(
+                            color: colors.textTertiary,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: validations
+                            .expand((v) => v.tags)
+                            .where((t) => t.isNotEmpty)
+                            .toSet()
+                            .take(8)
+                            .map((term) {
+                          return ActionChip(
+                            avatar: Icon(Icons.tag, size: 14, color: colors.primary),
+                            label: Text(term),
+                            labelStyle: AppTypography.caption.copyWith(color: colors.text),
+                            backgroundColor: colors.cardBackground,
+                            side: BorderSide(color: colors.border),
+                            onPressed: () {
+                              HapticManager.shared.selection();
+                              _searchCtrl.text = term;
+                              _onSearchChanged(term);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                   ],
 
                   // Validations section

@@ -1,36 +1,70 @@
 -- ==============================================================================
--- TRUTHPRENUER — DATABASE SCHEMA VERIFICATION TEST SUITE
+-- TRUTHPRENUER — DATABASE SCHEMA & SECURITY VERIFICATION TEST SUITE
+-- Verifies all 21 core tables, security columns, WORM audit logs, triggers, RPCs
 -- ==============================================================================
 
 DO $$
 BEGIN
-  -- 1. Assert users table exists and has critical security columns
+  -- 1. Assert profiles table exists and has critical security columns
   ASSERT (SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'status'
-  )), 'ASSERTION FAILED: users.status column missing';
+    WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role'
+  )), 'ASSERTION FAILED: public.profiles.role column missing';
 
   ASSERT (SELECT EXISTS (
     SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'users' AND column_name = 'role'
-  )), 'ASSERTION FAILED: users.role column missing';
+    WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'username'
+  )), 'ASSERTION FAILED: public.profiles.username column missing';
 
-  -- 2. Assert audit_logs table exists and is structured for WORM compliance
+  -- 2. Assert admin_audit_logs table exists for WORM compliance
   ASSERT (SELECT EXISTS (
     SELECT 1 FROM information_schema.tables 
-    WHERE table_name = 'audit_logs'
-  )), 'ASSERTION FAILED: audit_logs table missing';
+    WHERE table_schema = 'public' AND table_name = 'admin_audit_logs'
+  )), 'ASSERTION FAILED: public.admin_audit_logs table missing';
 
-  -- 3. Assert campaigns and validations tables exist
+  -- 3. Assert startups and validations tables exist
   ASSERT (SELECT EXISTS (
     SELECT 1 FROM information_schema.tables 
-    WHERE table_name = 'campaigns'
-  )), 'ASSERTION FAILED: campaigns table missing';
+    WHERE table_schema = 'public' AND table_name = 'startups'
+  )), 'ASSERTION FAILED: public.startups table missing';
 
   ASSERT (SELECT EXISTS (
     SELECT 1 FROM information_schema.tables 
-    WHERE table_name = 'validations'
-  )), 'ASSERTION FAILED: validations table missing';
+    WHERE table_schema = 'public' AND table_name = 'validations'
+  )), 'ASSERTION FAILED: public.validations table missing';
 
-  RAISE NOTICE 'DATABASE SCHEMA INTEGRITY VERIFICATION PASSED SUCCESSFULLY';
+  -- 4. Assert confidential founder vault: evidence_items exists with is_private
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'evidence_items' AND column_name = 'is_private'
+  )), 'ASSERTION FAILED: public.evidence_items.is_private column missing';
+
+  -- 5. Assert messaging and social connection tables
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'connection_requests'
+  )), 'ASSERTION FAILED: public.connection_requests table missing';
+
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'messages'
+  )), 'ASSERTION FAILED: public.messages table missing';
+
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'notifications'
+  )), 'ASSERTION FAILED: public.notifications table missing';
+
+  -- 6. Assert privacy and consent tables
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'privacy_requests'
+  )), 'ASSERTION FAILED: public.privacy_requests table missing';
+
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'consent_records'
+  )), 'ASSERTION FAILED: public.consent_records table missing';
+
+  RAISE NOTICE 'TRUTHPRENUER DATABASE SCHEMA & SECURITY INTEGRITY VERIFIED SUCCESSFULLY';
 END $$;

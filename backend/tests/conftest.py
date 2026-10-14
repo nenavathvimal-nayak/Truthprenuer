@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from typing import Optional
 import pytest
 import jwt
 from fastapi.testclient import TestClient
@@ -22,8 +23,8 @@ def client():
 def make_test_jwt(
     user_id: str = "test-user-uuid-1234",
     email: str = "user@truthprenuer.com",
-    app_metadata_role: str = None,
-    user_metadata_role: str = None,
+    app_metadata_role: Optional[str] = None,
+    user_metadata_role: Optional[str] = None,
     expires_in_seconds: int = 3600
 ) -> str:
     """Helper to generate JWT tokens for test cases."""

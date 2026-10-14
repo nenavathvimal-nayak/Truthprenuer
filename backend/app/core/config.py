@@ -1,12 +1,12 @@
 import os
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Truthprenuer API"
     VERSION: str = "1.0.0"
-    ENVIRONMENT: str = Field(default="development", env="ENVIRONMENT")
+    ENVIRONMENT: str = Field(default="development", validation_alias="ENVIRONMENT")
     
     # Security & CORS
     ALLOWED_ORIGINS: List[str] = [
@@ -40,24 +40,25 @@ class Settings(BaseSettings):
     # Supabase credentials (server-side only)
     SUPABASE_URL: str = Field(
         default="https://ledjnqvcyzqledcibjpd.supabase.co",
-        env="SUPABASE_URL"
+        validation_alias="SUPABASE_URL"
     )
     SUPABASE_ANON_KEY: str = Field(
         default="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxlZGpucXZjeXpxbGVkY2lianBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMDIyNjUsImV4cCI6MjEwNjY3ODI2NX0.42aIIeQexSnm-dRnUE7vICv882jwl5tw70wyL3OSbhw",
-        env="SUPABASE_ANON_KEY"
+        validation_alias="SUPABASE_ANON_KEY"
     )
-    SUPABASE_SERVICE_ROLE_KEY: str = Field(default="", env="SUPABASE_SERVICE_ROLE_KEY")
-    SUPABASE_JWT_SECRET: str = Field(default="", env="SUPABASE_JWT_SECRET")
+    SUPABASE_SERVICE_ROLE_KEY: str = Field(default="", validation_alias="SUPABASE_SERVICE_ROLE_KEY")
+    SUPABASE_JWT_SECRET: str = Field(default="", validation_alias="SUPABASE_JWT_SECRET")
     
     # AI service
-    GEMINI_API_KEY: str = Field(default="", env="GEMINI_API_KEY")
+    GEMINI_API_KEY: str = Field(default="", validation_alias="GEMINI_API_KEY")
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
     AI_RATE_LIMIT_PER_MINUTE: int = 10
     
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
 
 settings = Settings()

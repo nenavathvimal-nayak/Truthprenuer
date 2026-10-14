@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Users, 
   Activity, 
@@ -8,6 +8,7 @@ import {
   RefreshCw, 
   Clock 
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { VerificationVelocityChart } from '../components/visuals/VerificationVelocityChart';
 import { CategoryDonutChart } from '../components/visuals/CategoryDonutChart';
 import { SystemMetricsGauges } from '../components/visuals/SystemMetricsGauges';
@@ -16,6 +17,7 @@ import { ActivityHeatmap } from '../components/visuals/ActivityHeatmap';
 import { GlobalMeshNodes } from '../components/visuals/GlobalMeshNodes';
 
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+  if (!data || data.length === 0) return null;
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
@@ -96,13 +98,62 @@ function EnhancedStatCard({
   );
 }
 
+interface ValidationItem {
+  id: string;
+  thesis: string;
+  stage: string;
+  upvotes: number;
+  created_at: string;
+}
+
 export function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    validations: 0,
+    verified: 0,
+    profiles: 0,
+    auditLogs: 0,
+  });
+  const [recentValidations, setRecentValidations] = useState<ValidationItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleRefresh = () => {
+  const fetchDashboardData = async () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 700);
+    try {
+      // 1. Fetch live metrics from Supabase
+      const [
+        { count: validationsCount },
+        { count: verifiedCount },
+        { count: profilesCount },
+        { count: auditLogsCount },
+        { data: valData }
+      ] = await Promise.all([
+        supabase.from('validations').select('*', { count: 'exact', head: true }),
+        supabase.from('validations').select('*', { count: 'exact', head: true }).eq('stage', 'verified'),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('admin_audit_logs').select('*', { count: 'exact', head: true }),
+        supabase.from('validations').select('id, thesis, stage, upvotes, created_at').order('created_at', { ascending: false }).limit(4)
+      ]);
+
+      setStats({
+        validations: validationsCount || 0,
+        verified: verifiedCount || 0,
+        profiles: profilesCount || 0,
+        auditLogs: auditLogsCount || 0,
+      });
+
+      setRecentValidations(valData || []);
+    } catch (err) {
+      console.warn('Dashboard telemetry fetch error:', err);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
   };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="space-y-7">
@@ -119,18 +170,19 @@ export function Dashboard() {
             </span>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            Autonomous verification velocity, domain distribution, cryptographic consensus, and Zero-Trust boundary posture.
+            Authoritative database metrics, consensus verification dispatches, and Zero-Trust boundary posture.
           </p>
         </div>
 
         <div className="flex items-center space-x-3">
           <div className="hidden sm:flex items-center space-x-2 text-xs font-mono text-gray-400 bg-[#141414] border border-[#2A2A2A] px-3 py-2 rounded-xl">
             <Clock size={14} className="text-[#F44A22]" />
-            <span>UTC 15:15 · 127.0.0.1:60135</span>
+            <span>Isolated Privileged Console</span>
           </div>
 
           <button
-            onClick={handleRefresh}
+            onClick={fetchDashboardData}
+            disabled={isRefreshing}
             className="flex items-center space-x-2 text-xs font-mono px-3.5 py-2 rounded-xl bg-[#222222] text-[#FEF8E8] border border-[#2A2A2A] hover:border-[#F44A22] hover:text-[#F44A22] transition-colors"
           >
             <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
@@ -143,39 +195,39 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <EnhancedStatCard
           title="Consensus Validations"
-          value="1,842"
-          change="+18.4%"
-          subtitle="this sprint"
+          value={loading ? '—' : stats.validations.toLocaleString()}
+          change="LIVE"
+          subtitle="database records"
           icon={Activity}
-          sparkData={[12, 19, 15, 25, 22, 30, 38, 42]}
+          sparkData={[stats.validations, stats.validations, stats.validations]}
           color="#F44A22"
           accent={true}
         />
         <EnhancedStatCard
           title="Verified Truth Records"
-          value="1,492"
-          change="+12.1%"
-          subtitle="cryptographically sealed"
+          value={loading ? '—' : stats.verified.toLocaleString()}
+          change="SEALED"
+          subtitle="empirical consensus"
           icon={CheckCircle}
-          sparkData={[8, 14, 12, 18, 20, 26, 31, 35]}
+          sparkData={[stats.verified, stats.verified, stats.verified]}
           color="#10B981"
         />
         <EnhancedStatCard
           title="Active Founder Profiles"
-          value="2,810"
-          change="+8.6%"
+          value={loading ? '—' : stats.profiles.toLocaleString()}
+          change="ACTIVE"
           subtitle="authenticated identities"
           icon={Users}
-          sparkData={[20, 21, 23, 24, 26, 28, 29, 32]}
+          sparkData={[stats.profiles, stats.profiles, stats.profiles]}
           color="#3B82F6"
         />
         <EnhancedStatCard
-          title="Security Incidents"
-          value="0 Breaches"
-          change="100%"
-          subtitle="Zero-Trust enforced"
+          title="Security Audit Records"
+          value={loading ? '—' : stats.auditLogs.toLocaleString()}
+          change="WORM"
+          subtitle="immutable logs"
           icon={Shield}
-          sparkData={[0, 0, 0, 0, 0, 0, 0, 0]}
+          sparkData={[stats.auditLogs, stats.auditLogs, stats.auditLogs]}
           color="#8B5CF6"
         />
       </div>
@@ -211,79 +263,54 @@ export function Dashboard() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="font-bold text-sm text-[#FEF8E8]">Recent Verification Dispatches & Evidence Reports</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Directly verified by autonomous consensus algorithms</p>
+            <p className="text-xs text-gray-400 mt-0.5">Authoritative validations loaded from Supabase</p>
           </div>
           <span className="text-[11px] font-mono text-gray-400 bg-[#161616] px-2.5 py-1 rounded-lg border border-[#2A2A2A]">
             Auto-Sync Active
           </span>
         </div>
 
-        <div className="space-y-3">
-          {[
-            {
-              id: 'VAL-9821',
-              title: 'Autonomous LLM Hallucination Guard with Sub-10ms Gate',
-              category: 'AI & DeepTech',
-              verdict: 'VERIFIED TRUTH',
-              confidence: '98.4%',
-              validators: 42,
-              statusColor: 'text-green-400 bg-green-500/10 border-green-500/30'
-            },
-            {
-              id: 'VAL-9820',
-              title: 'Decentralized Micro-Invoice Factoring for Dubai Logistics',
-              category: 'FinTech',
-              verdict: 'VERIFIED TRUTH',
-              confidence: '94.1%',
-              validators: 29,
-              statusColor: 'text-green-400 bg-green-500/10 border-green-500/30'
-            },
-            {
-              id: 'VAL-9819',
-              title: '100x Compression Ratio Genomic Alignment Pipeline',
-              category: 'HealthTech',
-              verdict: 'DISPUTED EVIDENCE',
-              confidence: '43.2%',
-              validators: 38,
-              statusColor: 'text-[#F44A22] bg-[#F44A22]/10 border-[#F44A22]/30'
-            },
-            {
-              id: 'VAL-9818',
-              title: 'Zero-Overhead SQLite Cache Invalidation on Mobile',
-              category: 'DevTools',
-              verdict: 'VERIFIED TRUTH',
-              confidence: '91.8%',
-              validators: 19,
-              statusColor: 'text-green-400 bg-green-500/10 border-green-500/30'
-            }
-          ].map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-[#161616] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-all gap-3"
-            >
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-[10px] font-mono text-gray-500">{item.id}</span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#222222] text-gray-300">
-                    {item.category}
+        {recentValidations.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 font-mono text-xs">
+            {loading ? 'Loading recent verifications from database...' : 'No verification dispatches recorded yet in database.'}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {recentValidations.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-[#161616] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-all gap-3"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-mono text-gray-500">{item.id.substring(0, 8)}</span>
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#222222] text-gray-300 uppercase">
+                      {item.stage || 'STAGE'}
+                    </span>
+                  </div>
+                  <div className="text-xs font-bold text-[#FEF8E8]">{item.thesis}</div>
+                </div>
+
+                <div className="flex items-center space-x-4 self-end sm:self-auto">
+                  <div className="text-right">
+                    <div className="text-xs font-mono font-bold text-[#FEF8E8]">{item.upvotes || 0} votes</div>
+                    <div className="text-[10px] font-mono text-gray-500">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border ${
+                    item.stage === 'verified'
+                      ? 'text-green-400 bg-green-500/10 border-green-500/30'
+                      : 'text-[#F44A22] bg-[#F44A22]/10 border-[#F44A22]/30'
+                  }`}>
+                    {item.stage ? item.stage.toUpperCase() : 'PENDING'}
                   </span>
                 </div>
-                <div className="text-xs font-bold text-[#FEF8E8]">{item.title}</div>
               </div>
-
-              <div className="flex items-center space-x-4 self-end sm:self-auto">
-                <div className="text-right">
-                  <div className="text-xs font-mono font-bold text-[#FEF8E8]">{item.confidence}</div>
-                  <div className="text-[10px] font-mono text-gray-500">{item.validators} nodes</div>
-                </div>
-
-                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border ${item.statusColor}`}>
-                  {item.verdict}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

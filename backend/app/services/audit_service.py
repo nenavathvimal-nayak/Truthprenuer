@@ -2,6 +2,7 @@ import time
 import uuid
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
+from postgrest.types import CountMethod
 from app.core.logging import app_logger, log_audit_event
 from app.core.config import settings
 
@@ -197,7 +198,7 @@ class AuditService:
         client = self._get_client()
         if client:
             try:
-                resp = client.table("admin_audit_logs").select("id", count="exact").execute()
+                resp = client.table("admin_audit_logs").select("id", count=CountMethod.exact).execute()
                 if resp.count is not None:
                     return resp.count
             except Exception:

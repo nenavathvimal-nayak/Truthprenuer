@@ -32,7 +32,20 @@ import '../views/main/dashboard_view.dart';
 import '../views/admin/admin_dashboard_view.dart';
 import '../models/models.dart';
 
+import '../views/auth/auth_callback_view.dart';
 import '../repositories/supabase_client.dart';
+
+class GoRouterAuthNotifier extends ChangeNotifier {
+  GoRouterAuthNotifier() {
+    try {
+      safeSupabaseClient?.auth.onAuthStateChange.listen((_) {
+        notifyListeners();
+      });
+    } catch (_) {}
+  }
+}
+
+final _authRefreshNotifier = GoRouterAuthNotifier();
 
 String? _extractAuthError(Uri uri) {
   if (uri.queryParameters.containsKey('error_description')) {
@@ -57,54 +70,75 @@ String? _extractAuthError(Uri uri) {
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
+  refreshListenable: _authRefreshNotifier,
   redirect: (context, state) {
     // Intercept auth errors in deep links (e.g. expired recovery tokens)
     final authError = _extractAuthError(state.uri);
-    if (authError != null && state.matchedLocation != '/forgot-password') {
+    if (authError != null &&
+        state.matchedLocation != '/forgot-password' &&
+        state.matchedLocation != '/auth/callback') {
       final cleanMsg = authError.replaceAll('+', ' ');
       return '/forgot-password?error=${Uri.encodeComponent(cleanMsg)}';
     }
 
-    final isRecoveryRoute = state.matchedLocation == '/change-password' &&
+    final isRecoveryRoute = (state.matchedLocation == '/change-password' ||
+            state.matchedLocation == '/auth/reset-password') &&
         (state.uri.queryParameters['recovery'] == 'true' ||
             state.uri.fragment.contains('type=recovery') ||
             state.uri.queryParameters.containsKey('code') ||
             state.uri.fragment.contains('access_token'));
 
-    final isPrivateRoute = [
-      '/validation-wizard',
-      '/chats',
-      '/chat-room',
-      '/settings',
-      '/notification-preferences',
-      '/edit-profile',
-      '/profile-setup',
-      '/team-management',
-      '/notifications',
-      if (!kDebugMode) '/admin',
-    ].contains(state.matchedLocation) ||
-        (state.matchedLocation == '/change-password' && !isRecoveryRoute);
+    // Strict allowlist of public unauthenticated screens
+    const publicRoutes = {
+      '/splash',
+      '/onboarding',
+      '/action',
+      '/auth',
+      '/signup',
+      '/otp',
+      '/forgot-password',
+      '/how-it-works',
+      '/about',
+      '/faq',
+      '/auth/callback',
+      '/auth/reset-password',
+    };
+
+    final isPublic = publicRoutes.contains(state.matchedLocation) || isRecoveryRoute;
+
+    // Reject admin console in release mode or if accessed externally
+    if (!kDebugMode && state.matchedLocation == '/admin') {
+      return '/';
+    }
 
     final client = safeSupabaseClient;
-    final isClientConfigured = client != null;
     final hasUser = client?.auth.currentUser != null;
 
-    if (isClientConfigured) {
-      if (!hasUser && isPrivateRoute) {
-        // Preserve target deep link with parameters safely
-        final targetUri = state.uri.toString();
-        return '/auth?redirect=${Uri.encodeComponent(targetUri)}';
-      } else if (hasUser && (state.matchedLocation == '/auth' || state.matchedLocation == '/signup' || state.matchedLocation == '/otp')) {
-        final redirectParam = state.uri.queryParameters['redirect'];
-        if (redirectParam != null && redirectParam.isNotEmpty) {
-          final decoded = Uri.decodeComponent(redirectParam).trim();
-          if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
-            return decoded;
-          }
-        }
-        return '/';
+    // Zero-Trust: Require active verified session for all protected application screens
+    if (!isPublic && !hasUser) {
+      final targetUri = state.uri.toString();
+      final cleanTarget = targetUri == '/' ? '' : targetUri;
+      if (cleanTarget.isNotEmpty) {
+        return '/auth?redirect=${Uri.encodeComponent(cleanTarget)}';
       }
+      return '/auth';
     }
+
+    // Redirect authenticated users away from authentication pages
+    if (hasUser &&
+        (state.matchedLocation == '/auth' ||
+            state.matchedLocation == '/signup' ||
+            state.matchedLocation == '/otp')) {
+      final redirectParam = state.uri.queryParameters['redirect'];
+      if (redirectParam != null && redirectParam.isNotEmpty) {
+        final decoded = Uri.decodeComponent(redirectParam).trim();
+        if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.contains('://')) {
+          return decoded;
+        }
+      }
+      return '/';
+    }
+
     return null;
   },
   routes: [
@@ -141,6 +175,27 @@ final GoRouter appRouter = GoRouter(
         final errorParam = state.uri.queryParameters['error'];
         return ForgotPasswordView(initialError: errorParam);
       },
+    ),
+    GoRoute(
+      path: '/auth/callback',
+      builder: (context, state) {
+        final error = state.uri.queryParameters['error_description'] ??
+            state.uri.queryParameters['error'] ??
+            _extractAuthError(state.uri);
+        final code = state.uri.queryParameters['code'];
+        final tokenHash = state.uri.queryParameters['token_hash'];
+        final type = state.uri.queryParameters['type'];
+        return AuthCallbackView(
+          initialError: error,
+          initialCode: code,
+          initialTokenHash: tokenHash,
+          initialType: type,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/auth/reset-password',
+      builder: (context, state) => const ChangePasswordView(isRecovery: true),
     ),
     GoRoute(
       path: '/profile-setup',
@@ -321,8 +376,9 @@ final GoRouter appRouter = GoRouter(
         } else if (extra is ValidationRequest) {
           validation = extra;
         }
+        final String vid = validation?.id ?? (extra is Map ? extra['id']?.toString() : null) ?? "";
         return ValidationDetailView(
-          validationId: validation?.id ?? "val_auto_inventory",
+          validationId: vid,
           validation: validation,
           author: author,
         );

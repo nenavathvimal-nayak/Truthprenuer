@@ -221,82 +221,49 @@ class _FounderHomeView extends ConsumerWidget {
             // LATEST SIGNAL
             const _SectionHeader(title: "LATEST SIGNAL"),
             const SizedBox(height: 12),
-            const _SignalRow(
-              icon: Icons.trending_up_rounded,
-              title: "3 new enterprise validator responses",
-              subtitle: "Willingness to pay validated at \$49/seat/mo tier.",
-              timeAgo: "2h ago",
-            ),
-            const SizedBox(height: 8),
-            _SignalRow(
-              icon: Icons.warning_amber_rounded,
-              title: "Contradiction detected in onboarding",
-              subtitle: "2 respondents flagged compliance requirements before signup.",
-              timeAgo: "5h ago",
-              isAlert: true,
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: colors.surface,
-                    title: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: colors.warning),
-                        const SizedBox(width: 8),
-                        Text("Contradiction Signal", style: TextStyle(color: colors.text)),
-                      ],
-                    ),
-                    content: Text(
-                      "A contradiction occurs when validator evidence conflicts directly with a core assumption.\n\n"
-                      "Why this matters:\n"
-                      "Founders often proceed with flawed premises without empirical disproof. This signal highlights where market reality diverges from your thesis so you can investigate before building.",
-                      style: AppTypography.body.copyWith(color: colors.textSecondary),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text("Got It"),
+            if (activeValidation.responsesCount > 0)
+              _SignalRow(
+                icon: Icons.trending_up_rounded,
+                title: "${activeValidation.responsesCount} validator responses received",
+                subtitle: "Empirical health score: ${activeValidation.healthScore.toInt()}% on hypothesis.",
+                timeAgo: "Live",
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: colors.cardBackground,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: colors.textSecondary, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "No validator feedback received yet. Share your validation sprint link to gather market evidence.",
+                        style: AppTypography.footnote.copyWith(color: colors.textSecondary),
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          context.push('/evidence-locker');
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: colors.primary),
-                        child: const Text("Inspect Evidence"),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    ),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: AppSpacing.sectionGap),
 
-            // DECISION REQUIRED
-            const _SectionHeader(title: "DECISION REQUIRED"),
+            // SPRINT DECISION
+            const _SectionHeader(title: "ACTIVE SPRINT DECISION"),
             const SizedBox(height: 12),
             _ActionRow(
               icon: Icons.psychology_outlined,
               iconColor: colors.warning,
-              title: "Pricing Tier Pivot vs Self-Serve",
-              subtitle: "Evidence suggests target customers expect annual billing.",
+              title: "Review Evidence Alignment",
+              subtitle: "Assess validation evidence against core hypothesis before committing resources.",
               onTap: () {
                 HapticManager.shared.impactLight();
-                context.push('/validation-detail/val_auto_inventory');
+                context.push('/validation-detail/${activeValidation.id}', extra: activeValidation);
               },
-            ),
-
-            const SizedBox(height: AppSpacing.sectionGap),
-
-            // NEXT EXPERIMENT
-            const _SectionHeader(title: "NEXT EXPERIMENT"),
-            const SizedBox(height: 12),
-            const _ActionRow(
-              icon: Icons.science_outlined,
-              iconColor: AppPalette.orange,
-              title: "Test 5 Enterprise Compliance Objections",
-              subtitle: "Run 15-min interview questions on SOC2 readiness.",
             ),
             const SizedBox(height: 40),
           ],
@@ -450,11 +417,25 @@ class _InvestorHomeView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sectionGap),
         const _SectionHeader(title: "WATCHLIST SIGNALS"),
         const SizedBox(height: 12),
-        const _SignalRow(
-          icon: Icons.check_circle_outline_rounded,
-          title: "SaaS Workflow Tool",
-          subtitle: "Completed 20 structured interviews. 85% problem validation rate.",
-          timeAgo: "Today",
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.radar_outlined, color: colors.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "No watchlist notifications. Track founder validation sprints above to receive empirical updates.",
+                  style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -565,11 +546,25 @@ class _ProfessionalHomeView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sectionGap),
         const _SectionHeader(title: "YOUR IMPACT & KARMA"),
         const SizedBox(height: 12),
-        const _SignalRow(
-          icon: Icons.star_border_rounded,
-          title: "Top Contributor in FinTech",
-          subtitle: "Your feedback helped 3 founders pivot away from bad assumptions.",
-          timeAgo: "This month",
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.workspace_premium_outlined, color: colors.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "Review assumptions and provide constructive feedback to build verifiable platform reputation.",
+                  style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -611,18 +606,25 @@ class _CreatorHomeView extends StatelessWidget {
 
         const _SectionHeader(title: "TRENDING VALIDATION THEMES"),
         const SizedBox(height: 12),
-        const _SignalRow(
-          icon: Icons.hub_outlined,
-          title: "AI Workflows vs Legacy SaaS",
-          subtitle: "14 founders testing human-in-the-loop interfaces this week.",
-          timeAgo: "Active",
-        ),
-        const SizedBox(height: 8),
-        const _SignalRow(
-          icon: Icons.monetization_on_outlined,
-          title: "Micro-SaaS Pricing Benchmarks",
-          subtitle: "New signals show reluctance toward seat-based pricing.",
-          timeAgo: "Active",
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: colors.cardBackground,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border.withValues(alpha: 0.5)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.insights_outlined, color: colors.textSecondary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "Aggregated validation trends and empirical signals will populate as community founders test theses.",
+                  style: AppTypography.footnote.copyWith(color: colors.textSecondary),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -761,23 +763,18 @@ class _SignalRow extends StatelessWidget {
   final String title;
   final String subtitle;
   final String timeAgo;
-  final bool isAlert;
-  final VoidCallback? onTap;
-
   const _SignalRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.timeAgo,
-    this.isAlert = false,
-    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).appColors;
 
-    final rowContent = Container(
+    return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: colors.cardBackground,
@@ -789,13 +786,13 @@ class _SignalRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
-              color: isAlert ? colors.warning.withValues(alpha: 0.10) : AppPalette.orange.withValues(alpha: 0.10),
+              color: AppPalette.orange.withValues(alpha: 0.10),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
               size: 16,
-              color: isAlert ? colors.warning : AppPalette.orange,
+              color: AppPalette.orange,
             ),
           ),
           const SizedBox(width: 12),
@@ -832,21 +829,9 @@ class _SignalRow extends StatelessWidget {
               ],
             ),
           ),
-          if (onTap != null) ...[
-            const SizedBox(width: 8),
-            Icon(Icons.info_outline, size: 16, color: colors.textTertiary),
-          ],
         ],
       ),
     );
-
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: rowContent,
-      );
-    }
-    return rowContent;
   }
 }
 

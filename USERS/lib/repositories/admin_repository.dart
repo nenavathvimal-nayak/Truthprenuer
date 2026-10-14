@@ -26,22 +26,26 @@ class AdminRepository {
     final featuredVal = validations.where((v) => v.status == 'featured').length;
     final flaggedVal = validations.where((v) => v.status == 'flagged').length;
 
-    final totalUsers = users.length + 120; // Active platform user base
-    final verifiedValidators = users.where((u) => u.isVerified).length + 28;
+    final totalUsers = users.length;
+    final verifiedValidators = users.where((u) => u.isVerified).length;
 
     final totalResponses = validations.fold<int>(0, (sum, v) => sum + v.responsesCount);
     final highConviction = validations.where((v) => v.healthScore >= 75 || v.upvotes >= 20).length;
 
+    final avgConviction = validations.isNotEmpty
+        ? (validations.fold<double>(0.0, (sum, v) => sum + v.healthScore) / validations.length)
+        : 0.0;
+
     return AdminPlatformMetrics(
-      totalValidations: totalVal > 0 ? totalVal : 18,
-      activeValidations: activeVal > 0 ? activeVal : 14,
+      totalValidations: totalVal,
+      activeValidations: activeVal,
       featuredValidations: featuredVal,
       flaggedValidations: flaggedVal,
       totalUsers: totalUsers,
       verifiedValidators: verifiedValidators,
-      totalResponses: totalResponses > 0 ? totalResponses : 84,
-      highConvictionSprints: highConviction > 0 ? highConviction : 6,
-      averageConvictionScore: 82.4,
+      totalResponses: totalResponses,
+      highConvictionSprints: highConviction,
+      averageConvictionScore: avgConviction,
       isRealtimeConnected: realtimeState.isConnected,
       activeRealtimeChannels: realtimeState.activeChannels,
       connectionLatencyMs: realtimeState.latencyMs,

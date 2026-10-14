@@ -6,6 +6,7 @@ import 'package:taeed_flutter/models/models.dart';
 import 'package:taeed_flutter/models/role_provider.dart';
 import 'package:taeed_flutter/models/admin_models.dart';
 import 'package:taeed_flutter/repositories/admin_repository.dart';
+import 'package:taeed_flutter/repositories/app_providers.dart';
 import 'package:taeed_flutter/repositories/realtime_sync_service.dart';
 import 'package:taeed_flutter/views/admin/admin_dashboard_view.dart';
 
@@ -85,16 +86,48 @@ void main() {
     });
 
     test('AdminRepository aggregates platform metrics correctly', () async {
-      final container = ProviderContainer();
+      final testValidation = ValidationRequest(
+        id: 'val_test',
+        authorId: 'usr_test',
+        title: 'Test Sprint',
+        problem: 'Test Problem',
+        solution: 'Test Solution',
+        targetAudience: 'Founders',
+        status: 'active',
+        healthScore: 80,
+        upvotes: 5,
+        feedbackCount: 3,
+        createdAt: DateTime.now(),
+      );
+      final testUser = User(
+        id: 'usr_test',
+        name: 'Test Founder',
+        username: 'test_founder',
+        bio: 'Building tests',
+        role: 'Founder',
+        userRole: UserRole.founder,
+        skills: ['Dart'],
+        location: 'Remote',
+        isVerified: true,
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          validationsProvider.overrideWith((ref) => Future.value([testValidation])),
+          communityUsersProvider.overrideWithValue([testUser]),
+        ],
+      );
       addTearDown(container.dispose);
 
       final repo = container.read(adminRepositoryProvider);
       final metrics = await repo.getPlatformMetrics();
 
-      expect(metrics.totalValidations, greaterThan(0));
-      expect(metrics.totalUsers, greaterThan(0));
-      expect(metrics.isRealtimeConnected, isTrue);
-      expect(metrics.activeRealtimeChannels, 3);
+      expect(metrics.totalValidations, 1);
+      expect(metrics.activeValidations, 1);
+      expect(metrics.totalUsers, 1);
+      expect(metrics.verifiedValidators, 1);
+      expect(metrics.totalResponses, 3);
+      expect(metrics.averageConvictionScore, 80.0);
     });
 
     test('AdminRepository updates validation status and user verification without crash', () async {

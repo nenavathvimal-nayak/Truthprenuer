@@ -28,7 +28,7 @@ export function AuditLogs() {
       if (apiUrl) {
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token || '';
-        const res = await fetch(`${apiUrl}/api/v1/admin/audit-logs?limit=50`, {
+        const res = await fetch(`${apiUrl}/api/v1/admin/audit-logs?limit=100`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -40,73 +40,37 @@ export function AuditLogs() {
           return;
         }
       }
-      // Fallback default sample events if backend is unconfigured or offline
-        setLogs([
-          {
-            event_id: 'evt-7f8a9102-bc34',
-            actor_id: 'admin_security_01',
-            actor_role: 'Super_Admin',
-            action: 'USER_SUSPENDED',
-            target_type: 'user',
-            target_id: 'usr_fraud_492',
-            result: 'SUCCESS',
-            ip_address: '10.0.4.12',
-            reason: 'Systemic duplicate validation submissions detected',
-            timestamp: Date.now() / 1000 - 1800,
-          },
-          {
-            event_id: 'evt-3b2c1d09-ee12',
-            actor_id: 'mod_alex_02',
-            actor_role: 'Moderator',
-            action: 'REPORT_ACTION_REMOVE_CONTENT',
-            target_type: 'report',
-            target_id: 'rep_spam_991',
-            result: 'SUCCESS',
-            ip_address: '10.0.2.88',
-            reason: 'Violation of empirical evidence standards',
-            timestamp: Date.now() / 1000 - 5400,
-          },
-          {
-            event_id: 'evt-0a9b8c7d-1144',
-            actor_id: 'system_security_edge',
-            actor_role: 'Security',
-            action: 'RATE_LIMIT_TRIPPED',
-            target_type: 'endpoint',
-            target_id: '/api/v1/ai/validate',
-            result: 'BLOCKED',
-            ip_address: '198.51.100.44',
-            reason: 'Exceeded 60 req/min sliding burst threshold',
-            timestamp: Date.now() / 1000 - 8600,
-          }
-        ]);
-    } catch {
-      // Offline fallback
-      setLogs([
-        {
-          event_id: 'evt-7f8a9102-bc34',
-          actor_id: 'admin_security_01',
-          actor_role: 'Super_Admin',
-          action: 'USER_SUSPENDED',
-          target_type: 'user',
-          target_id: 'usr_fraud_492',
-          result: 'SUCCESS',
-          ip_address: '10.0.4.12',
-          reason: 'Systemic duplicate validation submissions detected',
-          timestamp: Date.now() / 1000 - 1800,
-        },
-        {
-          event_id: 'evt-3b2c1d09-ee12',
-          actor_id: 'mod_alex_02',
-          actor_role: 'Moderator',
-          action: 'REPORT_ACTION_REMOVE_CONTENT',
-          target_type: 'report',
-          target_id: 'rep_spam_991',
-          result: 'SUCCESS',
-          ip_address: '10.0.2.88',
-          reason: 'Violation of empirical evidence standards',
-          timestamp: Date.now() / 1000 - 5400,
-        }
-      ]);
+
+      // Query Supabase directly
+      const { data, error } = await supabase
+        .from('admin_audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.warn('Direct audit log query error:', error.message);
+        setLogs([]);
+      } else if (data) {
+        const mapped: AuditEvent[] = data.map((d: any) => ({
+          event_id: d.event_id || d.id,
+          actor_id: d.actor_id || 'system',
+          actor_role: d.actor_role || 'Admin',
+          action: d.action,
+          target_type: d.target_type,
+          target_id: d.target_id,
+          result: d.result || 'SUCCESS',
+          ip_address: d.ip_address,
+          reason: d.reason,
+          timestamp: d.created_at ? new Date(d.created_at).getTime() / 1000 : Date.now() / 1000,
+        }));
+        setLogs(mapped);
+      } else {
+        setLogs([]);
+      }
+    } catch (err) {
+      console.warn('Failed to load audit logs:', err);
+      setLogs([]);
     } finally {
       setLoading(false);
     }

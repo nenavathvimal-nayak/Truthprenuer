@@ -2,21 +2,36 @@
 -- TRUTHPRENUER — SEED DATA FOR STAGING AND LOCAL VERIFICATION
 -- ==============================================================================
 
+-- PRODUCTION EXECUTION GUARD
+-- Ensure seed script is NEVER executed in a production environment
+DO $$ 
+BEGIN 
+  IF current_setting('app.environment', true) = 'production' THEN 
+    RAISE EXCEPTION 'CRITICAL: Execution of seed_data.sql is prohibited in production environment.'; 
+  END IF; 
+END $$;
+
 -- 1. Initial System Roles & Administrator
-INSERT INTO users (id, email, username, full_name, role, status, reputation_score)
+INSERT INTO public.profiles (id, username, full_name, role, is_verified, reputation_score)
 VALUES 
-  ('00000000-0000-0000-0000-000000000001', 'admin@truthprenuer.local', 'sysadmin', 'Local System Admin', 'superadmin', 'active', 1000)
-ON CONFLICT (email) DO NOTHING;
+  ('00000000-0000-0000-0000-000000000001', 'sysadmin', 'Local System Admin', 'Super_Admin', true, 1000)
+ON CONFLICT (id) DO UPDATE SET
+  role = EXCLUDED.role,
+  is_verified = EXCLUDED.is_verified,
+  reputation_score = EXCLUDED.reputation_score;
 
 -- 2. Initial Sample Verified Truth Seekers & Validators
-INSERT INTO users (id, email, username, full_name, role, status, reputation_score)
+INSERT INTO public.profiles (id, username, full_name, role, is_verified, reputation_score)
 VALUES 
-  ('00000000-0000-0000-0000-000000000002', 'validator1@truthprenuer.org', 'truth_verifier_alpha', 'Alpha Verification Lead', 'validator', 'active', 750),
-  ('00000000-0000-0000-0000-000000000003', 'user1@truthprenuer.org', 'citizen_investigator', 'Citizen Investigator', 'user', 'active', 120)
-ON CONFLICT (email) DO NOTHING;
+  ('00000000-0000-0000-0000-000000000002', 'truth_verifier_alpha', 'Alpha Verification Lead', 'Investor', true, 750),
+  ('00000000-0000-0000-0000-000000000003', 'citizen_investigator', 'Citizen Investigator', 'Founder', false, 120)
+ON CONFLICT (id) DO UPDATE SET
+  role = EXCLUDED.role,
+  is_verified = EXCLUDED.is_verified,
+  reputation_score = EXCLUDED.reputation_score;
 
--- 3. Initial Sample Validation Campaigns
-INSERT INTO campaigns (id, title, description, category, creator_id, status, target_confidence)
+-- 3. Initial Sample Validation Sprints
+INSERT INTO public.validations (id, author_id, thesis, target_audience, stage, status, health_score, upvotes)
 VALUES 
-  ('10000000-0000-0000-0000-000000000001', 'Autonomous AI Fact Verification Benchmark 2026', 'Independent algorithmic corroboration of enterprise generative claims.', 'AI & Technology', '00000000-0000-0000-0000-00000001', 'active', 0.95)
+  ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003', 'Autonomous AI Fact Verification Benchmark 2026', 'Enterprise Operators', 'validation', 'active', 85, 12)
 ON CONFLICT (id) DO NOTHING;

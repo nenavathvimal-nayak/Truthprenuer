@@ -1,4 +1,4 @@
 """Truthprenuer Backend API Gateway."""
-from app.api.routes import router
+from app.api.v1 import health, ai, admin
 
-__all__ = ["router"]
+__all__ = ["health", "ai", "admin"]

@@ -1,20 +1,61 @@
-import { useState } from 'react';
-import { Ban, CheckCircle2, Search, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Ban, CheckCircle2, Search, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAdminAuth } from '../components/AdminAuthGuard';
+import { supabase } from '../lib/supabase';
+
+interface UserRecord {
+  id: string;
+  full_name: string;
+  username: string;
+  email?: string;
+  role: string;
+  is_suspended: boolean;
+  joined: string;
+}
 
 export function Users() {
   const { user: currentAdmin } = useAdminAuth();
-  const [users, setUsers] = useState([
-    { id: 'usr_01', full_name: 'Vikram Nayak', email: 'vikram@truthprenuer.com', role: 'Super_Admin', status: 'Active', is_suspended: false, joined: '2024-01-10' },
-    { id: 'usr_02', full_name: 'Elena Rostova', email: 'elena@biotechlabs.io', role: 'Founder', status: 'Active', is_suspended: false, joined: '2024-02-15' },
-    { id: 'usr_03', full_name: 'Marcus Chen', email: 'marcus@sequoia-fellows.com', role: 'Investor', status: 'Active', is_suspended: false, joined: '2024-03-01' },
-    { id: 'usr_04', full_name: 'Spam Bot Engine', email: 'promo992@tempmail.ninja', role: 'Founder', status: 'Suspended', is_suspended: true, joined: '2024-03-20' },
-  ]);
-
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
-  const handleToggleSuspend = (targetUser: typeof users[0]) => {
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, username, role, is_suspended, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setActionFeedback(`Database query failed: ${error.message}`);
+        setLoading(false);
+        return;
+      }
+
+      const mapped: UserRecord[] = (data || []).map((p: any) => ({
+        id: p.id,
+        full_name: p.full_name || p.username || 'User',
+        username: p.username || 'user',
+        email: `@${p.username || p.id.substring(0, 8)}`,
+        role: p.role || 'Founder',
+        is_suspended: !!p.is_suspended,
+        joined: p.created_at ? new Date(p.created_at).toISOString().split('T')[0] : 'Recently',
+      }));
+      setUsers(mapped);
+    } catch (err: any) {
+      setActionFeedback(`Error loading users: ${err.message || err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleToggleSuspend = async (targetUser: UserRecord) => {
     if (targetUser.id === currentAdmin?.id) {
       alert("Security Guard: You cannot perform administrative suspension on your own session.");
       return;
@@ -25,26 +66,58 @@ export function Users() {
       ? prompt("Enter audit justification for suspension (required):", "Suspicious spam behavior") 
       : prompt("Enter audit justification for account restoration:", "Verification completed");
 
-    if (!reason) return;
+    if (!reason || !reason.trim()) return;
 
-    setUsers(prev => prev.map(u => {
-      if (u.id === targetUser.id) {
-        return {
-          ...u,
+    try {
+      // 1. Update profiles table in Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
           is_suspended: newSuspendedState,
-          status: newSuspendedState ? 'Suspended' : 'Active'
-        };
-      }
-      return u;
-    }));
+          suspended_at: newSuspendedState ? new Date().toISOString() : null,
+          suspension_reason: newSuspendedState ? reason.trim() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', targetUser.id);
 
-    setActionFeedback(`User ${targetUser.full_name} (${targetUser.id}) was ${newSuspendedState ? 'SUSPENDED' : 'RESTORED'}. Audit event recorded.`);
-    setTimeout(() => setActionFeedback(null), 5000);
+      if (updateError) {
+        setActionFeedback(`Action failed: ${updateError.message}`);
+        return;
+      }
+
+      // 2. Persist audit log
+      await supabase.from('admin_audit_logs').insert({
+        event_id: `evt-${crypto.randomUUID()}`,
+        actor_id: currentAdmin?.id,
+        actor_role: currentAdmin?.role || 'Admin',
+        action: newSuspendedState ? 'USER_SUSPENDED' : 'USER_RESTORED',
+        target_type: 'user',
+        target_id: targetUser.id,
+        result: 'SUCCESS',
+        reason: reason.trim(),
+        details: { target_name: targetUser.full_name, previous_status: targetUser.is_suspended },
+      });
+
+      setUsers(prev => prev.map(u => {
+        if (u.id === targetUser.id) {
+          return {
+            ...u,
+            is_suspended: newSuspendedState,
+          };
+        }
+        return u;
+      }));
+
+      setActionFeedback(`User ${targetUser.full_name} (${targetUser.id.substring(0, 8)}) was ${newSuspendedState ? 'SUSPENDED' : 'RESTORED'}. Audit event recorded.`);
+      setTimeout(() => setActionFeedback(null), 5000);
+    } catch (err: any) {
+      setActionFeedback(`Operation failed: ${err.message || err}`);
+    }
   };
 
   const filteredUsers = users.filter(u => 
     u.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -59,11 +132,18 @@ export function Users() {
         </div>
 
         <div className="flex items-center space-x-3">
+          <button
+            onClick={fetchUsers}
+            className="flex items-center space-x-2 text-xs font-mono px-3 py-2 rounded-xl bg-[#222222] text-[#FEF8E8] border border-[#2A2A2A] hover:border-[#F44A22] transition-colors"
+          >
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
             <input 
               type="text" 
-              placeholder="Search by name, email, role..." 
+              placeholder="Search by name, role..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="bg-[#1F1F1F] border border-[#2A2A2A] text-white pl-9 pr-4 py-2 rounded-xl text-xs placeholder-gray-500 focus:outline-none focus:border-[#F44A22] w-64"
@@ -92,7 +172,7 @@ export function Users() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#2A2A2A]">
-            {filteredUsers.map((u) => (
+            {!loading && filteredUsers.map((u) => (
               <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
                 <td className="px-6 py-4 font-medium flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-xl bg-[#F44A22]/10 text-[#F44A22] flex items-center justify-center font-bold text-xs border border-[#F44A22]/20">
@@ -148,6 +228,21 @@ export function Users() {
                 </td>
               </tr>
             ))}
+            {loading && (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-gray-400 font-mono">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-[#F44A22] mr-2"></div>
+                  Loading authentic user profiles from Supabase...
+                </td>
+              </tr>
+            )}
+            {!loading && filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-gray-400 font-mono">
+                  No registered profiles found in the database.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

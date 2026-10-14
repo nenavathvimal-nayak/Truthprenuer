@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -87,7 +88,9 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
     });
 
     try {
-      await ref.read(authProvider.notifier).resendConfirmationEmail(email);
+      final queryType = GoRouterState.of(context).uri.queryParameters['type'];
+      final otpType = queryType == 'signup' ? OtpType.signup : OtpType.email;
+      await ref.read(authProvider.notifier).resendConfirmationEmail(email, type: otpType);
       if (!mounted) return;
       HapticManager.shared.notificationSuccess();
       _startCooldown();
@@ -131,7 +134,9 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
     });
 
     try {
-      final success = await ref.read(authProvider.notifier).verifyOTP(email, otp);
+      final queryType = GoRouterState.of(context).uri.queryParameters['type'];
+      final otpType = queryType == 'signup' ? OtpType.signup : OtpType.email;
+      final success = await ref.read(authProvider.notifier).verifyOTP(email, otp, type: otpType);
       if (!mounted) return;
 
       if (success) {
@@ -272,6 +277,7 @@ class _OTPVerificationViewState extends ConsumerState<OTPVerificationView> {
                 child: TextField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   textAlign: TextAlign.center,
                   maxLength: 6,
                   style: AppTypography.metric.copyWith(

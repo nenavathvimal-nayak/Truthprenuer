@@ -167,26 +167,52 @@ class _TopValidatorsLeaderboardViewState extends ConsumerState<TopValidatorsLead
             const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.md)),
 
             // Leaderboard List
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final user = filteredUsers[index];
-                    final rank = index + 1;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: _LeaderboardCard(
-                        rank: rank,
-                        user: user,
-                        onRequestAudit: () => _requestAudit(context, user, colors),
-                      ),
-                    );
-                  },
-                  childCount: filteredUsers.length,
+            if (filteredUsers.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xxl),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.person_search_rounded, size: 48, color: colors.textTertiary),
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          "No Validators in this Discipline",
+                          style: AppTypography.headline.copyWith(color: colors.text),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          "There are currently no validators registered under $_selectedDiscipline.",
+                          textAlign: TextAlign.center,
+                          style: AppTypography.subheadline.copyWith(color: colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, 100),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final user = filteredUsers[index];
+                      final rank = index + 1;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _LeaderboardCard(
+                          rank: rank,
+                          user: user,
+                          onRequestAudit: () => _requestAudit(context, user, colors),
+                        ),
+                      );
+                    },
+                    childCount: filteredUsers.length,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

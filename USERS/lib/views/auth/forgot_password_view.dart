@@ -72,15 +72,14 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         final String origin = kIsWeb && Uri.base.hasAuthority && Uri.base.host.isNotEmpty
             ? Uri.base.origin
             : AppConfig.appPublicUrl;
-        final redirectUrl = '$origin/change-password?recovery=true';
+        final redirectUrl = '$origin/auth/reset-password';
 
         await client.auth.resetPasswordForEmail(
           email,
           redirectTo: redirectUrl,
         );
       } else {
-        // Mock fallback for offline preview
-        await Future.delayed(const Duration(milliseconds: 300));
+        throw const AuthException('Authentication backend is unavailable. Please check your network connection.');
       }
 
       if (!mounted) return;

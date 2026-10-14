@@ -44,6 +44,7 @@ class RealtimeSyncNotifier extends StateNotifier<RealtimeSyncState> {
   RealtimeChannel? _responsesChannel;
   RealtimeChannel? _profilesChannel;
   Timer? _heartbeatTimer;
+  StreamSubscription<AuthState>? _authSub;
 
   RealtimeSyncNotifier(this._ref)
       : super(RealtimeSyncState(
@@ -56,17 +57,37 @@ class RealtimeSyncNotifier extends StateNotifier<RealtimeSyncState> {
               details: "Realtime synchronization engine booted successfully.",
               severity: AuditLogSeverity.success,
             ),
-            AdminAuditLogItem.now(
-              action: "CHANNEL_ATTACHED",
-              actorName: "Supabase Realtime",
-              target: "public:validations",
-              details: "Listening for live Postgres changes on startup validation sprints.",
-              severity: AuditLogSeverity.info,
-            ),
           ],
         )) {
-    _initializeRealtimeListeners();
+    final client = safeSupabaseClient;
+    if (client != null) {
+      if (client.auth.currentSession != null) {
+        _initializeRealtimeListeners();
+      }
+      _authSub = client.auth.onAuthStateChange.listen((data) {
+        final event = data.event;
+        if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.tokenRefreshed) {
+          _initializeRealtimeListeners();
+        } else if (event == AuthChangeEvent.signedOut) {
+          _unsubscribeAll();
+          state = state.copyWith(
+            isConnected: false,
+            activeChannels: 0,
+            recentEvents: [],
+          );
+        }
+      });
+    }
     _startHeartbeat();
+  }
+
+  void _unsubscribeAll() {
+    _validationsChannel?.unsubscribe();
+    _validationsChannel = null;
+    _responsesChannel?.unsubscribe();
+    _responsesChannel = null;
+    _profilesChannel?.unsubscribe();
+    _profilesChannel = null;
   }
 
   void _startHeartbeat() {
@@ -80,16 +101,26 @@ class RealtimeSyncNotifier extends StateNotifier<RealtimeSyncState> {
     final client = safeSupabaseClient;
     if (client == null) {
       state = state.copyWith(
-        isConnected: true,
+        isConnected: false,
         lastHeartbeat: DateTime.now(),
-        latencyMs: 12,
+        latencyMs: 0,
       );
       return;
     }
 
     try {
+      final hasSession = client.auth.currentSession != null;
+      if (!hasSession) {
+        state = state.copyWith(
+          isConnected: false,
+          activeChannels: 0,
+          lastHeartbeat: DateTime.now(),
+        );
+        return;
+      }
+
       final stopwatch = Stopwatch()..start();
-      final isLive = client.realtime.isConnected || client.auth.currentSession != null;
+      final isLive = client.realtime.isConnected;
       stopwatch.stop();
 
       state = state.copyWith(
@@ -107,7 +138,8 @@ class RealtimeSyncNotifier extends StateNotifier<RealtimeSyncState> {
 
   void _initializeRealtimeListeners() {
     final client = safeSupabaseClient;
-    if (client == null) return;
+    if (client == null || client.auth.currentSession == null) return;
+    _unsubscribeAll();
 
     try {
       // 1. Validations live broadcast channel
@@ -205,10 +237,9 @@ class RealtimeSyncNotifier extends StateNotifier<RealtimeSyncState> {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _heartbeatTimer?.cancel();
-    _validationsChannel?.unsubscribe();
-    _responsesChannel?.unsubscribe();
-    _profilesChannel?.unsubscribe();
+    _unsubscribeAll();
     super.dispose();
   }
 }

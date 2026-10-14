@@ -1,7 +1,37 @@
 {
+  "include": [
+    "backend",
+    "ALGORITHMS",
+    "ADMIN"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    "backend/venv",
+    "USERS"
+  ],
   "venvPath": "backend",
   "venv": "venv",
   "extraPaths": [
-    "backend"
+    "backend",
+    "ALGORITHMS",
+    "backend/venv/lib/python3.9/site-packages"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "backend",
+      "extraPaths": [
+        "backend",
+        "backend/venv/lib/python3.9/site-packages"
+      ]
+    },
+    {
+      "root": "ALGORITHMS",
+      "extraPaths": [
+        "ALGORITHMS",
+        "backend/venv/lib/python3.9/site-packages"
+      ]
+    }
   ]
 }

@@ -478,9 +478,19 @@ class _AddEvidenceSheetState extends ConsumerState<_AddEvidenceSheet> {
       return;
     }
 
+    final activeValidation = ref.read(validationsProvider).value?.firstOrNull;
+    if (activeValidation == null) {
+      HapticManager.shared.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please create an active validation sprint before logging evidence items.")),
+      );
+      return;
+    }
+    final activeValidationId = activeValidation.id;
+
     final newItem = EvidenceItem(
       id: const Uuid().v4(),
-      validationId: "mock_validation",
+      validationId: activeValidationId,
       type: _selectedType,
       title: title,
       summary: content,

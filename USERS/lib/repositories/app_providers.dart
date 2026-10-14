@@ -8,6 +8,7 @@ import 'validation_repository.dart';
 import 'feedback_repository.dart';
 import 'evidence_repository.dart';
 import 'messaging_repository.dart';
+import 'notification_repository.dart';
 import 'supabase_client.dart';
 
 // Export all repository providers for convenient access
@@ -19,6 +20,7 @@ export 'evidence_repository.dart';
 export 'ai_repository.dart';
 export 'decision_repository.dart';
 export 'messaging_repository.dart';
+export 'notification_repository.dart';
 export 'privacy_repository.dart';
 
 // Current active profile
@@ -57,103 +59,13 @@ final currentUserProvider = FutureProvider<User?>((ref) async {
 // Authoritative Validations Stream
 final validationsProvider = FutureProvider<List<ValidationRequest>>((ref) async {
   final repo = ref.watch(validationRepositoryProvider);
-  final backendList = await repo.getValidations();
-  if (backendList.isNotEmpty) return backendList;
-
-  // Pre-seeded high quality empirical validation sprints
-  return [
-    ValidationRequest(
-      id: "val_auto_inventory",
-      authorId: "founder_dev_1",
-      authorName: "Alex Vimal",
-      authorRole: "Founder",
-      title: "Automated Restaurant Inventory via Invoice OCR",
-      problem: "Restaurant owners lose 15% margin on food spoilage because daily stock audits take 2 hours every night.",
-      solution: "WhatsApp bot that parses handwritten vendor invoices into daily inventory balance sheets automatically.",
-      targetAudience: "Small Restaurant Owners & Head Chefs",
-      tags: ["Pricing", "F&B", "Automation"],
-      validationStage: ValidationStage.prototype,
-      feedbackCount: 18,
-      upvotes: 42,
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    ValidationRequest(
-      id: "val_soc2_compliance",
-      authorId: "founder_dev_1",
-      authorName: "Alex Vimal",
-      authorRole: "Founder",
-      title: "Instant SOC2 Evidence Collector for Micro-SaaS",
-      problem: "Solo-founders and micro-teams lose enterprise deals because enterprise security questionnaires take 40+ hours.",
-      solution: "One-click GitHub and AWS audit connector that auto-generates SOC2 evidence sheets.",
-      targetAudience: "B2B SaaS Founders (<10 employees)",
-      tags: ["Problem", "Security", "DevOps"],
-      validationStage: ValidationStage.idea,
-      feedbackCount: 9,
-      upvotes: 27,
-      createdAt: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-  ];
+  return await repo.getValidations();
 });
 
 // Authoritative Validation Responses Stream
 final validationResponsesProvider = FutureProvider.autoDispose.family<List<ValidationResponse>, String>((ref, validationId) async {
   final repo = ref.watch(feedbackRepositoryProvider);
-  final backendResponses = await repo.getResponsesForValidation(validationId);
-  if (backendResponses.isNotEmpty) return backendResponses;
-
-  if (validationId == "val_auto_inventory") {
-    return [
-      ValidationResponse(
-        id: "resp_1",
-        validationId: validationId,
-        respondentId: "user_marcus",
-        respondentName: "Marcus Sterling",
-        respondentRole: "Head of Operations",
-        answers: [
-          ValidationAnswer(
-            id: "ans_1_1",
-            responseId: "resp_1",
-            questionId: "q1",
-            answerText: "Severe (4/5) - nightly manual reconciliation causes inventory leakage.",
-            numericValue: 4.0,
-          ),
-          ValidationAnswer(
-            id: "ans_1_2",
-            responseId: "resp_1",
-            questionId: "q2",
-            answerText: "Yes, ₹999/mo is trivial if invoice OCR works with 90%+ accuracy.",
-            numericValue: 1.0,
-          ),
-        ],
-        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
-      ),
-      ValidationResponse(
-        id: "resp_2",
-        validationId: validationId,
-        respondentId: "user_elena",
-        respondentName: "Elena Rostova",
-        respondentRole: "Principal Validator",
-        answers: [
-          ValidationAnswer(
-            id: "ans_2_1",
-            responseId: "resp_2",
-            questionId: "q1",
-            answerText: "Moderate (3/5) - suppliers already provide digital CSVs in 40% of cases.",
-            numericValue: 3.0,
-          ),
-          ValidationAnswer(
-            id: "ans_2_2",
-            responseId: "resp_2",
-            questionId: "q2",
-            answerText: "Willing to pay only if WhatsApp OCR handles crumpled or handwritten receipts.",
-            numericValue: 0.0,
-          ),
-        ],
-        createdAt: DateTime.now().subtract(const Duration(hours: 14)),
-      ),
-    ];
-  }
-  return [];
+  return await repo.getResponsesForValidation(validationId);
 });
 
 // Authoritative Evidence Items Provider
@@ -164,44 +76,8 @@ final evidenceListProvider = StateNotifierProvider<EvidenceNotifier, List<Eviden
 class EvidenceNotifier extends StateNotifier<List<EvidenceItem>> {
   final EvidenceRepository _repository;
 
-  EvidenceNotifier(this._repository) : super([
-    EvidenceItem(
-      id: "ev_1",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.interview,
-      title: "Daily Spoilage Friction Confirmed",
-      summary: "3 Restaurant owners in Bangalore confirmed spending 90 mins every night counting stock.",
-      confidenceScore: 88,
-      keyInsight: "Direct operational pain confirmed; willingness to pay \$49/mo tier established.",
-      classification: EvidenceClassification.supports,
-      tags: ["Supports", "Interview"],
-      createdAt: DateTime.now().subtract(const Duration(hours: 4)),
-    ),
-    EvidenceItem(
-      id: "ev_2",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.survey,
-      title: "WhatsApp Alerts Preferred Over Native App",
-      summary: "12 of 14 respondents stated they will ignore another mobile app but check WhatsApp alerts instantly.",
-      confidenceScore: 92,
-      keyInsight: "Shift from standalone mobile dashboard to conversational WhatsApp notifications.",
-      classification: EvidenceClassification.supports,
-      tags: ["Supports", "Channel Fit"],
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    EvidenceItem(
-      id: "ev_3",
-      validationId: "val_auto_inventory",
-      type: EvidenceItemType.data,
-      title: "Hardware Barcode Scanner Resistance",
-      summary: "Chefs refused to use handheld barcode guns during peak dinner rush.",
-      confidenceScore: 78,
-      keyInsight: "Eliminate barcode scanner assumption; focus exclusively on invoice OCR.",
-      classification: EvidenceClassification.contradicts,
-      tags: ["Contradicts", "Friction"],
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-  ]);
+  EvidenceNotifier(this._repository, [List<EvidenceItem>? initialItems])
+      : super(initialItems ?? const []);
 
   void addEvidence(EvidenceItem item) {
     state = [item, ...state];
@@ -224,110 +100,41 @@ final realCommunityUsersProvider = FutureProvider<List<User>>((ref) async {
 final communityUsersProvider = Provider<List<User>>((ref) {
   final asyncUsers = ref.watch(realCommunityUsersProvider);
   return asyncUsers.maybeWhen(
-    data: (users) => users.isNotEmpty ? users : _defaultSeedUsers,
-    orElse: () => _defaultSeedUsers,
+    data: (users) => users,
+    orElse: () => const <User>[],
   );
 });
 
-final _defaultSeedUsers = [
-  User(
-    id: "user_elena",
-    name: "Elena Rostova",
-    username: "erostova",
-    bio: "Partner at Apex Ventures. Former operator building developer platforms.",
-    role: "Investor",
-    userRole: UserRole.investor,
-    skills: ["Venture Capital", "B2B SaaS", "Developer Tools", "GTM Strategy"],
-    location: "San Francisco, CA",
-    isVerified: true,
-    validationsCompleted: 41,
-    helpfulnessScore: 4.9,
-  ),
-  User(
-    id: "user_marcus",
-    name: "Marcus Vance",
-    username: "marcusv",
-    bio: "12+ yrs evaluating distributed cloud architecture & security compliance.",
-    role: "Professional",
-    userRole: UserRole.professional,
-    skills: ["SOC2 Compliance", "Cloud Security", "Enterprise DevOps"],
-    location: "New York, NY",
-    isVerified: true,
-    validationsCompleted: 38,
-    helpfulnessScore: 4.8,
-  ),
-  User(
-    id: "user_sarah",
-    name: "Sarah Chen",
-    username: "schen_growth",
-    bio: "Growth & Retention Lead. Helped 4 startups scale from \$0 to \$1M ARR.",
-    role: "Professional",
-    userRole: UserRole.professional,
-    skills: ["Customer Acquisition", "Pricing Strategy", "Product-Led Growth"],
-    location: "Singapore",
-    isVerified: true,
-    validationsCompleted: 32,
-    helpfulnessScore: 4.7,
-  ),
-  User(
-    id: "user_dev",
-    name: "Dev Patel",
-    username: "dev_fintech",
-    bio: "Building payments rails and embedded banking integrations.",
-    role: "Founder",
-    userRole: UserRole.founder,
-    skills: ["FinTech", "Payments", "API Design", "Banking"],
-    location: "London, UK",
-    isVerified: true,
-    validationsCompleted: 29,
-    helpfulnessScore: 4.6,
-  ),
-];
-
-// Notifications State Notifier
+// Authoritative Notifications State Notifier
 final notificationsProvider = StateNotifierProvider<NotificationsNotifier, List<AppNotification>>((ref) {
-  return NotificationsNotifier();
+  final repo = ref.watch(notificationRepositoryProvider);
+  return NotificationsNotifier(repo);
 });
 
 class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
-  NotificationsNotifier() : super([
-    AppNotification(
-      id: "notif_1",
-      type: AppNotificationType.feedback,
-      actorId: "user_marcus",
-      actorName: "Marcus Vance",
-      message: "submitted structured feedback on your Automated Restaurant Inventory sprint.",
-      time: DateTime.now().subtract(const Duration(minutes: 45)),
-      isRead: false,
-      actionId: "val_auto_inventory",
-    ),
-    AppNotification(
-      id: "notif_2",
-      type: AppNotificationType.milestone,
-      actorId: "system",
-      actorName: "TRUTHPRENUER",
-      message: "Automated Restaurant Inventory reached 15+ responses. AI Evidence Synthesis is ready.",
-      time: DateTime.now().subtract(const Duration(hours: 3)),
-      isRead: false,
-      actionId: "val_auto_inventory",
-    ),
-    AppNotification(
-      id: "notif_3",
-      type: AppNotificationType.connection,
-      actorId: "user_elena",
-      actorName: "Elena Rostova",
-      message: "sent you a connection request to discuss your validation sprint.",
-      time: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-      actionId: "user_elena",
-    ),
-  ]);
+  final NotificationRepository _repo;
+
+  NotificationsNotifier([NotificationRepository? repo, List<AppNotification>? initialNotifications])
+      : _repo = repo ?? NotificationRepository(safeSupabaseClient),
+        super(initialNotifications ?? const []) {
+    loadNotifications();
+  }
+
+  Future<void> loadNotifications() async {
+    try {
+      final remote = await _repo.getNotifications();
+      if (remote.isNotEmpty) {
+        state = remote;
+      }
+    } catch (_) {}
+  }
 
   void markAllNotificationsRead() {
     state = state.map((n) {
       n.isRead = true;
       return n;
     }).toList();
+    _repo.markAllNotificationsRead().catchError((_) {});
   }
 
   void markNotificationRead(String id) {
@@ -335,6 +142,11 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
       if (n.id == id) n.isRead = true;
       return n;
     }).toList();
+    _repo.markNotificationRead(id).catchError((_) {});
+  }
+
+  void addNotification(AppNotification notif) {
+    state = [notif, ...state];
   }
 }
 
@@ -347,26 +159,9 @@ final conversationsProvider = StateNotifierProvider<ConversationsNotifier, List<
 class ConversationsNotifier extends StateNotifier<List<Conversation>> {
   final MessagingRepository _repo;
 
-  ConversationsNotifier([MessagingRepository? repo])
+  ConversationsNotifier([MessagingRepository? repo, List<Conversation>? initialConversations])
       : _repo = repo ?? MessagingRepository(safeSupabaseClient),
-        super([
-          Conversation(
-            id: "conv_elena",
-            participantIds: ["founder_dev_1", "user_elena"],
-            lastMessage: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
-            lastMessageTime: DateTime.now().subtract(const Duration(minutes: 18)),
-            unreadCount: 1,
-            isPinned: true,
-          ),
-          Conversation(
-            id: "conv_marcus",
-            participantIds: ["founder_dev_1", "user_marcus"],
-            lastMessage: "I left detailed feedback on the SOC2 question regarding AWS audit scope.",
-            lastMessageTime: DateTime.now().subtract(const Duration(hours: 2)),
-            unreadCount: 0,
-            isPinned: false,
-          ),
-        ]) {
+        super(initialConversations ?? const []) {
     loadConversations();
   }
 
@@ -386,7 +181,7 @@ class ConversationsNotifier extends StateNotifier<List<Conversation>> {
     if (existing != null) return existing;
 
     final localId = "conv_${DateTime.now().millisecondsSinceEpoch}";
-    final myId = safeSupabaseClient?.auth.currentUser?.id ?? "founder_dev_1";
+    final myId = safeSupabaseClient?.auth.currentUser?.id ?? "local_user";
     final newConv = Conversation(
       id: localId,
       participantIds: [myId, targetUserId],
@@ -462,34 +257,9 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
   final String conversationId;
   final MessagingRepository _repo;
 
-  ChatMessagesNotifier(this.conversationId, [MessagingRepository? repo])
+  ChatMessagesNotifier(this.conversationId, [MessagingRepository? repo, List<ChatMessage>? initialMessages])
       : _repo = repo ?? MessagingRepository(safeSupabaseClient),
-        super([
-          ChatMessage(
-            id: "msg_init_1",
-            conversationId: conversationId,
-            senderId: "user_elena",
-            text: "Hi Alex! Reviewed your latest invoice OCR validation. How are you addressing handwriting variance on vendor sheets?",
-            sentAt: DateTime.now().subtract(const Duration(hours: 1)),
-            isRead: true,
-          ),
-          ChatMessage(
-            id: "msg_init_2",
-            conversationId: conversationId,
-            senderId: "founder_dev_1",
-            text: "Hey Elena! We're pairing Google Document AI with a fine-tuned layout model. 94% accuracy on handwritten totals in our 12-kitchen sample.",
-            sentAt: DateTime.now().subtract(const Duration(minutes: 30)),
-            isRead: true,
-          ),
-          ChatMessage(
-            id: "msg_init_3",
-            conversationId: conversationId,
-            senderId: "user_elena",
-            text: "Read your restaurant OCR evidence. Impressive counter-metric on barcode guns.",
-            sentAt: DateTime.now().subtract(const Duration(minutes: 18)),
-            isRead: false,
-          ),
-        ]) {
+        super(initialMessages ?? const []) {
     loadMessages();
   }
 
@@ -511,7 +281,7 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
     String? attachmentTitle,
     String? attachmentSubtitle,
   }) {
-    final senderId = safeSupabaseClient?.auth.currentUser?.id ?? "founder_dev_1";
+    final senderId = safeSupabaseClient?.auth.currentUser?.id ?? "local_user";
     final localMsg = ChatMessage(
       id: "msg_${DateTime.now().millisecondsSinceEpoch}",
       conversationId: conversationId,
@@ -568,11 +338,8 @@ enum ConnectionStatus {
 class ConnectionsNotifier extends StateNotifier<Map<String, ConnectionStatus>> {
   final Set<String> _inFlight = {};
 
-  ConnectionsNotifier()
-      : super({
-          // Seed initial pending request from Elena (matches Elena's notification)
-          "user_elena": ConnectionStatus.received,
-        });
+  ConnectionsNotifier([Map<String, ConnectionStatus>? initialConnections])
+      : super(initialConnections ?? const {});
 
   ConnectionStatus getStatus(String userId) {
     return state[userId] ?? ConnectionStatus.none;
@@ -629,9 +396,7 @@ class ConnectionsNotifier extends StateNotifier<Map<String, ConnectionStatus>> {
   }
 
   void reset() {
-    state = {
-      "user_elena": ConnectionStatus.received,
-    };
+    state = {};
   }
 
   void clearAll() {

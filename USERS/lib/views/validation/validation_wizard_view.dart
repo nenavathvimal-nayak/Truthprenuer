@@ -35,48 +35,23 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
   ];
 
   // Step 2: Assumption & Problem
-  final TextEditingController _titleCtrl = TextEditingController(text: "Automated Restaurant Inventory");
-  final TextEditingController _assumptionCtrl = TextEditingController(
-    text: "We believe small restaurant owners will pay ₹999/month for automated daily inventory tracking.",
-  );
-  final TextEditingController _problemCtrl = TextEditingController(
-    text: "Restaurant owners lose 15% of margins on food spoilage because manual stock audits take 2 hours every night.",
-  );
+  final TextEditingController _titleCtrl = TextEditingController();
+  final TextEditingController _assumptionCtrl = TextEditingController();
+  final TextEditingController _problemCtrl = TextEditingController();
 
   // Step 3: Audience
   final List<String> _availableAudienceRoles = [
     "Restaurant Owner", "Head Chef", "F&B Manager", "Retailer", "Startup Founder", "Tech Operator"
   ];
-  final Set<String> _selectedAudienceRoles = {"Restaurant Owner", "F&B Manager"};
+  final Set<String> _selectedAudienceRoles = <String>{};
   String _selectedGeography = "India";
 
   // Step 4: Questions
-  final List<Map<String, dynamic>> _questions = [
-    {
-      "id": "q1",
-      "text": "How severe is inventory tracking friction in your daily operations?",
-      "type": "Rating",
-      "required": true,
-    },
-    {
-      "id": "q2",
-      "text": "Would you pay ₹999/month for automated WhatsApp inventory alerts?",
-      "type": "Yes/No",
-      "required": true,
-    },
-    {
-      "id": "q3",
-      "text": "What is the biggest concern you have with adopting new inventory software?",
-      "type": "Open Text",
-      "required": false,
-    },
-  ];
+  final List<Map<String, dynamic>> _questions = [];
 
   // Step 5: Context & Attachments
-  final TextEditingController _contextCtrl = TextEditingController(
-    text: "We have built a simple WhatsApp bot that scans handwritten supplier invoices and logs stock automatically.",
-  );
-  final TextEditingController _linkCtrl = TextEditingController(text: "https://truthprenuer.app/demo/inventory");
+  final TextEditingController _contextCtrl = TextEditingController();
+  final TextEditingController _linkCtrl = TextEditingController();
 
   // Step 6: Privacy & Duration
   String _selectedVisibility = "Public";
@@ -736,7 +711,33 @@ class _ValidationWizardViewState extends ConsumerState<ValidationWizardView> {
           style: AppTypography.body.copyWith(color: colors.textSecondary),
         ),
         const SizedBox(height: 16),
-        ..._questions.asMap().entries.map((entry) {
+        if (_questions.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(
+              color: colors.cardBackground,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.border),
+            ),
+            alignment: Alignment.center,
+            child: Column(
+              children: [
+                Icon(Icons.quiz_outlined, size: 36, color: colors.textSecondary.withAlpha(100)),
+                const SizedBox(height: 8),
+                Text(
+                  "No questions added yet",
+                  style: AppTypography.bodyMedium.copyWith(color: colors.text, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Tap 'Add' to specify feedback prompts for respondents.",
+                  style: AppTypography.caption.copyWith(color: colors.textSecondary),
+                ),
+              ],
+            ),
+          )
+        else
+          ..._questions.asMap().entries.map((entry) {
           final idx = entry.key;
           final q = entry.value;
 

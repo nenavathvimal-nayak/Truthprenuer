@@ -72,8 +72,8 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
     try {
       final client = safeSupabaseClient;
       if (client != null) {
-        // If not in recovery mode and user provided current password, verify it first
-        if (!widget.isRecovery && _currentPasswordController.text.isNotEmpty) {
+        // Enforce mandatory re-authentication for logged-in password changes
+        if (!widget.isRecovery) {
           final currentUser = client.auth.currentUser;
           if (currentUser?.email != null) {
             await client.auth.signInWithPassword(
@@ -88,7 +88,7 @@ class _ChangePasswordViewState extends ConsumerState<ChangePasswordView> {
           UserAttributes(password: _newPasswordController.text.trim()),
         );
       } else {
-        await Future.delayed(const Duration(milliseconds: 250));
+        throw const AuthException('Authentication backend is unavailable. Please check your connection.');
       }
 
       if (!mounted) return;

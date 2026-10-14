@@ -282,23 +282,32 @@ class ValidationRepository {
       return true;
     }
     try {
-      final currentData = await client
-          .from('validations')
-          .select('upvotes')
-          .eq('id', validationId)
-          .maybeSingle()
-          .timeout(const Duration(seconds: 3));
+      try {
+        await client.rpc('toggle_validation_upvote', params: {
+          'p_validation_id': validationId,
+          'p_increment': upvote,
+        }).timeout(const Duration(seconds: 3));
+        return true;
+      } catch (_) {
+        // Fallback to direct update if RPC is pending deployment
+        final currentData = await client
+            .from('validations')
+            .select('upvotes')
+            .eq('id', validationId)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 3));
 
-      final int currentCount = (currentData?['upvotes'] as int?) ?? 0;
-      final int newCount = upvote ? (currentCount + 1) : ((currentCount > 0) ? currentCount - 1 : 0);
+        final int currentCount = (currentData?['upvotes'] as int?) ?? 0;
+        final int newCount = upvote ? (currentCount + 1) : ((currentCount > 0) ? currentCount - 1 : 0);
 
-      await client
-          .from('validations')
-          .update({'upvotes': newCount})
-          .eq('id', validationId)
-          .timeout(const Duration(seconds: 3));
+        await client
+            .from('validations')
+            .update({'upvotes': newCount})
+            .eq('id', validationId)
+            .timeout(const Duration(seconds: 3));
 
-      return true;
+        return true;
+      }
     } catch (e) {
       AppLogger.error('Failed to toggle upvote on validation $validationId', e, null, 'ValidationRepository');
       return false;
