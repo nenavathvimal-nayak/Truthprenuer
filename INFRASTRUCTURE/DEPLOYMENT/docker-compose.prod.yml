@@ -1,20 +1,63 @@
 version: "3.8"
 
+networks:
+  truthprenuer-prod-net:
+    driver: bridge
+
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: truthprenuer-prod-redis
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+    networks:
+      - truthprenuer-prod-net
+
   backend:
     build:
       context: ../../backend
       dockerfile: Dockerfile
+    container_name: truthprenuer-prod-backend
     restart: always
     environment:
       - PORT=8000
       - ENVIRONMENT=production
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CORS_ORIGINS=${CORS_ORIGINS}
     ports:
       - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/liveness"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+    networks:
+      - truthprenuer-prod-net

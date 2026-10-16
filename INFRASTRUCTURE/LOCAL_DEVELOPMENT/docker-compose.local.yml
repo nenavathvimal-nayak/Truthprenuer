@@ -1,13 +1,17 @@
 version: "3.8"
 
-services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+networks:
+  truthprenuer-local-net:
+    driver: bridge
 
-  postgres_mock:
+volumes:
+  truthprenuer_pg_data:
+
+services:
+  postgres:
     image: postgres:15-alpine
+    container_name: truthprenuer-local-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: truthprenuer
       POSTGRES_USER: postgres
@@ -15,4 +19,56 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ../../DATABASE/SCHEMA/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - truthprenuer_pg_data:/var/lib/postgresql/data
+      - ../../DATABASE/MIGRATIONS/001_initial_schema.sql:/docker-entrypoint-initdb.d/01_initial_schema.sql:ro
+      - ../../DATABASE/MIGRATIONS/002_security_and_trust_upgrade.sql:/docker-entrypoint-initdb.d/02_security_upgrade.sql:ro
+      - ../../DATABASE/MIGRATIONS/003_audit_worm_and_role_guards.sql:/docker-entrypoint-initdb.d/03_worm_guards.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d truthprenuer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - truthprenuer-local-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: truthprenuer-local-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - truthprenuer-local-net
+
+  platform-backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: truthprenuer-local-backend
+    restart: unless-stopped
+    environment:
+      - ENVIRONMENT=development
+      - PORT=8000
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/truthprenuer
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000","http://127.0.0.1:60135","http://localhost:8080"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/liveness"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - truthprenuer-local-net
