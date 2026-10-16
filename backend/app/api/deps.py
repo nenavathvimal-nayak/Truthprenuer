@@ -37,8 +37,14 @@ def require_admin(
     request: Request,
     user: AuthenticatedUser = Depends(get_current_user)
 ) -> AuthenticatedUser:
-    """Strict server-side RBAC and Local-Only origin validation for Admin operations."""
+    """Strict server-side RBAC, cryptographic signature verification, and Local-Only origin validation for Admin operations."""
     require_local_admin_origin(request)
+    if not user.is_signature_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied: valid cryptographically signed authentication token required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -50,8 +56,14 @@ def require_moderator(
     request: Request,
     user: AuthenticatedUser = Depends(get_current_user)
 ) -> AuthenticatedUser:
-    """Strict server-side RBAC and Local-Only origin validation for Moderator operations."""
+    """Strict server-side RBAC, cryptographic signature verification, and Local-Only origin validation for Moderator operations."""
     require_local_admin_origin(request)
+    if not user.is_signature_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Access denied: valid cryptographically signed authentication token required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_moderator:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

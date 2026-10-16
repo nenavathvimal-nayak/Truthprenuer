@@ -7,6 +7,6 @@
 - **Admin Console:** Distributed only to trusted operator workstations via secure local repository clone and executed strictly on loopback `127.0.0.1:60135`.
 
 ## 2. Security Runbooks
-- [Deployment Architecture](file:///Volumes/NAYAK/taeed_flutter_source/PRODUCT/ARCHITECTURE/DEPLOYMENT_ARCHITECTURE.md)
-- [Admin Isolation Specification](file:///Volumes/NAYAK/taeed_flutter_source/PRODUCT/SECURITY/ADMIN_ISOLATION.md)
-- [Threat Model](file:///Volumes/NAYAK/taeed_flutter_source/PRODUCT/SECURITY/THREAT_MODEL.md)
+- [Deployment Architecture](../../PRODUCT/ARCHITECTURE/DEPLOYMENT_ARCHITECTURE.md)
+- [Admin Isolation Specification](../../PRODUCT/SECURITY/ADMIN_ISOLATION.md)
+- [Threat Model](../../PRODUCT/SECURITY/THREAT_MODEL.md)

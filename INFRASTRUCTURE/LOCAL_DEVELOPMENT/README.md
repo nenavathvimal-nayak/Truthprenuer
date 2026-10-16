@@ -13,5 +13,5 @@ Coordinates local development services across Flutter, FastAPI, Supabase, and th
 
 ## 3. Docker Orchestration
 Local containerized backend development is supported via:
-- Containerfile: [`backend/Dockerfile`](file:///Volumes/NAYAK/taeed_flutter_source/backend/Dockerfile)
-- Compose definition: [`backend/docker-compose.yml`](file:///Volumes/NAYAK/taeed_flutter_source/backend/docker-compose.yml)
+- Containerfile: [`backend/Dockerfile`](../../backend/Dockerfile)
+- Compose definition: [`backend/docker-compose.yml`](../../backend/docker-compose.yml)

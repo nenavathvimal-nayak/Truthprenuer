@@ -74,8 +74,9 @@ func renderIcon(
     }
 }
 
-let basePath = "/Volumes/NAYAK/taeed_flutter_source"
-let logoDarkPath = "\(basePath)/assets/logos/truthprenuer_logo_dark.png"
+let scriptDir = URL(fileURLWithPath: #file).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().path
+let basePath = ProcessInfo.processInfo.environment["WORKSPACE_ROOT"] ?? scriptDir
+let logoDarkPath = "\(basePath)/USERS/ASSETS/logos/truthprenuer_logo_dark.png"
 let darkBg = NSColor(red: 10/255.0, green: 10/255.0, blue: 10/255.0, alpha: 1.0)
 
 // 1. web/favicon.png (High-resolution 64x64 Truthprenuer logo)

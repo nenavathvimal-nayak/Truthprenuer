@@ -85,7 +85,7 @@ To prevent spoofing and guarantee high deliverability into user inboxes:
 ## 5. Token Handling & Verification Lifecycle
 
 1. **Client Exchange**:
-   - The Flutter web client handles `/auth/callback` via `AuthCallbackView` ([`USERS/lib/views/auth/auth_callback_view.dart`](file:///Volumes/NAYAK/taeed_flutter_source/USERS/lib/views/auth/auth_callback_view.dart)).
+   - The Flutter web client handles `/auth/callback` via `AuthCallbackView` ([`USERS/lib/views/auth/auth_callback_view.dart`](../../USERS/lib/views/auth/auth_callback_view.dart)).
    - Tokens received in the URI query or hash fragment are processed through `client.auth.verifyOTP(...)`.
 2. **Error Recovery**:
    - If a link has expired or was already used, `AuthCallbackView` displays a clear error explanation and offers a one-tap button to request a fresh link or return to sign-in.

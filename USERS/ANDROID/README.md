@@ -4,10 +4,10 @@
 Target definitions, manifest mappings, and build specifications for the Android mobile client of Truthprenuer.
 
 ## 2. Directory Mappings & Canonical Files
-- **Canonical Android Root:** [`android/`](file:///Volumes/NAYAK/taeed_flutter_source/android/)
-- **Android Manifest:** [`android/app/src/main/AndroidManifest.xml`](file:///Volumes/NAYAK/taeed_flutter_source/android/app/src/main/AndroidManifest.xml)
-- **App Gradle:** [`android/app/build.gradle`](file:///Volumes/NAYAK/taeed_flutter_source/android/app/build.gradle)
-- **Target Specification:** [`android_target_definition.json`](file:///Volumes/NAYAK/taeed_flutter_source/USERS/ANDROID/android_target_definition.json)
+- **Canonical Android Root:** [`android/`](../../USERS/ANDROID)
+- **Android Manifest:** [`android/app/src/main/AndroidManifest.xml`](../../USERS/ANDROID/app/src/main/AndroidManifest.xml)
+- **App Gradle:** [`android/app/build.gradle`](../../USERS/ANDROID/app/build.gradle)
+- **Target Specification:** [`android_target_definition.json`](../../USERS/ANDROID/android_target_definition.json)
 
 ## 3. Build & Execution Commands
 ```bash

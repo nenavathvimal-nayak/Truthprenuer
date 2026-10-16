@@ -18,4 +18,4 @@ Here $\gamma_k$ represents the claim confidence coefficient.
 ## 2. Inactivity Decay & Slashing
 - Inactive accounts decay by $1\%$ per 30 days without activity.
 - Malicious coordination or bot submissions trigger immediate administrative slashing to $0$ and account suspension.
-- Implementation lives in [`DATABASE/FUNCTIONS/stored_procedures.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/FUNCTIONS/stored_procedures.sql) (`recalculate_user_reputation`).
+- Implementation lives in [`DATABASE/FUNCTIONS/stored_procedures.sql`](../../DATABASE/FUNCTIONS/stored_procedures.sql) (`recalculate_user_reputation`).

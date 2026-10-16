@@ -10,5 +10,5 @@ Matches startup hypotheses with vetted domain operators based on demonstrated do
    $$\text{Affinity}(O, H) = w_1 \cdot \text{SectorSimilarity}(O, H) + w_2 \cdot \text{ReputationScore}(O) + w_3 \cdot \text{FeedbackQuality}(O)$$
 
 ## 3. Implementation Reference
-- Algorithm Specification: [`PRODUCT/RAW_SPECS/TAEED SEARCH, RECOMMENDATION, DISCOVERY & PERSONALIZATION SYSTEM`](file:///Volumes/NAYAK/taeed_flutter_source/PRODUCT/RAW_SPECS/TAEED%20SEARCH,%20RECOMMENDATION,%20DISCOVERY%20&%20PERSONALIZATION%20SYSTEM)
-- Database Indexes: [`DATABASE/INDEXES/performance_indexes.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/INDEXES/performance_indexes.sql)
+- Algorithm Specification: [`PRODUCT/RAW_SPECS/TAEED SEARCH, RECOMMENDATION, DISCOVERY & PERSONALIZATION SYSTEM`](../../PRODUCT/RAW_SPECS/TAEED SEARCH, RECOMMENDATION, DISCOVERY & PERSONALIZATION SYSTEM)
+- Database Indexes: [`DATABASE/INDEXES/performance_indexes.sql`](../../DATABASE/INDEXES/performance_indexes.sql)

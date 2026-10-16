@@ -38,7 +38,7 @@ graph LR
 
 - **Hosting Platform:** Cloudflare Pages (Static Web SPA)
 - **Custom Domain:** `https://truthprenuer.pages.dev`
-- **Build Script:** [`scripts/build_flutter_web.sh`](file:///Volumes/NAYAK/taeed_flutter_source/scripts/build_flutter_web.sh)
+- **Build Script:** [`scripts/build_flutter_web.sh`](../../DEVTOOLS/SCRIPTS/build_flutter_web.sh)
 - **Output Directory:** `build/web/`
 - **Invariants:**
   - Administrative routes are disabled in release web builds.
@@ -50,7 +50,7 @@ graph LR
 ## 3. Public API / Backend Deployment
 
 - **Hosting Platform:** Cloud Run / Fly.io / Docker Compose
-- **Dockerfile:** [`backend/Dockerfile`](file:///Volumes/NAYAK/taeed_flutter_source/backend/Dockerfile)
+- **Dockerfile:** [`backend/Dockerfile`](../../backend/Dockerfile)
   - Multi-stage build based on `python:3.11-slim`.
   - Non-root user `appuser` (UID 10001).
   - Healthcheck on `/health/live`.

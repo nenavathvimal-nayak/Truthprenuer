@@ -236,4 +236,74 @@ def test_admin_blocked_from_external_ip(client):
     assert res.status_code == 403
     assert "local loopback access only" in res.json()["detail"].lower()
 
+def test_forged_token_with_wrong_secret_rejected(client):
+    """
+    CRITICAL SECURITY TEST:
+    Attacker signs a token with an unauthorized secret key.
+    The server MUST reject the signature and return 401 Unauthorized.
+    """
+    forged_token = make_test_jwt(
+        user_id="attacker-forge-id",
+        email="attacker@evil.com",
+        app_metadata_role="Super_Admin",
+        signing_secret="wrong-secret-key-attacker-666"
+    )
+    res = client.get(
+        "/api/v1/admin/audit-logs",
+        headers={"Authorization": f"Bearer {forged_token}"}
+    )
+    assert res.status_code == 401
+    assert "invalid authentication token" in res.json()["detail"].lower()
+
+def test_malformed_token_rejected(client):
+    """Verify malformed or garbage Bearer tokens fail closed with 401."""
+    res = client.get(
+        "/api/v1/admin/audit-logs",
+        headers={"Authorization": "Bearer not-a-valid-jwt-token"}
+    )
+    assert res.status_code == 401
+    assert "invalid authentication token" in res.json()["detail"].lower()
+
+def test_unverified_token_cannot_access_admin_even_in_dev(client):
+    """
+    CRITICAL SECURITY TEST:
+    Even when SUPABASE_JWT_SECRET is empty in development, unverified tokens
+    must NEVER be granted privileged administrative access (fail-closed).
+    """
+    from app.core.config import settings
+    orig_secret = settings.SUPABASE_JWT_SECRET
+    try:
+        # Simulate environment where secret is unset
+        settings.SUPABASE_JWT_SECRET = ""
+        unverified_token = make_test_jwt(
+            user_id="unverified-admin-claim",
+            email="hacker@evil.com",
+            app_metadata_role="Admin",
+            signing_secret="any-random-dev-key"
+        )
+        res = client.get(
+            "/api/v1/admin/audit-logs",
+            headers={"Authorization": f"Bearer {unverified_token}"}
+        )
+        assert res.status_code == 401
+        assert "valid cryptographically signed" in res.json()["detail"].lower()
+    finally:
+        settings.SUPABASE_JWT_SECRET = orig_secret
+
+def test_non_admin_personas_rejected_from_admin_endpoints(client):
+    """
+    Verify authenticated non-admin personas (Founder, Investor, Creator, Professional)
+    are strictly rejected with HTTP 403 Forbidden on administrative endpoints.
+    """
+    for role in ["Founder", "Investor", "Creator", "Professional"]:
+        token = make_test_jwt(
+            user_id=f"user-{role.lower()}-123",
+            app_metadata_role=role
+        )
+        res = client.get(
+            "/api/v1/admin/audit-logs",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert res.status_code == 403, f"Expected role {role} to be forbidden from admin audit-logs"
+
 

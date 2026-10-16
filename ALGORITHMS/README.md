@@ -7,12 +7,12 @@ The `ALGORITHMS/` subsystem defines the mathematical, probabilistic, and statist
 
 | Module | Core Logic | Implementation Reference |
 | :--- | :--- | :--- |
-| [`ALGORITHMS/VALIDATION/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/VALIDATION/) | Bayesian consensus probability aggregation | [`backend/app/services/`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/services/) & [`lib/core/`](file:///Volumes/NAYAK/taeed_flutter_source/lib/core/) |
-| [`ALGORITHMS/SCORING/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/SCORING/) | Multi-factor validator reputation scoring | [`DATABASE/FUNCTIONS/stored_procedures.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/FUNCTIONS/stored_procedures.sql) |
-| [`ALGORITHMS/RECOMMENDATIONS/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/RECOMMENDATIONS/) | Proof-of-evidence feed ranking algorithm | [`lib/repositories/`](file:///Volumes/NAYAK/taeed_flutter_source/lib/repositories/) |
-| [`ALGORITHMS/ANALYTICS/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/ANALYTICS/) | Real-time consensus velocity telemetry | [`admin_panel/src/components/visuals/`](file:///Volumes/NAYAK/taeed_flutter_source/admin_panel/src/components/visuals/) |
-| [`ALGORITHMS/SEARCH/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/SEARCH/) | Semantic claim matching and duplicate detection | [`backend/app/api/v1/ai.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/api/v1/ai.py) |
-| [`ALGORITHMS/TESTS/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/TESTS/) | Mathematical verification tests and benchmarks | [`backend/tests/`](file:///Volumes/NAYAK/taeed_flutter_source/backend/tests/) |
+| [`ALGORITHMS/VALIDATION/`](../ALGORITHMS/VALIDATION) | Bayesian consensus probability aggregation | [`backend/app/services/`](../backend/app/services) & [`lib/core/`](../USERS/lib/core) |
+| [`ALGORITHMS/SCORING/`](../ALGORITHMS/SCORING) | Multi-factor validator reputation scoring | [`DATABASE/FUNCTIONS/stored_procedures.sql`](../DATABASE/FUNCTIONS/stored_procedures.sql) |
+| [`ALGORITHMS/RECOMMENDATIONS/`](../ALGORITHMS/RECOMMENDATIONS) | Proof-of-evidence feed ranking algorithm | [`lib/repositories/`](../USERS/lib/repositories) |
+| [`ALGORITHMS/ANALYTICS/`](../ALGORITHMS/ANALYTICS) | Real-time consensus velocity telemetry | [`admin_panel/src/components/visuals/`](../ADMIN/src/components/visuals) |
+| [`ALGORITHMS/SEARCH/`](../ALGORITHMS/SEARCH) | Semantic claim matching and duplicate detection | [`backend/app/api/v1/ai.py`](../backend/app/api/v1/ai.py) |
+| [`ALGORITHMS/TESTS/`](../ALGORITHMS/TESTS) | Mathematical verification tests and benchmarks | [`backend/tests/`](../backend/tests) |
 
 ## 3. Core Principles
 1. **Mathematical Objectivity:** Claims are evaluated using empirical evidence weights, not raw popularity or engagement loops.

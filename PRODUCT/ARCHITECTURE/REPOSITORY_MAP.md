@@ -10,31 +10,33 @@
 Truthprenuer adheres to the master multi-tier enterprise structure:
 
 ```text
-Truthprenuer/
-├── USERS/              # Public User Applications, APIs & Infrastructure
-│   ├── WEB/            # Flutter Web Embedding & Cloudflare Build Setup
-│   ├── ANDROID/        # Flutter Android Native Wrapper & Gradle Config
-│   ├── IOS/            # Flutter iOS Xcode Workspace & Podfile
-│   ├── DESKTOP/        # macOS, Linux, Windows Desktop Embeddings
-│   ├── BACKEND/        # FastAPI Application, Services & Test Suite
-│   ├── SHARED/         # Shared Riverpod State, UI Components, Design System
-│   ├── ALGORITHMS/     # AI Pitch Extraction, Validation Scoring & Counter-Metrics
-│   ├── INFRASTRUCTURE/ # Docker, Compose, and Fly.io Container Packages
-│   └── DOCUMENTATION/  # Public API Integration & Developer Guides
+Truthprenuer/ (Child Repository / Submodule: USERS/FLUTTER/taeed_flutter_source)
+├── USERS/              # Flutter Multi-Platform Client & Platform Assets
+│   ├── lib/            # Flutter core Dart application source (Riverpod, screens, widgets)
+│   ├── test/           # Flutter unit & widget tests (64 passed)
+│   ├── pubspec.yaml    # Flutter dependency manifest
+│   ├── web/            # Flutter Web embedding & build configurations
+│   ├── android/        # Android native embedding & Gradle files
+│   ├── ios/            # iOS Xcode project, Podfile & bundle configurations
+│   ├── macos/          # macOS desktop embedding
+│   ├── linux/          # Linux desktop embedding
+│   └── windows/        # Windows desktop embedding
 │
-├── ADMIN/              # Private Administrative Console (Localhost-Only)
-│   ├── APP/            # Vite + React Admin Root Application
-│   ├── FRONTEND/       # Admin Dashboard, Moderation Queue, User Management
-│   ├── BACKEND/        # Administrative Endpoints (/api/v1/admin/*)
-│   ├── AUTH/           # AdminAuthGuard, Dev Bypass Gate
-│   ├── AUTHORIZATION/  # Server-Side RBAC & require_local_admin_origin Loopback Guard
-│   ├── AUDIT_LOGS/     # Append-Only WORM Database Audit Logging Service
-│   ├── CONFIG/         # Bundler Host (127.0.0.1) & Port (60135) Strict Config
-│   ├── SECURITY/       # Isolation Boundary & Hardening Specifications
-│   ├── TESTS/          # Admin Build & Privileged Endpoint Test Suites
-│   ├── SCRIPTS/        # Admin Utilities
-│   ├── RUN_LOCAL/      # Dedicated start_admin_60135.sh Fail-Fast Script
-│   └── DOCUMENTATION/  # Administrator Manual & Operational Runbooks
+├── ADMIN/              # Private Administrative Console (Localhost-Only 127.0.0.1:60135)
+│   ├── src/            # React 19 source, components (AdminAuthGuard), pages
+│   ├── package.json    # Vite 8 / React 19 dependencies & scripts
+│   ├── vite.config.ts  # Strict loopback binding (127.0.0.1:60135, strictPort: true)
+│   ├── dist/           # Local build output (excluded from public deployment)
+│   └── RUN_LOCAL/      # Dedicated start_admin_60135.sh Fail-Fast Script
+│
+├── backend/            # FastAPI Backend Service & Test Suite
+│   ├── app/            # Application core, config, security, and API endpoints
+│   │   ├── api/        # API v1 routes & dependencies (deps.py)
+│   │   ├── core/       # Security (security.py) & settings (config.py)
+│   │   └── services/   # Business logic services
+│   ├── tests/          # Pytest suite with authentication & isolation tests (17 passed)
+│   ├── requirements.txt # Python dependencies
+│   └── venv/           # Python 3.11 virtual environment
 │
 ├── DATABASE/           # Relational Schema, Policies, & Migration Engine
 │   ├── SCHEMA/         # Authoritative PostgreSQL Relational Schema (schema.sql)
@@ -48,30 +50,35 @@ Truthprenuer/
 │   ├── TESTS/          # Schema Validation & RLS Policy Tests
 │   └── DOCUMENTATION/  # Data Dictionary & DPDP / GDPR Compliance Registers
 │
-├── PRODUCT/            # Product Governance, PRDs, & Technical Runbooks
-│   ├── PRD/            # Master Product Requirements & Feature Catalogue
-│   ├── REQUIREMENTS/   # Legal, Terms, DPDP, and GDPR Compliance Standards
-│   ├── USER_JOURNEYS/  # Personas, User Psychology, & Information Architecture
-│   ├── UI_UX/          # Design Tokens, Typography, & Screen Inventories
-│   ├── DESIGN_SYSTEM/  # Handoff Specs, Component Tokens, & Audit Matrix
+├── ALGORITHMS/         # Proprietary Algorithmic Engines & Domain Tests
+│   ├── SCORING/        # Reputation, truth weighting & founder scores
+│   ├── RECOMMENDATIONS/# Algorithmic matching & feed generation
+│   ├── ANALYTICS/      # Platform analytics calculation
+│   ├── SEARCH/         # Semantic & vector search queries
+│   └── TESTS/          # Dedicated algorithm test suite (4 passed)
+│
+├── INFRASTRUCTURE/     # Deployment, Containerization & Local Dev
+│   ├── DOCKER/         # Dockerfiles & container definitions
+│   ├── LOCAL_DEVELOPMENT/ # Local dev orchestration
+│   └── CI_CD/          # CI/CD guidance & configurations
+│
+├── PRODUCT/            # Product Governance, Architecture & Technical Runbooks
 │   ├── ARCHITECTURE/   # REPOSITORY_MAP.md, DEPLOYMENT_ARCHITECTURE.md
-│   ├── SECURITY/       # ADMIN_ISOLATION.md, THREAT_MODEL.md
-│   ├── QA_REPORTS/     # FINAL_VERIFICATION_REPORT.md & Test Evidence
-│   ├── RELEASES/       # Staging & Production Deployment Gate Criteria
-│   ├── ROADMAP/        # Milestone Roadmap & Sprint Targets
+│   ├── SECURITY/       # ADMIN_ISOLATION.md, STRIX_AUDITS_INSPECTION.md
+│   ├── QA_REPORTS/     # REPOSITORY_MAINTENANCE_REPORT.md & Test Evidence
+│   ├── PRD/            # Master Product Requirements & Feature Catalogue
 │   └── RUNBOOKS/       # LOCAL_DEVELOPMENT.md, ADMIN_STARTUP.md, INCIDENT_RESPONSE.md
 │
-├── DEVTOOLS/           # Engineering Automation, CI/CD, & Scanners
-│   ├── SCRIPTS/        # Web Compilation & Port 60135 Launchers
-│   ├── DEVELOPMENT/    # Local Service Orchestration
-│   ├── TESTING/        # Test Runners across Flutter, Python, and Vite
-│   └── SECURITY_SCANNING/ # Gitleaks & SAST CodeQL Orchestrators
+├── DEVTOOLS/           # Engineering Automation, Scripts & Scanners
+│   ├── GENERATORS/     # Icon & asset generation tooling
+│   ├── SCRIPTS/        # Maintenance & automation scripts
+│   └── SECURITY_SCANNING/ # Security audit & check scripts
 │
-├── .github/workflows/  # Automated Multi-Tier CI & Security Workflows
+├── .github/workflows/  # Automated Multi-Tier CI Workflows
 ├── README.md           # Master Project Overview
 ├── SECURITY.md         # Vulnerability Disclosure & Threat Policies
 ├── CONTRIBUTING.md     # Engineering Standards & PR Guidelines
-└── CHANGELOG.md        # Full Audit & Hardening Changelog
+└── CHANGELOG.md        # Audit & Hardening Changelog
 ```
 
 ---
@@ -79,7 +86,7 @@ Truthprenuer/
 ## 2. Framework Preservation & Path Continuity
 
 To maintain seamless compatibility with framework package managers and build systems:
-1. **Flutter Root:** `pubspec.yaml` remains at the root level, referencing `lib/`, `test/`, and platform folders (`web/`, `android/`, `ios/`).
-2. **FastAPI Backend:** Located in `backend/` with `requirements.txt` and its own isolated virtual environment `backend/venv/`.
-3. **React 19 Admin Panel:** Located in `admin_panel/` with `package.json` and strict loopback configuration for `127.0.0.1:60135`.
-4. **Logical Access:** The target directories (`USERS/`, `ADMIN/`, `DATABASE/`, `PRODUCT/`, `DEVTOOLS/`) provide structured separation, operational runbooks, and build automation.
+1. **Flutter Universal Client:** Located in `USERS/` with `USERS/pubspec.yaml`, `USERS/lib/`, `USERS/test/`, and platform folders (`USERS/WEB/`, `USERS/ANDROID/`, `USERS/IOS/`, `USERS/DESKTOP/`).
+2. **FastAPI Backend:** Located in `backend/` with `requirements.txt` and its isolated virtual environment `backend/venv/`.
+3. **React 19 Admin Panel:** Located in `ADMIN/` (with `admin_panel/` symlink alias) containing `package.json`, `vite.config.ts`, and strict loopback configuration for `127.0.0.1:60135`.
+4. **Logical Subsystems:** Dedicated directories (`USERS/`, `ADMIN/`, `DATABASE/`, `ALGORITHMS/`, `PRODUCT/`, `DEVTOOLS/`) provide structured separation, operational runbooks, and build automation.

@@ -36,11 +36,11 @@ graph TD
 
 | Subsystem | Responsibility | Critical Files |
 | :--- | :--- | :--- |
-| **`USERS/`** | Public mobile, desktop, and web applications for founders and validators | [`lib/`](file:///Volumes/NAYAK/taeed_flutter_source/lib/), [`web/`](file:///Volumes/NAYAK/taeed_flutter_source/web/), [`android/`](file:///Volumes/NAYAK/taeed_flutter_source/android/), [`ios/`](file:///Volumes/NAYAK/taeed_flutter_source/ios/) |
-| **`ADMIN/`** | Private administrative console running strictly on local loopback | [`admin_panel/`](file:///Volumes/NAYAK/taeed_flutter_source/admin_panel/), [`ADMIN/RUN_LOCAL/`](file:///Volumes/NAYAK/taeed_flutter_source/ADMIN/RUN_LOCAL/) |
-| **`DATABASE/`** | Relational schemas, migrations, triggers, indexes, and WORM policies | [`DATABASE/SCHEMA/`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/SCHEMA/), [`DATABASE/POLICIES/`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/POLICIES/) |
-| **`BACKEND/`** | Asynchronous FastAPI service exposing public and administrative routes | [`backend/app/`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/) |
-| **`ALGORITHMS/`** | Bayesian consensus algorithms, dynamic scoring, and anti-sybil weighting | [`ALGORITHMS/VALIDATION/`](file:///Volumes/NAYAK/taeed_flutter_source/ALGORITHMS/VALIDATION/) |
-| **`INFRASTRUCTURE/`** | Cloud topologies, Dockerfiles, Cloudflare routing, and telemetry | [`INFRASTRUCTURE/DEPLOYMENT/`](file:///Volumes/NAYAK/taeed_flutter_source/INFRASTRUCTURE/DEPLOYMENT/) |
-| **`DEVTOOLS/`** | Repository integrity validators, test suites, and security scanners | [`DEVTOOLS/REPOSITORY_MAINTENANCE/`](file:///Volumes/NAYAK/taeed_flutter_source/DEVTOOLS/REPOSITORY_MAINTENANCE/) |
-| **`PRODUCT/`** | PRD, requirements, user journeys, runbooks, and QA reports | [`PRODUCT/`](file:///Volumes/NAYAK/taeed_flutter_source/PRODUCT/) |
+| **`USERS/`** | Public mobile, desktop, and web applications for founders and validators | [`lib/`](../../USERS/lib), [`web/`](../../USERS/WEB), [`android/`](../../USERS/ANDROID), [`ios/`](../../USERS/IOS) |
+| **`ADMIN/`** | Private administrative console running strictly on local loopback | [`admin_panel/`](../../ADMIN), [`ADMIN/RUN_LOCAL/`](../../ADMIN/RUN_LOCAL) |
+| **`DATABASE/`** | Relational schemas, migrations, triggers, indexes, and WORM policies | [`DATABASE/SCHEMA/`](../../DATABASE/SCHEMA), [`DATABASE/POLICIES/`](../../DATABASE/POLICIES) |
+| **`BACKEND/`** | Asynchronous FastAPI service exposing public and administrative routes | [`backend/app/`](../../backend/app) |
+| **`ALGORITHMS/`** | Bayesian consensus algorithms, dynamic scoring, and anti-sybil weighting | [`ALGORITHMS/VALIDATION/`](../../ALGORITHMS/VALIDATION) |
+| **`INFRASTRUCTURE/`** | Cloud topologies, Dockerfiles, Cloudflare routing, and telemetry | [`INFRASTRUCTURE/DEPLOYMENT/`](../../INFRASTRUCTURE/DEPLOYMENT) |
+| **`DEVTOOLS/`** | Repository integrity validators, test suites, and security scanners | [`DEVTOOLS/REPOSITORY_MAINTENANCE/`](../../DEVTOOLS/REPOSITORY_MAINTENANCE) |
+| **`PRODUCT/`** | PRD, requirements, user journeys, runbooks, and QA reports | [`PRODUCT/`](../../PRODUCT) |

@@ -3,7 +3,7 @@
 
 **Date:** 12 October 2026  
 **Auditor:** Principal Software Architect, DevSecOps & Security Review  
-**Repository Root:** `/Volumes/NAYAK/taeed_flutter_source`  
+**Repository Root:** `Truthprenuer` (workspace: `USERS/FLUTTER/taeed_flutter_source`)  
 **Target Identity:** `Truthprenuer/`  
 
 ---

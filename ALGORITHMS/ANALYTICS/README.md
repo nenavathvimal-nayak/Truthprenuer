@@ -9,5 +9,5 @@ The Analytics subsystem processes telemetry, validation milestones, and operator
 - **Validation Signal-to-Noise Ratio (SNR):** Weighted credibility score relative to submission volume.
 
 ## 3. Implementation Reference
-- Service Implementation: [`backend/app/services/`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/services/)
-- Telemetry Collection: [`lib/repositories/app_providers.dart`](file:///Volumes/NAYAK/taeed_flutter_source/lib/repositories/app_providers.dart)
+- Service Implementation: [`backend/app/services/`](../../backend/app/services)
+- Telemetry Collection: [`lib/repositories/app_providers.dart`](../../USERS/lib/repositories/app_providers.dart)

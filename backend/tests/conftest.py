@@ -14,6 +14,11 @@ if backend_dir not in sys.path:
 from app.main import app
 from app.core.config import settings
 
+TEST_JWT_SECRET = "test-secret-key-1234567890123456"
+
+# Ensure test suite runs with a deterministic verified JWT secret
+settings.SUPABASE_JWT_SECRET = TEST_JWT_SECRET
+
 @pytest.fixture
 def client():
     """FastAPI TestClient fixture."""
@@ -25,7 +30,8 @@ def make_test_jwt(
     email: str = "user@truthprenuer.com",
     app_metadata_role: Optional[str] = None,
     user_metadata_role: Optional[str] = None,
-    expires_in_seconds: int = 3600
+    expires_in_seconds: int = 3600,
+    signing_secret: Optional[str] = None
 ) -> str:
     """Helper to generate JWT tokens for test cases."""
     now = int(time.time())
@@ -42,5 +48,5 @@ def make_test_jwt(
     if user_metadata_role:
         payload["user_metadata"]["role"] = user_metadata_role
 
-    secret = settings.SUPABASE_JWT_SECRET or "test-secret-key-1234567890123456"
+    secret = signing_secret if signing_secret is not None else (settings.SUPABASE_JWT_SECRET or TEST_JWT_SECRET)
     return jwt.encode(payload, secret, algorithm="HS256")

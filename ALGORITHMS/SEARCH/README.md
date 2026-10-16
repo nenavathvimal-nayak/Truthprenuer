@@ -9,5 +9,5 @@ Enables fast, relevance-ranked full-text and semantic discovery across startup h
   $$\text{Score} = \alpha \cdot \text{TextRelevance} + \beta \cdot \text{TruthScore} + \gamma \cdot \text{RecencyDecay}$$
 
 ## 3. Implementation Reference
-- Database Indexes: [`DATABASE/INDEXES/performance_indexes.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/INDEXES/performance_indexes.sql)
-- Search UI Overlay: [`lib/views/main/search_overlay_view.dart`](file:///Volumes/NAYAK/taeed_flutter_source/lib/views/main/search_overlay_view.dart)
+- Database Indexes: [`DATABASE/INDEXES/performance_indexes.sql`](../../DATABASE/INDEXES/performance_indexes.sql)
+- Search UI Overlay: [`lib/views/main/search_overlay_view.dart`](../../USERS/lib/views/main/search_overlay_view.dart)

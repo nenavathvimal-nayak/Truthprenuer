@@ -2,7 +2,7 @@
 
 **Audit Date:** 12 October 2026  
 **Auditing Team:** Principal Architect, Application Security, DevSecOps & QA Organization  
-**Repository Root:** `/Volumes/NAYAK/taeed_flutter_source`  
+**Repository Root:** `Truthprenuer` (workspace: `USERS/FLUTTER/taeed_flutter_source`)  
 **Active Branch:** `main` (commit tracked with `origin/main`)  
 
 ---

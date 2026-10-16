@@ -3,7 +3,7 @@
 
 **Audit Date:** 12 October 2026  
 **Auditor Roles:** Principal Software Architect, Staff Engineer, Repository Maintainer, DevSecOps Engineer, Database Architect, Security Engineer  
-**Workspace:** `/Volumes/NAYAK/taeed_flutter_source`  
+**Workspace:** `Truthprenuer` (workspace: `USERS/FLUTTER/taeed_flutter_source`)  
 **Target Identity:** `Truthprenuer/`  
 **Final Status:** **100% VERIFIED & PRODUCTION READY** 🟢  
 
@@ -120,13 +120,13 @@ Truthprenuer/
 ## 3. Changes Executed
 
 1. **Zero-Trust Admin Isolation:**
-   - Modified [`admin_panel/vite.config.ts`](file:///Volumes/NAYAK/taeed_flutter_source/admin_panel/vite.config.ts): Bound `server` and `preview` strictly to `host: '127.0.0.1'` on `port: 60135` with `strictPort: true`.
-   - Updated [`admin_panel/package.json`](file:///Volumes/NAYAK/taeed_flutter_source/admin_panel/package.json): Added `--host 127.0.0.1 --port 60135` to `dev` and `preview` scripts.
-   - Hardened [`backend/app/api/deps.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/api/deps.py): Implemented `require_local_admin_origin` rejecting any non-loopback origin/host for admin endpoints with `HTTP 403 Forbidden`.
-   - Added launcher scripts: [`ADMIN/RUN_LOCAL/start_admin_60135.sh`](file:///Volumes/NAYAK/taeed_flutter_source/ADMIN/RUN_LOCAL/start_admin_60135.sh) and [`DEVTOOLS/SCRIPTS/start_admin_60135.sh`](file:///Volumes/NAYAK/taeed_flutter_source/DEVTOOLS/SCRIPTS/start_admin_60135.sh).
+   - Modified [`admin_panel/vite.config.ts`](../../ADMIN/vite.config.ts): Bound `server` and `preview` strictly to `host: '127.0.0.1'` on `port: 60135` with `strictPort: true`.
+   - Updated [`admin_panel/package.json`](../../ADMIN/package.json): Added `--host 127.0.0.1 --port 60135` to `dev` and `preview` scripts.
+   - Hardened [`backend/app/api/deps.py`](../../backend/app/api/deps.py): Implemented `require_local_admin_origin` rejecting any non-loopback origin/host for admin endpoints with `HTTP 403 Forbidden`.
+   - Added launcher scripts: [`ADMIN/RUN_LOCAL/start_admin_60135.sh`](../../ADMIN/RUN_LOCAL/start_admin_60135.sh) and [`DEVTOOLS/SCRIPTS/start_admin_60135.sh`](../../DEVTOOLS/SCRIPTS/start_admin_60135.sh).
 
 2. **Admin Visual Telemetry Upgrade:**
-   - Upgraded [`admin_panel/src/pages/Dashboard.tsx`](file:///Volumes/NAYAK/taeed_flutter_source/admin_panel/src/pages/Dashboard.tsx) with a full suite of interactive SVG data visualizations:
+   - Upgraded [`admin_panel/src/pages/Dashboard.tsx`](../../ADMIN/src/pages/Dashboard.tsx) with a full suite of interactive SVG data visualizations:
      - `VerificationVelocityChart.tsx`: Area and trend chart with dynamic 24h/7d/30d filtering and crosshair hover data.
      - `CategoryDonutChart.tsx`: Multi-segment donut chart displaying domain distributions.
      - `SystemMetricsGauges.tsx`: Circular radial progress gauges for consensus, RLS enforcement, and latency.
@@ -136,10 +136,10 @@ Truthprenuer/
      - `MiniSparkline`: Inline KPI card trajectory sparklines.
 
 3. **Backend Reliability & Security Bug Fixes:**
-   - Memory Leak Fix: Updated [`backend/app/core/rate_limit.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/core/rate_limit.py) to automatically evict stale sliding-window timestamps, preventing unbounded memory growth.
-   - WORM Audit Trail: Updated [`backend/app/services/audit_service.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/services/audit_service.py) to persist administrative audit records to PostgreSQL with zero UPDATE/DELETE policy.
-   - Prompt Injection Guard: Added `<untrusted_submission>` delimiters and sanitization in [`backend/app/api/v1/ai.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/api/v1/ai.py).
-   - User Suspension Persistence: Updated [`backend/app/services/moderation_service.py`](file:///Volumes/NAYAK/taeed_flutter_source/backend/app/services/moderation_service.py) to persist suspensions directly to the `profiles` table.
+   - Memory Leak Fix: Updated [`backend/app/core/rate_limit.py`](../../backend/app/core/rate_limit.py) to automatically evict stale sliding-window timestamps, preventing unbounded memory growth.
+   - WORM Audit Trail: Updated [`backend/app/services/audit_service.py`](../../backend/app/services/audit_service.py) to persist administrative audit records to PostgreSQL with zero UPDATE/DELETE policy.
+   - Prompt Injection Guard: Added `<untrusted_submission>` delimiters and sanitization in [`backend/app/api/v1/ai.py`](../../backend/app/api/v1/ai.py).
+   - User Suspension Persistence: Updated [`backend/app/services/moderation_service.py`](../../backend/app/services/moderation_service.py) to persist suspensions directly to the `profiles` table.
 
 4. **Repository Architecture Scaffolding:**
    - Structured and populated all modules across `USERS/`, `ADMIN/`, `DATABASE/`, `PRODUCT/`, `ALGORITHMS/`, `INFRASTRUCTURE/`, and `DEVTOOLS/`.
@@ -164,7 +164,7 @@ Truthprenuer/
 
 ## 5. Duplicate Analysis & Resolution
 
-- **Database Schemas:** Consolidated duplicate SQL fragments into [`DATABASE/SCHEMA/schema.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/SCHEMA/schema.sql) and [`DATABASE/POLICIES/rls_policies.sql`](file:///Volumes/NAYAK/taeed_flutter_source/DATABASE/POLICIES/rls_policies.sql).
+- **Database Schemas:** Consolidated duplicate SQL fragments into [`DATABASE/SCHEMA/schema.sql`](../../DATABASE/SCHEMA/schema.sql) and [`DATABASE/POLICIES/rls_policies.sql`](../../DATABASE/POLICIES/rls_policies.sql).
 - **Scripts:** Consolidated scattered launch scripts into canonical utilities under `DEVTOOLS/SCRIPTS/` and `ADMIN/RUN_LOCAL/`.
 - **Documentation:** Unified fragmented notes into canonical documents under `PRODUCT/` with cross-linking, eliminating redundant copies.
 
